@@ -1,0 +1,64 @@
+# Settings for Backend (on Cloud Run).
+# See https://firebase.google.com/docs/app-hosting/configure#cloud-run
+runConfig:
+  minInstances: 0
+  # maxInstances: 100
+  # concurrency: 80
+  # cpu: 1
+  # memoryMiB: 512
+
+# Environment variables and secrets.
+env:
+  # Firebase configuration - public variables
+  - variable: NEXT_PUBLIC_FIREBASE_API_KEY
+    value: AIzaSyAxNdSG8icf-rJXgty75jQpibJ-4brnV4o
+    availability:
+      - BUILD
+      - RUNTIME
+
+  - variable: NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
+    # value: drift-log.firebaseapp.com
+    value: auth.flowcost.work
+    availability:
+      - BUILD
+      - RUNTIME
+
+  - variable: NEXT_PUBLIC_FIREBASE_PROJECT_ID
+    value: flow-cost
+    availability:
+      - BUILD
+      - RUNTIME
+
+  - variable: NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
+    value: storage.flowcost.co
+    availability:
+      - BUILD
+      - RUNTIME
+
+  - variable: NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
+    value: "1091687081465"
+    availability:
+      - BUILD
+      - RUNTIME
+
+  - variable: NEXT_PUBLIC_FIREBASE_APP_ID
+    value: "1:1091687081465:web:b1159bb6d5513afb670928"
+    availability:
+      - BUILD
+      - RUNTIME
+
+  - variable: NEXT_PUBLIC_MEASUREMENT_ID
+    value: "G-WV7ZXLMCFM"
+    availability:
+      - BUILD
+      - RUNTIME
+
+  - variable: NEXT_PUBLIC_RECAPTCHA_V3_SITE_KEY
+    value: "6LcMnsorAAAAABSfbIA6B1klct2FLJTOZcepgOuE"
+    availability:
+      - BUILD
+      - RUNTIME
+
+  # For sensitive secrets, store in Cloud Secret Manager and reference here:
+  # - variable: MY_SECRET
+  #   secret: mySecretRef
