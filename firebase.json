@@ -25,7 +25,7 @@
     }
   ],
   "hosting": {
-    "site": "flowcost",
+    "site": "flow-cost",
     "rewrites": [
       {
         "source": "/acceptConnectionInvitation",

@@ -6,7 +6,7 @@ process.env.FIRESTORE_EMULATOR_HOST = '127.0.0.1:8080';
 
 // Initialize admin SDK with actual project ID for emulator
 admin.initializeApp({
-  projectId: 'drift-log',
+  projectId: 'flow-cost',
 });
 
 const db = getFirestore(admin.app());
