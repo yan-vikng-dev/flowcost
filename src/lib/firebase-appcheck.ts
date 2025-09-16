@@ -23,7 +23,6 @@ if (typeof window !== 'undefined') {
       });
     }
   } catch (err) {
-    // eslint-disable-next-line no-console
     console.warn('App Check init skipped/failed:', err);
   }
 }

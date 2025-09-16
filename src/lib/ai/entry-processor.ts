@@ -64,7 +64,14 @@ const fetchRecentEntries = async (userId: string, maxCount: number = 25) => {
     limit(maxCount)
   ));
   return snap.docs.map(d => {
-    const data = d.data() as any;
+    type FirestoreEntryData = {
+      originalAmount?: unknown;
+      amount?: unknown;
+      currency?: unknown;
+      category?: unknown;
+      date?: unknown & { toDate?: () => Date };
+    };
+    const data = d.data() as FirestoreEntryData;
     const dateVal = data.date?.toDate ? data.date.toDate() : (typeof data.date === 'string' ? new Date(data.date) : undefined);
     return {
       amount: Number(data.originalAmount ?? data.amount ?? 0),

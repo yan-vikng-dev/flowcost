@@ -3,7 +3,6 @@
 import { useAuth } from '@/lib/auth-context';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
-import { useRef, useState, useEffect as useReactEffect } from 'react';
 import { AppLayout } from '@/components/app-layout';
 import { EntriesCacheProvider } from '@/lib/entries-cache';
 import { EntryAnimationProvider } from '@/contexts/entry-animation-context';
