@@ -5,7 +5,6 @@ import { Providers } from "@/lib/providers";
 import { Toaster } from "@/components/ui/sonner";
 import { TopologyBackground } from "@/components/ui/topology-background";
 import Script from "next/script";
-import { GOOGLE_ADS_ID } from "@/lib/config";
 import ConsentManager from "@/components/consent-manager";
 
 const poppins = Poppins({
@@ -25,6 +24,9 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
 };
+
+const GOOGLE_ADS_ID = process.env.NEXT_PUBLIC_GOOGLE_ADS_ID;
+if (!GOOGLE_ADS_ID) throw new Error("GOOGLE_ADS_ID is not set");
 
 export default function RootLayout({
   children,

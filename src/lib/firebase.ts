@@ -4,3 +4,4 @@ export { auth } from './firebase-auth';
 export { db } from './firebase-db';
 export { storage } from './firebase-storage';
 export { functions } from './firebase-functions';
+export { trackEvent } from './firebase-analytics';

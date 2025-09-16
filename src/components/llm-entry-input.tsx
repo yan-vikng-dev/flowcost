@@ -12,6 +12,7 @@ import { Input } from '@/components/ui/input';
 import { X, FileText, Volume2, ImageIcon, Paperclip, SendHorizonal, Loader2 } from 'lucide-react';
 import { LLMEntryDebug } from '@/components/llm-entry-debug';
 import { getCurrencyByCode } from '@/lib/currencies';
+import { trackEvent } from '@/lib/firebase';
 
 interface ParsedEntry {
   type: 'expense' | 'income';
@@ -137,6 +138,17 @@ export function LLMEntryInput({ onDateChange, onEntryCreated }: LLMEntryInputInl
         await setDoc(docRef, entryData);
         // Clear the form
         clearForm();
+
+        // Analytics: entry created (llm)
+        trackEvent('entry_created', {
+          source: 'llm',
+          type: parsed.type,
+          amount: parsed.amount,
+          currency: normalizedCurrency,
+          category: parsed.category,
+          confidence: parsed.confidence,
+          had_file: Boolean(selectedFile),
+        });
       } catch (parseError) {
         toast.error('Failed to parse structured output as JSON');
         console.error('JSON parse error:', parseError);

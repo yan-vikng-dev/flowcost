@@ -31,6 +31,7 @@ import { Repeat } from 'lucide-react';
 import type { RecurrenceFrequency } from '@/types/recurring';
 import { RECURRENCE_LIMITS } from '@/types/recurring';
 import { EntryType } from '@/types/entry';
+import { trackEvent } from '@/lib/firebase';
 
 const formSchema = z
   .object({
@@ -218,6 +219,15 @@ export function EntryForm({ onSuccess, onDateChange, onEntryCreated }: EntryForm
         clearForm();
         
         onSuccess?.();
+
+        // Analytics: entry created (manual)
+        trackEvent('entry_created', {
+          source: 'manual',
+          type: values.type,
+          amount: amount,
+          currency,
+          category: values.category,
+        });
         
       }
       

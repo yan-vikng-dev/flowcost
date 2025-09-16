@@ -20,6 +20,7 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { LoadingLogo } from '@/components/ui/loading-logo';
+import { trackEvent } from '@/lib/firebase';
 
 export default function Onboarding() {
   const { user, loading, needsOnboarding } = useAuth();
@@ -55,6 +56,13 @@ export default function Onboarding() {
         connectedUserIds: [],
         createdAt: serverTimestamp(),
         onboardingCompleted: true,
+      });
+
+      // Track registration
+      trackEvent('sign_up', {
+        method: 'google',
+        user_id: user.id,
+        currency,
       });
 
       router.push('/dashboard');

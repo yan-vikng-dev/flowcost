@@ -1,9 +1,10 @@
 "use client";
 
 import CookieConsent from "@/components/blocks/cookie-consent";
-import { GOOGLE_ADS_ID } from "@/lib/config";
 
 export default function ConsentManager() {
+  const GOOGLE_ADS_ID = process.env.NEXT_PUBLIC_GOOGLE_ADS_ID;
+  if (!GOOGLE_ADS_ID) throw new Error("GOOGLE_ADS_ID is not set");
   return (
     <CookieConsent
       variant="mini"

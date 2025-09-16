@@ -1,6 +1,7 @@
 import { collection, addDoc, serverTimestamp, deleteDoc, doc } from 'firebase/firestore';
 import { httpsCallable } from 'firebase/functions';
 import { db, functions } from '@/lib/firebase';
+import { trackEvent } from '@/lib/firebase';
 
 export class ConnectionsService {
   static async invite(invitedBy: string, inviterName: string, invitedEmail: string): Promise<string> {
@@ -16,6 +17,11 @@ export class ConnectionsService {
     };
 
     const ref = await addDoc(collection(db, 'connectionInvitations'), invitationData);
+    try {
+      trackEvent('invite_sent', {
+        invited_email_domain: invitedEmail.split('@')[1] || '',
+      });
+    } catch {}
     return ref.id;
   }
 
