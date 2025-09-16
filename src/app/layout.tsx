@@ -42,6 +42,7 @@ export default function RootLayout({
             __html: `
               window.dataLayer = window.dataLayer || [];
               function gtag(){dataLayer.push(arguments);} 
+              // Advanced Consent Mode defaults (v2) and recommended settings
               gtag('consent', 'default', {
                 ad_storage: 'denied',
                 ad_user_data: 'denied',
@@ -49,6 +50,9 @@ export default function RootLayout({
                 analytics_storage: 'denied',
                 wait_for_update: 500
               });
+              // Recommended settings per Google docs
+              gtag('set', 'url_passthrough', true);
+              gtag('set', 'ads_data_redaction', true);
               gtag('js', new Date());
             `,
           }}
@@ -64,6 +68,17 @@ export default function RootLayout({
             __html: `
               window.gtag = window.gtag || function(){(window.dataLayer = window.dataLayer || []).push(arguments)};
               gtag('config', '${GOOGLE_ADS_ID}');
+              // If user previously consented, re-apply granted state on load
+              try {
+                if (document.cookie.includes('cookieConsent=true')) {
+                  gtag('consent', 'update', {
+                    ad_storage: 'granted',
+                    ad_user_data: 'granted',
+                    ad_personalization: 'granted',
+                    analytics_storage: 'granted',
+                  });
+                }
+              } catch {}
             `,
           }}
         />
