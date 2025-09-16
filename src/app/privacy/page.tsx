@@ -153,7 +153,7 @@ export default function PrivacyPage() {
             <ul className="list-disc pl-6 space-y-1 mb-4">
               <li>
                 <strong>Google Tags (gtag.js) and Consent Mode</strong>: We load Google tag with Consent Mode set to
-                "denied" by default. When you accept cookies, we update consent to allow analytics and ads storage. See
+                &quot;denied&quot; by default. When you accept cookies, we update consent to allow analytics and ads storage. See
                 Google&apos;s privacy policy for details.
               </li>
             </ul>

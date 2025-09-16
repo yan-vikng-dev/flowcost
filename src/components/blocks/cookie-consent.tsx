@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Check, Cookie, X } from "lucide-react";
+import { Cookie } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -130,7 +130,7 @@ const CookieConsent = React.forwardRef<HTMLDivElement, CookieConsentProps>(
             <CardContent className="space-y-2">
               <CardDescription className="text-sm">{renderedDescription}</CardDescription>
               <p className="text-xs text-muted-foreground">
-                By clicking <span className="font-medium">"Accept"</span>, you
+                By clicking <span className="font-medium">&quot;Accept&quot;</span>, you
                 agree to our use of cookies.
               </p>
               {!hasInlinePolicyLink && (
