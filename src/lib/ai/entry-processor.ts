@@ -1,7 +1,6 @@
 import { CATEGORY_NAMES } from '@/types/category';
-import { db } from '@/lib/firebase';
-import { collection, getDocs, limit, orderBy, query, where } from 'firebase/firestore';
 import { getEntryParserModel } from './ai';
+import { getEntriesSummary } from '@/services/entries';
 
 // Convert a File to an inline data part for the model
 const fileToPart = (file: File) => new Promise<{ inlineData: { data: string; mimeType: string } }>((resolve) => {
@@ -57,29 +56,7 @@ const extractJSON = (text: string): string => {
 };
 
 const fetchRecentEntries = async (userId: string, maxCount: number = 25) => {
-  const snap = await getDocs(query(
-    collection(db, 'entries'),
-    where('userId', '==', userId),
-    orderBy('date', 'desc'),
-    limit(maxCount)
-  ));
-  return snap.docs.map(d => {
-    type FirestoreEntryData = {
-      originalAmount?: unknown;
-      amount?: unknown;
-      currency?: unknown;
-      category?: unknown;
-      date?: unknown & { toDate?: () => Date };
-    };
-    const data = d.data() as FirestoreEntryData;
-    const dateVal = data.date?.toDate ? data.date.toDate() : (typeof data.date === 'string' ? new Date(data.date) : undefined);
-    return {
-      amount: Number(data.originalAmount ?? data.amount ?? 0),
-      currency: String(data.currency ?? ''),
-      category: String(data.category ?? ''),
-      date: dateVal ? dateVal.toISOString().split('T')[0] : ''
-    };
-  });
+  return getEntriesSummary({ userId, limit: maxCount });
 };
 
 export const processEntry = async (

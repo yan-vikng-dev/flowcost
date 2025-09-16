@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import type { Entry } from '@/types';
 import { useAuth } from '@/lib/auth-context';
 import { useEntriesCache } from '@/lib/entries-cache';
+import { getEntries } from '@/services/entries';
 
 interface UseEntriesOptions {
   startDate: Date;
@@ -47,8 +48,24 @@ export function useEntries(options: UseEntriesOptions) {
     }
 
     if (!cache) {
-      console.warn('EntriesCache provider not found, using direct Firestore queries');
-      return;
+      let aborted = false;
+      (async () => {
+        try {
+          setLoading(true);
+          const fetched = await getEntries({ userIds: memberIds, startTime, endTime, order: 'desc' });
+          if (!aborted) {
+            setEntries(fetched);
+            setLoading(false);
+            setError(null);
+          }
+        } catch (err) {
+          if (!aborted) {
+            setError(err as Error);
+            setLoading(false);
+          }
+        }
+      })();
+      return () => { aborted = true; };
     }
 
     const unsubscribe = cache.subscribe(
