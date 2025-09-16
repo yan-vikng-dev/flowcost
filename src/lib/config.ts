@@ -8,4 +8,4 @@ export const SERVICE_START_DATE = new Date(Date.UTC(2025, 0, 1, 0, 0, 0, 0));
 export const REGISTRATIONS_CLOSED = false;
 
 // Google Ads/Tag configuration
-export const GOOGLE_ADS_ID = process.env.NEXT_PUBLIC_GOOGLE_ADS_ID || 'AW-17572813812';
+export const GOOGLE_ADS_ID = process.env.NEXT_PUBLIC_GOOGLE_ADS_ID;
