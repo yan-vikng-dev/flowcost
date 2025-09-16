@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef } from 'react';
-import { processEntry } from '@/lib/ai/ai';
+import { processEntry } from '@/lib/ai/entry-processor';
 import { toast } from 'sonner';
 import { useAuth } from '@/lib/auth-context';
 import { db } from '@/lib/firebase';
@@ -93,7 +93,11 @@ export function LLMEntryInput({ onDateChange, onEntryCreated }: LLMEntryInputInl
     setIsLoading(true);
 
     try {
-      const result = await processEntry(inputText, selectedFile || undefined);
+      const result = await processEntry(
+        inputText,
+        selectedFile || undefined,
+        { userId: user.id, displayCurrency: user.displayCurrency }
+      );
       
       try {
         const parsed: ParsedEntry = JSON.parse(result);
