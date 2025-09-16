@@ -1,7 +1,0 @@
-User-agent: *
-Allow: /
-
-# Preferred host
-Host: flowcost.co
-
-

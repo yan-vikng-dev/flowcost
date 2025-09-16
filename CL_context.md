@@ -171,3 +171,31 @@ Multi-currency expense tracking with real-time collaboration.
 - entry: a single financial transaction, can be income or expense
 - recurring template: a template for a recurring transaction, can be daily, weekly, monthly, or yearly
 - recurring entry: a single instance of a recurring transaction, created from a recurring template
+
+## Analytics
+
+- **Firebase Analytics (GA4)**
+  - **Initialization**: Client-only via `getAnalytics(firebaseApp)` inside `src/lib/firebase-analytics.ts`. The GA4 `measurementId` is plumbed through `src/lib/firebase-app.ts` from `process.env.NEXT_PUBLIC_MEASUREMENT_ID`.
+  - **Helper**: Use `trackEvent(eventName, params)` exported from `src/lib/firebase.ts` (re-exports `src/lib/firebase-analytics.ts`). The helper no-ops on the server and when Analytics isn't available.
+  - **Tracked events**:
+    - `sign_up`: when onboarding completes in `src/app/onboarding/page.tsx`.
+      - Params: `method` (e.g., "google"), `user_id`, `currency`.
+    - `entry_created`: after a successful entry write.
+      - Manual form: `src/components/entry-form.tsx`
+      - LLM input: `src/components/llm-entry-input.tsx`
+      - Params: `source` ("manual"|"llm"), `type`, `amount`, `currency`, `category`, optional `confidence`, `had_file`.
+    - `invite_sent`: after sending a connection invite in `src/services/connections.ts`.
+      - Params: `invited_email_domain`.
+  - **Docs**: See Firebase guidance for GA4 on web, `measurementId`, and the Analytics SDK [`Firebase Analytics Web setup`](https://firebase.google.com/docs/analytics/get-started?platform=web#web_2).
+
+- **Google Ads gtag**
+  - **Loading**: `src/app/layout.tsx` loads `gtag.js` with `NEXT_PUBLIC_GOOGLE_ADS_ID` and runs `gtag('config', <ADS_ID>)`.
+  - **Consent Mode v2**: Defaults are set to denied in `gtag-consent-default`; `src/components/consent-manager.tsx` updates consent to granted on user approval and re-calls `gtag('config', <ADS_ID>)` as needed.
+  - **Coexistence with Firebase Analytics**: We do not call `gtag('config', 'G-<GA4>')` for GA4. Firebase Analytics is initialized via the SDK (`getAnalytics`) and handles GA4 events. If you ever want to share the same GA4 stream between direct `gtag()` calls and Firebase, follow the Firebase doc section "Use Firebase with existing gtag.js tagging" (avoid duplicate GA4 `gtag('config')` and initialize Firebase Analytics before sending `gtag()` events).
+
+- **Environments**
+  - Public envs are defined in `apphosting.yaml`: `NEXT_PUBLIC_MEASUREMENT_ID` (GA4) and `NEXT_PUBLIC_GOOGLE_ADS_ID` (Ads). Use distinct IDs for preview/staging to avoid polluting prod data.
+
+- **Privacy & Debugging**
+  - Tracking is disabled by default until the user grants consent via the consent manager.
+  - Use GA4 DebugView to verify events during local development; Firebase Analytics web typically surfaces localhost events automatically in DebugView.
