@@ -4,6 +4,9 @@ import "./globals.css";
 import { Providers } from "@/lib/providers";
 import { Toaster } from "@/components/ui/sonner";
 import { TopologyBackground } from "@/components/ui/topology-background";
+import Script from "next/script";
+import { GOOGLE_ADS_ID } from "@/lib/config";
+import ConsentManager from "@/components/consent-manager";
 
 const poppins = Poppins({
   variable: "--font-poppins",
@@ -30,6 +33,41 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        {/* Google tag (gtag.js) */}
+        <Script
+          id="gtag-consent-default"
+          strategy="afterInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `
+              window.dataLayer = window.dataLayer || [];
+              function gtag(){dataLayer.push(arguments);} 
+              gtag('consent', 'default', {
+                ad_storage: 'denied',
+                ad_user_data: 'denied',
+                ad_personalization: 'denied',
+                analytics_storage: 'denied',
+                wait_for_update: 500
+              });
+              gtag('js', new Date());
+            `,
+          }}
+        />
+        <Script
+          src={`https://www.googletagmanager.com/gtag/js?id=${GOOGLE_ADS_ID}`}
+          strategy="afterInteractive"
+        />
+        <Script
+          id="gtag-config"
+          strategy="afterInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `
+              window.gtag = window.gtag || function(){(window.dataLayer = window.dataLayer || []).push(arguments)};
+              gtag('config', '${GOOGLE_ADS_ID}');
+            `,
+          }}
+        />
+      </head>
       <body
         className={`${poppins.variable} font-sans antialiased overflow-visible`}
       >
@@ -37,6 +75,7 @@ export default function RootLayout({
           <TopologyBackground />
           {children}
           <Toaster position="bottom-right" />
+          <ConsentManager />
         </Providers>
       </body>
     </html>

@@ -129,9 +129,41 @@ export default function PrivacyPage() {
             <h2 className="text-xl font-semibold mb-4">11. Contact Us</h2>
             <p>
               If you have questions about this Privacy Policy, please contact me at:{" "}
-              <a href="mailto:yan.vikng@gmail.com" className="text-blue-600 hover:underline">
-                yan.vikng@gmail.com
+              <a href="mailto:yan@vikng.dev" className="text-blue-600 hover:underline">
+                yan@vikng.dev
               </a>
+            </p>
+          </section>
+
+          <section className="mb-8">
+            <h2 id="cookies" className="text-xl font-semibold mb-4">12. Cookies and Similar Technologies</h2>
+            <p className="mb-4">
+              We use cookies and similar technologies to operate the site, remember your preferences, and
+              measure performance. Non-essential cookies (such as analytics and advertising) are disabled
+              by default and will only be used if you give consent via the cookie banner. You can withdraw
+              your consent at any time.
+            </p>
+            <h3 className="text-lg font-medium mb-2">Types of cookies we use</h3>
+            <ul className="list-disc pl-6 space-y-1 mb-4">
+              <li><strong>Strictly necessary</strong>: Required for core functionality (e.g., authentication, security).</li>
+              <li><strong>Analytics</strong>: Help us understand usage and improve the app (only with your consent).</li>
+              <li><strong>Advertising/Personalization</strong>: Used for attribution and ad personalization with Google Ads (only with your consent).</li>
+            </ul>
+            <h3 className="text-lg font-medium mb-2">Vendors and technologies</h3>
+            <ul className="list-disc pl-6 space-y-1 mb-4">
+              <li>
+                <strong>Google Tags (gtag.js) and Consent Mode</strong>: We load Google tag with Consent Mode set to
+                "denied" by default. When you accept cookies, we update consent to allow analytics and ads storage. See
+                Google&apos;s privacy policy for details.
+              </li>
+            </ul>
+            <h3 className="text-lg font-medium mb-2">Managing your preferences</h3>
+            <p className="mb-2">
+              You can change or withdraw your consent at any time by clearing your browser cookies or by using the
+              cookie banner if it reappears. You can also manage cookies via your browser settings.
+            </p>
+            <p className="text-sm text-muted-foreground">
+              Note: Essential cookies cannot be turned off as they are necessary for the site to function.
             </p>
           </section>
   

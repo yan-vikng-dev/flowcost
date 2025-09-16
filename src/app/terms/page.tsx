@@ -95,8 +95,8 @@ export default function TermsPage() {
             <h2 className="text-xl font-semibold mb-4">10. Contact Information</h2>
             <p>
               For questions about these Terms of Service, please contact me at:{" "}
-              <a href="mailto:yan.vikng@gmail.com" className="text-blue-600 hover:underline">
-                yan.vikng@gmail.com
+              <a href="mailto:yan@vikng.dev" className="text-blue-600 hover:underline">
+                yan@vikng.dev
               </a>
             </p>
           </section>
