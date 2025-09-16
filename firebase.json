@@ -70,7 +70,15 @@
       ".git",
       "firebase-debug.log",
       "firebase-debug.*.log",
-      "functions"
+      "functions",
+      ".next",
+      ".next-dev",
+      ".turbo",
+      ".vercel",
+      "coverage",
+      "scripts/**",
+      "**/*.log",
+      "**/*.map"
     ],
     "alwaysDeployFromSource": false
   }

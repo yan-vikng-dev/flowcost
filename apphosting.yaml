@@ -10,6 +10,24 @@ runConfig:
 # Environment variables and secrets.
 env:
   # Firebase configuration - public variables
+  - variable: NODE_ENV
+    value: production
+    availability:
+      - BUILD
+      - RUNTIME
+
+  - variable: NEXT_TELEMETRY_DISABLED
+    value: "1"
+    availability:
+      - BUILD
+      - RUNTIME
+
+  - variable: NEXT_DISABLE_SOURCEMAPS
+    value: "1"
+    availability:
+      - BUILD
+      - RUNTIME
+
   - variable: NEXT_PUBLIC_FIREBASE_API_KEY
     value: AIzaSyAxNdSG8icf-rJXgty75jQpibJ-4brnV4o
     availability:

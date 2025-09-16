@@ -405,7 +405,7 @@ export default function Home() {
         <div className="container mx-auto px-4 h-[100svh] flex flex-col">
           <div className="flex-1 min-h-[85svh] flex items-center">
             <div className="max-w-4xl">
-              <h1 className="text-6xl sm:text-7xl md:text-8xl font-extrabold tracking-tight leading-[0.95]">
+              <h1 className="text-6xl sm:text-7xl md:text-8xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-foreground">
                 Flowcost
               </h1>
               <p className="ml-2 mt-6 text-2xl sm:text-3xl text-muted-foreground">
