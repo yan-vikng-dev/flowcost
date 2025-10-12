@@ -1,5 +1,5 @@
 {
-  "name": "user-application",
+  "name": "user-app",
   "private": true,
   "type": "module",
   "scripts": {

@@ -405,9 +405,9 @@ The data-ops package is already configured to export all queries under the `./qu
 Your applications need to include the data-ops package as a dependency to use the shared queries. In a monorepo setup, this is typically done using workspace references.
 
 ```json
-// apps/user-application/package.json
+// apps/user-app/package.json
 {
-  "name": "user-application",
+  "name": "user-app",
   "dependencies": {
     "@repo/data-ops": "workspace:^"
   }
@@ -425,7 +425,7 @@ Once your queries are built and exported, you can import and use them anywhere i
 Import your queries directly into server functions for handling API requests and data operations.
 
 ```typescript
-// apps/user-application/src/server/functions/payments.ts
+// apps/user-app/src/server/functions/payments.ts
 import { createServerFn } from "@tanstack/react-start";
 import {
   updateSubscription,
@@ -478,7 +478,7 @@ export const getUserSubscription = baseFunction.handler(async (ctx) => {
 Queries can also be used in middleware for authentication, authorization, and request preprocessing.
 
 ```typescript
-// apps/user-application/src/server/middleware/user.ts
+// apps/user-app/src/server/middleware/user.ts
 import { createMiddleware } from "@tanstack/react-start";
 import { getUserByEmail } from "@repo/data-ops/queries/users";
 
@@ -506,7 +506,7 @@ export const userLookupMiddleware = createMiddleware({
 Import and use queries in API routes for handling webhooks, REST endpoints, and other server-side API operations.
 
 ```typescript
-// apps/user-application/src/routes/api/webhook/polar.ts
+// apps/user-app/src/routes/api/webhook/polar.ts
 import { Subscription } from "@polar-sh/sdk/models/components/subscription.js";
 import { Webhooks } from "@polar-sh/tanstack-start";
 import { updateSubscription } from "@repo/data-ops/queries/polar";

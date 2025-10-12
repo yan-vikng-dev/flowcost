@@ -16,7 +16,7 @@ This installs all dependencies and builds required packages.
 
 ### User Application
 ```bash
-pnpm run dev:user-application
+pnpm run dev:user-app
 ```
 
 ### Data Service
@@ -28,7 +28,7 @@ pnpm run dev:data-service
 
 ### User Application (Cloudflare)
 ```bash
-pnpm run deploy:user-application
+pnpm run deploy:user-app
 ```
 
 ### Data Service
@@ -41,6 +41,6 @@ pnpm run deploy:data-service
 You can also navigate into any sub-application directory and work with it independently in your IDE:
 
 ```bash
-cd packages/user-application
+cd packages/user-app
 # Open in your preferred IDE
 ```

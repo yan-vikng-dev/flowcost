@@ -229,7 +229,7 @@ In the `packages/data-ops/src/auth/server.ts` file, check to make sure the corre
 Once, done run `pnpm run build:data-ops` from the root of the pnpm workspace.
 
 
-## Step Eight: instruct the user to setup env for user-application and test
-Tell the user then need the same env variables in the user-application as they have in the data-ops package.
+## Step Eight: instruct the user to setup env for user-app and test
+Tell the user then need the same env variables in the user-app as they have in the data-ops package.
 
 Once this is done, they should be able to run the user application and test auth.

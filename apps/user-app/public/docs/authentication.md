@@ -325,7 +325,7 @@ export const Route = createFileRoute("/api/auth/$")({
 Use the Better Auth client to integrate authentication into your React components. The client provides hooks and utilities for managing authentication state and user sessions.
 
 ```typescript
-// apps/user-application/src/lib/auth-client.ts
+// apps/user-app/src/lib/auth-client.ts
 import { createAuthClient } from "better-auth/react";
 
 const authClient = createAuthClient();
