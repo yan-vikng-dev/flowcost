@@ -9,25 +9,20 @@ console.log("[server-entry]: using custom server entry in 'src/server.ts'");
 
 export default {
   fetch(request: Request) {
-    const db = initDatabase({
-      host: env.DATABASE_HOST,
-      username: env.DATABASE_USERNAME,
-      password: env.DATABASE_PASSWORD,
-    });
-
-    setAuth({
-      secret: env.BETTER_AUTH_SECRET,
-      socialProviders: {
-        google: {
-          clientId: env.GOOGLE_CLIENT_ID,
-          clientSecret: env.GOOGLE_CLIENT_SECRET,
-        },
-      },
-      adapter: {
-        drizzleDb: db,
-        provider: "mysql",
-      },
-    });
+    const db = initDatabase(env.DB); // D1 binding
+    // setAuth({
+    //   secret: env.BETTER_AUTH_SECRET,
+    //   socialProviders: {
+    //     google: {
+    //       clientId: env.GOOGLE_CLIENT_ID,
+    //       clientSecret: env.GOOGLE_CLIENT_SECRET,
+    //     },
+    //   },
+    //   adapter: {
+    //     drizzleDb: db,
+    //     provider: "mysql",
+    //   },
+    // });
     return handler.fetch(request, {
       context: {
         fromFetch: true,

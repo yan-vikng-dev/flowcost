@@ -9,8 +9,15 @@
   },
   "routes": [
     {
-      "pattern": "flowcost.com",
+      "pattern": "flowcost.co",
       "custom_domain": true
+    }
+  ],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "flowcost-db",
+      "database_id": "e2dc49b0-3d97-4ada-9135-0a0c1410f54c"
     }
   ]
 }
