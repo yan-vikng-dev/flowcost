@@ -8,3 +8,4 @@
 - secrets are stored in the .env file in the user-app package
 - public variables are stored in the wrangler.jsonc file in the user-app package
 - running cf-typegen generates the worker-configuration.d.ts file in the user-app package according to the two env providers above
+- .env file is not available to worker deployment. needs explicit `wrangler secret put VAR_NAME` command
