@@ -45,7 +45,7 @@ This creates type definitions allowing you to safely import and use Cloudflare e
 import { env } from "cloudflare:workers";
 
 // Now env is fully typed with your Wrangler configuration
-console.log(env.MY_VAR); // TypeScript knows this exists
+console.log(env.PUBLIC_VAR); // TypeScript knows this exists
 ```
 
 ### Wrangler Configuration
@@ -60,7 +60,7 @@ The `wrangler.jsonc` file configures your Cloudflare deployment:
   "compatibility_flags": ["nodejs_compat"],
   "main": "./src/server.ts",  // Custom server entry point
   "vars": {
-    "MY_VAR": "Hello from Cloudflare"
+    "PUBLIC_VAR": "Hello from Cloudflare"
   }
 }
 ```
@@ -214,7 +214,7 @@ export const exampleFunction = baseFunction
   .handler(async (ctx) => {
     // Access validated input: ctx.data
     // Access middleware context: ctx.context
-    // Access Cloudflare env: env.MY_VAR
+    // Access Cloudflare env: env.PUBLIC_VAR
     return 'Server response';
   });
 ```

@@ -4,8 +4,12 @@
   "compatibility_date": "2025-09-02",
   "compatibility_flags": ["nodejs_compat"],
   "main": "./src/server.ts",
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1
+  },
   "vars": {
-    "MY_VAR": "Hello from Cloudflare",
+    "GOOGLE_CLIENT_ID": "929719393907-apf36l038e899nof9ncpj21vlk92s9ed.apps.googleusercontent.com",
   },
   "routes": [
     {
@@ -15,6 +19,7 @@
   ],
   "d1_databases": [
     {
+      "remote": true,
       "binding": "DB",
       "database_name": "flowcost-db",
       "database_id": "e2dc49b0-3d97-4ada-9135-0a0c1410f54c"
