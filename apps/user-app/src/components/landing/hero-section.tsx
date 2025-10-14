@@ -1,40 +1,22 @@
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { ArrowRight, Github, Sparkles, Zap, Shield } from "lucide-react";
+import { ArrowRight, Github } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 
 export function HeroSection() {
   return (
-    <section className="relative px-6 lg:px-8 py-24 sm:py-32">
-      <div className="mx-auto max-w-4xl text-center">
-        <div className="mb-8 flex flex-wrap justify-center gap-2">
-          <Badge variant="secondary" className="mb-4">
-            <Sparkles className="mr-1 h-3 w-3" />
-            Production-Ready
-          </Badge>
-          <Badge variant="secondary" className="mb-4">
-            <Zap className="mr-1 h-3 w-3" />
-            Edge-Optimized
-          </Badge>
-          <Badge variant="secondary" className="mb-4">
-            <Shield className="mr-1 h-3 w-3" />
-            Type-Safe
-          </Badge>
-        </div>
-
-        <h1 className="text-4xl font-bold tracking-tight text-foreground sm:text-6xl lg:text-7xl">
-          Modern SaaS
-          <span className="block text-primary">Starter Kit</span>
+    <section className="relative min-h-screen flex items-center">
+      <div className="mx-auto max-w-4xl text-center space-y-6">
+        <h1 className="text-4xl font-bold tracking-tight sm:text-6xl lg:text-7xl">
+          Your personal
+          <span className="block text-primary">Expense Tracker</span>
         </h1>
 
-        <p className="mt-6 text-lg leading-8 text-muted-foreground max-w-2xl mx-auto">
-          Ship your SaaS faster with pre-configured authentication, database,
-          and payments. Built on TanStack Start with React 19, TypeScript, and
-          edge-ready infrastructure. Everything you need to launch your next
-          project.
+        <p className="text-lg leading-8 text-muted-foreground max-w-2xl">
+          Track your expenses, income, and budgets with ease.
+          Talk to your personal AI assistant to manage your data and get insights from anywhere, using our free WhatsApp integration.
         </p>
 
-        <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
           <Link to="/docs">
             <Button size="lg" className="group">
               Get Started
@@ -42,15 +24,15 @@ export function HeroSection() {
             </Button>
           </Link>
 
-          <Button variant="outline" size="lg" asChild>
+          <Button variant="outline" size="lg" disabled>
             <a
-              href="https://github.com/backpine/saas-kit"
+              href="https://github.com/yan-vikng-dev/flowcost"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center"
             >
-              <Github className="mr-2 h-4 w-4" />
-              View on GitHub
+              <Github className="mr-2"/>
+              Coming soon
             </a>
           </Button>
         </div>

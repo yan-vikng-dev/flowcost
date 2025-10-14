@@ -7,6 +7,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { authClient } from "@/lib/auth-client";
+import { Link } from "@tanstack/react-router";
+import { HomeIcon } from "lucide-react";
 
 export function GoogleLogin() {
   const handleGoogleSignIn = async () => {
@@ -24,9 +26,10 @@ export function GoogleLogin() {
           <CardDescription>Sign in to your account to continue</CardDescription>
         </CardHeader>
         <CardContent>
+          <div className="flex flex-col gap-2">
           <Button
             onClick={handleGoogleSignIn}
-            className="w-full h-12 text-base"
+            className="w-full text-base"
             variant="outline"
           >
             <svg className="mr-2 h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
@@ -37,6 +40,13 @@ export function GoogleLogin() {
             </svg>
             Continue with Google
           </Button>
+          <Link to="/">
+            <Button variant="outline" className="w-full text-base">
+              <HomeIcon className="h-4 w-4" />
+              Back to Home
+            </Button>
+          </Link>
+          </div>
         </CardContent>
       </Card>
     </div>

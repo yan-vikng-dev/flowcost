@@ -1,0 +1,2 @@
+- text defaults to text-foreground, so no need to set explicitly
+- prefer parent `space-y-x` and `gap` over individual children `mb-x` and `mt-x`

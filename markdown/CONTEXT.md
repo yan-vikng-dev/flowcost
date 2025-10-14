@@ -46,8 +46,14 @@
   - `pnpm run better-auth:generate` – Generate Better Auth schema into `src/drizzle/auth-schema.ts`
   - `pnpm run drizzle:generate` – Generate SQL migrations into `src/drizzle`
   - `pnpm run drizzle:migrate` – Apply migrations to configured database
-  - `pnpm run drizzle:pull` – Pull existing schema into TypeScript
+  - `pnpm run drizzle:pull` – Pull existing schema into TypeScript (optional, bootstrap only)
 - See detailed provider guides in `apps/user-app/public/docs/database.md:1` (PostgreSQL/Neon, MySQL/PlanetScale, Cloudflare D1 examples and runtime setup).
+
+**Schema-First Approach**
+- We use a schema-first workflow: the Drizzle schema in code is the source of truth.
+- Define/own tables under `packages/data-ops/src/drizzle/` (app tables in `schema.ts:1`; auth tables generated into `auth-schema.ts:1`).
+- Create migrations from the schema with `pnpm --filter data-ops run drizzle:generate`, then apply with `drizzle:migrate` and commit them.
+- `drizzle:pull` is supported to bootstrap from an existing DB, but ongoing development should remain schema-first (code → migrations → DB).
 
 **Authentication Flow (Better Auth)**
 - Server initialization happens per-request in `apps/user-app/src/server.ts:1`:
@@ -100,4 +106,3 @@
 - Configure D1 or another DB provider; update `packages/data-ops/drizzle.config.ts:1` and `packages/data-ops/src/database/setup.ts:1` accordingly
 - Set required secrets: `BETTER_AUTH_SECRET`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `POLAR_SECRET`, and any DB credentials your provider needs
 - Build `data-ops`, run migrations, and deploy each Worker independently
-

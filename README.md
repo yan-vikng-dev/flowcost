@@ -41,6 +41,6 @@ pnpm run deploy:data-service
 You can also navigate into any sub-application directory and work with it independently in your IDE:
 
 ```bash
-cd packages/user-app
+cd apps/user-app
 # Open in your preferred IDE
 ```

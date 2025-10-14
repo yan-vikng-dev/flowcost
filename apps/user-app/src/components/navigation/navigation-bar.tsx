@@ -1,6 +1,6 @@
 import * as React from "react";
 import { Link } from "@tanstack/react-router";
-import { Menu, Github, ExternalLink, LogIn } from "lucide-react";
+import { MenuIcon, ExternalLinkIcon, LogInIcon, BookIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -15,25 +15,39 @@ import { ThemeToggle } from "@/components/theme";
 import { authClient } from "@/lib/auth-client";
 import { AccountDialog } from "@/components/auth/account-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { WhatsappIcon, GithubIcon, type MergedIconComponent } from "@/components/icons";
 
 interface NavigationItem {
   label: string;
   href: string;
   isExternal?: boolean;
-  scrollTo?: string;
+  isDisabled?: boolean;
+  hideLabel?: boolean;
+  icon?: MergedIconComponent;
 }
 
 const navigationItems: NavigationItem[] = [
-  { label: "Features", href: "/#features", scrollTo: "features" },
   {
     label: "Documentation",
     href: "/docs",
-    isExternal: false,
+    isDisabled: true,
+    icon: BookIcon,
   },
   {
     label: "GitHub",
-    href: "https://github.com/backpine/saas-kit",
+    href: "https://github.com/yan-vikng-dev/flowcost",
     isExternal: true,
+    isDisabled: true,
+    hideLabel: true,
+    icon: GithubIcon,
+  },
+  {
+    label: "WhatsApp",
+    href: "https://wa.me/84906432245",
+    isExternal: true,
+    isDisabled: true,
+    hideLabel: true,
+    icon: WhatsappIcon,
   },
 ];
 
@@ -63,17 +77,7 @@ export function NavigationBar() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const handleSmoothScroll = (elementId: string) => {
-    const element = document.getElementById(elementId);
-    if (element) {
-      element.scrollIntoView({
-        behavior: "smooth",
-        block: "start",
-      });
-    }
-  };
-
-  const handleNavClick = (item: NavigationItem) => {
+  const handleNavClick = () => {
     setIsOpen(false);
   };
 
@@ -91,14 +95,11 @@ export function NavigationBar() {
           {/* Logo and Brand */}
           <Link
             to="/"
-            className="group flex items-center space-x-3 no-underline"
           >
-            <div className="flex flex-col">
-              <span className="text-lg lg:text-xl font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text text-transparent group-hover:from-primary group-hover:to-primary/80 transition-all duration-300">
-                SaaS Starter Kit
-              </span>
-              <span className="text-xs text-muted-foreground font-medium tracking-wider">
-                on CLOUDFLARE
+            <div className="flex items-center gap-2">
+              <img src="/logo/logo192.png" alt="Flowcost" className="size-12" />
+              <span className="text-lg lg:text-xl font-bold bg-gradient-to-r from-primary to-foreground bg-clip-text text-transparent hover:from-foreground hover:to-primary transition-all duration-300">
+                Flowcost
               </span>
             </div>
           </Link>
@@ -112,22 +113,20 @@ export function NavigationBar() {
                     href={item.href}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground transition-all duration-300 hover:bg-accent/50 group"
+                    className="flex items-center space-x-2 px-4 py-2 gap-2 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground transition-all duration-300 hover:bg-accent/50 group"
                   >
-                    <span>{item.label}</span>
-                    {item.label === "GitHub" ? (
-                      <Github className="h-4 w-4" />
-                    ) : (
-                      <ExternalLink className="h-4 w-4" />
-                    )}
+                    {!item.hideLabel && item.label}
+                    {item.icon && <item.icon className="size-4"/>}
                   </a>
                 ) : (
                   <Link
                     to={item.href}
-                    onClick={() => handleNavClick(item)}
-                    className="px-4 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground transition-all duration-300 hover:bg-accent/50 block"
+                    onClick={() => handleNavClick()}
+                    className="flex items-center px-4 py-2 gap-2 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground transition-all duration-300 hover:bg-accent/50"
                   >
-                    {item.label}
+                    {!item.hideLabel && item.label}
+                    {item.icon && <item.icon className="h-4 w-4" />}
+                    {item.isExternal && <ExternalLinkIcon className="h-4 w-4" />}
                   </Link>
                 )}
                 <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-0 h-0.5 bg-gradient-to-r from-primary to-primary/80 transition-all duration-300 group-hover:w-3/4" />
@@ -168,7 +167,7 @@ export function NavigationBar() {
                 variant="default"
                 className="gap-2"
               >
-                <LogIn className="h-4 w-4" />
+                <LogInIcon className="h-4 w-4" />
                 Sign In
               </Button>
             )}
@@ -184,7 +183,7 @@ export function NavigationBar() {
                   size="icon"
                   className="relative h-10 w-10 hover:bg-accent/50"
                 >
-                  <Menu className="h-5 w-5" />
+                  <MenuIcon className="h-5 w-5" />
                   <span className="sr-only">Open navigation menu</span>
                 </Button>
               </SheetTrigger>
@@ -213,16 +212,13 @@ export function NavigationBar() {
                           onClick={() => setIsOpen(false)}
                         >
                           <span>{item.label}</span>
-                          {item.label === "GitHub" ? (
-                            <Github className="h-4 w-4" />
-                          ) : (
-                            <ExternalLink className="h-4 w-4" />
-                          )}
+                          {item.icon && <item.icon className="h-4 w-4" />}
+                          {item.isExternal && <ExternalLinkIcon className="h-4 w-4" />}
                         </a>
                       ) : (
                         <Link
                           to={item.href}
-                          onClick={() => handleNavClick(item)}
+                          onClick={() => handleNavClick()}
                           className="flex items-center w-full px-4 py-3 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground transition-all duration-300 hover:bg-accent/50 text-left"
                         >
                           {item.label}
@@ -260,7 +256,7 @@ export function NavigationBar() {
                       variant="default"
                       className="w-full gap-2"
                     >
-                      <LogIn className="h-4 w-4" />
+                      <LogInIcon className="h-4 w-4" />
                       Sign In with Google
                     </Button>
                   )}
