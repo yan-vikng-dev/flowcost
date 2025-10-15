@@ -4,13 +4,18 @@
  */
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
-  "name": "saas-kit-data-service",
+  "name": "backend-service",
   "main": "./src/index.ts",
   "compatibility_date": "2025-04-01",
   "compatibility_flags": ["nodejs_compat"],
   "observability": {
     "enabled": true,
 		"head_sampling_rate": 1
+  },
+  "triggers": {
+	"crons": [
+		"0 0 * * *"
+	]
   },
   "routes": [
 		{
@@ -28,7 +33,7 @@
 	],
 	"kv_namespaces": [
 		{
-			"binding": "ER_KV",
+			"binding": "CACHE",
 			"id": "f52e1d3b9f2c4428a3b0f10a663cb5a7",
 			"remote": true
 		}

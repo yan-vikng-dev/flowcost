@@ -21,7 +21,7 @@ pnpm run dev:webapp
 
 ### Data Service
 ```bash
-pnpm run dev:data-service
+pnpm run dev:backend-service
 ```
 
 ## Deployment
@@ -33,7 +33,7 @@ pnpm run deploy:webapp
 
 ### Data Service
 ```bash
-pnpm run deploy:data-service
+pnpm run deploy:backend-service
 ```
 
 ## Working with Individual Apps

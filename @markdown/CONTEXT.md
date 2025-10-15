@@ -3,7 +3,7 @@
 
 **Monorepo Layout**
 - `apps/webapp` – React 19 + TanStack Start app running as a Worker. Entry: `apps/webapp/src/server.ts:1`
-- `apps/data-service` – Cloudflare Worker using Hono. Entry: `apps/data-service/src/index.ts:1`
+- `apps/backend-service` – Cloudflare Worker using Hono. Entry: `apps/backend-service/src/index.ts:1`
 - `packages/data-ops` – Shared data/auth layer (Drizzle ORM schemas, Better Auth setup, queries). Main setup: `packages/data-ops/src/auth/server.ts:1`, `packages/data-ops/src/database/setup.ts:1`
 - Root workspace config: `pnpm-workspace.yaml:1`, `package.json:1`
 
@@ -16,19 +16,19 @@
 **Tooling & Scripts (root)**
 - `pnpm run setup` – Install deps and build the shared `data-ops` package
 - `pnpm run dev:webapp` – Dev server for the user app
-- `pnpm run dev:data-service` – Dev for the Hono worker
+- `pnpm run dev:backend-service` – Dev for the Hono worker
 - `pnpm run deploy:webapp` – Build `data-ops`, then deploy user app via Wrangler
-- `pnpm run deploy:data-service` – Build `data-ops`, then deploy data-service via Wrangler
+- `pnpm run deploy:backend-service` – Build `data-ops`, then deploy backend-service via Wrangler
 
 **Local Development**
 - Install once from repo root: `pnpm run setup`
 - Start the user app: `pnpm run dev:webapp` (Vite on port 3000)
-- Start the data-service: `pnpm run dev:data-service` (Wrangler dev)
+- Start the backend-service: `pnpm run dev:backend-service` (Wrangler dev)
 - You can work inside each app/package independently; paths are under `apps/*` and `packages/*` (note: README’s “packages/webapp” path is outdated; use `apps/webapp`).
 
 **Cloudflare Configuration**
 - User app Worker config: `apps/webapp/wrangler.jsonc:1` (sets `main`, `compatibility_date`, `compatibility_flags`, `routes`, `vars`, and D1 `d1_databases`)
-- Data service Worker config: `apps/data-service/wrangler.jsonc:1`
+- Data service Worker config: `apps/backend-service/wrangler.jsonc:1`
 - Type generation after changing Wrangler config: run `pnpm --filter webapp run cf-typegen` (or from inside `apps/webapp`, `pnpm run cf-typegen`). This updates `apps/webapp/worker-configuration.d.ts:1`
 
 **Environment & Secrets**
@@ -77,8 +77,8 @@
 - UI stack: Tailwind v4 + shadcn/ui components under `apps/webapp/src/components`
 
 **Backend Service (Hono)**
-- Entry and router: `apps/data-service/src/index.ts:1`, app instance in `apps/data-service/src/hono/app.ts:1`
-- Deployed as a separate Worker via `pnpm run deploy:data-service`
+- Entry and router: `apps/backend-service/src/index.ts:1`, app instance in `apps/backend-service/src/hono/app.ts:1`
+- Deployed as a separate Worker via `pnpm run deploy:backend-service`
 
 **Shared Package (`@repo/data-ops`)**
 - Auth setup and lifecycle: `packages/data-ops/src/auth/setup.ts:1`, `packages/data-ops/src/auth/server.ts:1`
@@ -88,11 +88,11 @@
 
 **Testing**
 - User app: Vitest configured in `apps/webapp/package.json:1`, with `@testing-library` and jsdom
-- Data service: Vitest with Workers pool in `apps/data-service/package.json:1`
+- Data service: Vitest with Workers pool in `apps/backend-service/package.json:1`
 
 **Deployment**
 - User app: `pnpm run deploy:webapp` (builds `data-ops`, then `wrangler deploy` using `apps/webapp/wrangler.jsonc:1`)
-- Data service: `pnpm run deploy:data-service` (builds `data-ops`, then `wrangler deploy` using `apps/data-service/wrangler.jsonc:1`)
+- Data service: `pnpm run deploy:backend-service` (builds `data-ops`, then `wrangler deploy` using `apps/backend-service/wrangler.jsonc:1`)
 - Domain routing for user app is configured in `apps/webapp/wrangler.jsonc:1` under `routes` (update `pattern` before production)
 
 **Gotchas & Tips**

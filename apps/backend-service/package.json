@@ -1,5 +1,5 @@
 {
-  "name": "data-service",
+  "name": "backend-service",
   "version": "0.0.0",
   "private": true,
   "scripts": {
@@ -18,7 +18,8 @@
     "wrangler": "^4.42.2"
   },
   "dependencies": {
-    "@repo/data-ops": "workspace:*",
+    "@repo/data-ops": "workspace:^",
+    "@repo/shared-config": "workspace:^",
     "hono": "^4.9.11",
     "zod": "^4.1.12"
   }

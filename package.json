@@ -10,8 +10,8 @@
     "deploy": "turbo run deploy",
     "dev:webapp": "pnpm run --filter webapp dev",
     "deploy:webapp": "pnpm run build:data-ops && pnpm run --filter webapp deploy",
-    "dev:data-service": "pnpm run --filter data-service dev",
-    "deploy:data-service": "pnpm run build:data-ops && pnpm run --filter data-service deploy"
+    "dev:backend-service": "pnpm run --filter backend-service dev",
+    "deploy:backend-service": "pnpm run build:data-ops && pnpm run --filter backend-service deploy"
   },
   "keywords": [],
   "author": "",

@@ -18,11 +18,14 @@ importers:
         specifier: ^5.9.3
         version: 5.9.3
 
-  apps/data-service:
+  apps/backend-service:
     dependencies:
       '@repo/data-ops':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../packages/data-ops
+      '@repo/shared-config':
+        specifier: workspace:^
+        version: link:../../packages/shared-config
       hono:
         specifier: ^4.9.11
         version: 4.9.11
