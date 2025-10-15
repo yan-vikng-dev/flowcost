@@ -25,5 +25,11 @@ export const updateExchangeRates = async (controller: ScheduledController, env: 
   }
 
   const db = getDb();
-  await db.insert(exchange_rates).values(newRates);
+  await db
+    .insert(exchange_rates)
+    .values(newRates)
+    .onConflictDoUpdate({
+      target: exchange_rates.date,
+      set: { rates: newRates.rates },
+    });
 };
