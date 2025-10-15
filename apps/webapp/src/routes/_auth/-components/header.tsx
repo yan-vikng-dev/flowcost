@@ -18,13 +18,16 @@ export function Header() {
     <header className="flex h-16 items-center justify-between border-b border-border bg-background px-6">
       {/* Left side - Logo */}
       <div className="flex items-center gap-2">
-        <Link to="/">
+        <Link to="/app">
           <img src="/logo/logo192.png" alt="Flowcost" className="size-12" />
         </Link>
       </div>
 
-      {/* Right side - Notifications and user menu */}
+      {/* Right side - Settings, Notifications and user menu */}
       <div className="flex items-center gap-2">
+        <Button asChild variant="ghost">
+          <Link to="/app/settings/preferences">Settings</Link>
+        </Button>
         <Button variant="ghost" size="icon" className="relative">
           <BellIcon className="h-5 w-5" />
           {/* <span className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-destructive"></span> */}

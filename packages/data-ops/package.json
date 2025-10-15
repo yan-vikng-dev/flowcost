@@ -30,7 +30,8 @@
     "drizzle:generate": "drizzle-kit generate",
     "drizzle:migrate": "drizzle-kit migrate",
     "drizzle:pull": "drizzle-kit pull",
-    "drizzle:studio": "drizzle-kit studio"
+    "drizzle:studio": "drizzle-kit studio",
+    "drizzle:push": "drizzle-kit push"
   },
   "keywords": [],
   "author": "",

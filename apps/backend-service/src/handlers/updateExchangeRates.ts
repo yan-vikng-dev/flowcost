@@ -1,5 +1,5 @@
 import { getDb } from "@repo/data-ops/database/setup";
-import { exchange_rates, InsertExchangeRates } from "@repo/data-ops/drizzle/schemas/exchange_rates";
+import { exchange_rates, InsertExchangeRate } from "@repo/data-ops/drizzle/schemas/exchange_rates";
 import { Currency } from "@repo/shared-config";
 
 type ExchangeRateResponse = {
@@ -19,7 +19,7 @@ export const updateExchangeRates = async (controller: ScheduledController, env: 
   const result = await fetch(url)
   const data = await result.json() as ExchangeRateResponse;
 
-  const newRates: InsertExchangeRates  = {
+  const newRates: InsertExchangeRate  = {
     date: new Date().toISOString().split('T')[0],
     rates: data.conversion_rates,
   }

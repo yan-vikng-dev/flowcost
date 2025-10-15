@@ -6,6 +6,7 @@ import { initDatabase } from "@repo/data-ops/database/setup";
 export default class DataService extends WorkerEntrypoint<Env> {
   
   fetch(request: Request) {
+    initDatabase(this.env.DB);
     return app.fetch(request, this.env, this.ctx);
   }
 

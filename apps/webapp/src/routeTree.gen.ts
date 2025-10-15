@@ -13,9 +13,7 @@ import { Route as AuthRouteRouteImport } from './routes/_auth/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthAppIndexRouteImport } from './routes/_auth/app/index'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth.$'
-import { Route as AuthAppPolarSubscriptionsRouteImport } from './routes/_auth/app/polar/subscriptions'
-import { Route as AuthAppPolarPortalRouteImport } from './routes/_auth/app/polar/portal'
-import { Route as AuthAppPolarCheckoutSuccessRouteImport } from './routes/_auth/app/polar/checkout.success'
+import { Route as AuthAppSettingsPreferencesRouteImport } from './routes/_auth/app/settings/preferences'
 
 const AuthRouteRoute = AuthRouteRouteImport.update({
   id: '/_auth',
@@ -36,21 +34,10 @@ const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   path: '/api/auth/$',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthAppPolarSubscriptionsRoute =
-  AuthAppPolarSubscriptionsRouteImport.update({
-    id: '/app/polar/subscriptions',
-    path: '/app/polar/subscriptions',
-    getParentRoute: () => AuthRouteRoute,
-  } as any)
-const AuthAppPolarPortalRoute = AuthAppPolarPortalRouteImport.update({
-  id: '/app/polar/portal',
-  path: '/app/polar/portal',
-  getParentRoute: () => AuthRouteRoute,
-} as any)
-const AuthAppPolarCheckoutSuccessRoute =
-  AuthAppPolarCheckoutSuccessRouteImport.update({
-    id: '/app/polar/checkout/success',
-    path: '/app/polar/checkout/success',
+const AuthAppSettingsPreferencesRoute =
+  AuthAppSettingsPreferencesRouteImport.update({
+    id: '/app/settings/preferences',
+    path: '/app/settings/preferences',
     getParentRoute: () => AuthRouteRoute,
   } as any)
 
@@ -58,17 +45,13 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/app': typeof AuthAppIndexRoute
-  '/app/polar/portal': typeof AuthAppPolarPortalRoute
-  '/app/polar/subscriptions': typeof AuthAppPolarSubscriptionsRoute
-  '/app/polar/checkout/success': typeof AuthAppPolarCheckoutSuccessRoute
+  '/app/settings/preferences': typeof AuthAppSettingsPreferencesRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/app': typeof AuthAppIndexRoute
-  '/app/polar/portal': typeof AuthAppPolarPortalRoute
-  '/app/polar/subscriptions': typeof AuthAppPolarSubscriptionsRoute
-  '/app/polar/checkout/success': typeof AuthAppPolarCheckoutSuccessRoute
+  '/app/settings/preferences': typeof AuthAppSettingsPreferencesRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -76,36 +59,20 @@ export interface FileRoutesById {
   '/_auth': typeof AuthRouteRouteWithChildren
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/_auth/app/': typeof AuthAppIndexRoute
-  '/_auth/app/polar/portal': typeof AuthAppPolarPortalRoute
-  '/_auth/app/polar/subscriptions': typeof AuthAppPolarSubscriptionsRoute
-  '/_auth/app/polar/checkout/success': typeof AuthAppPolarCheckoutSuccessRoute
+  '/_auth/app/settings/preferences': typeof AuthAppSettingsPreferencesRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths:
-    | '/'
-    | '/api/auth/$'
-    | '/app'
-    | '/app/polar/portal'
-    | '/app/polar/subscriptions'
-    | '/app/polar/checkout/success'
+  fullPaths: '/' | '/api/auth/$' | '/app' | '/app/settings/preferences'
   fileRoutesByTo: FileRoutesByTo
-  to:
-    | '/'
-    | '/api/auth/$'
-    | '/app'
-    | '/app/polar/portal'
-    | '/app/polar/subscriptions'
-    | '/app/polar/checkout/success'
+  to: '/' | '/api/auth/$' | '/app' | '/app/settings/preferences'
   id:
     | '__root__'
     | '/'
     | '/_auth'
     | '/api/auth/$'
     | '/_auth/app/'
-    | '/_auth/app/polar/portal'
-    | '/_auth/app/polar/subscriptions'
-    | '/_auth/app/polar/checkout/success'
+    | '/_auth/app/settings/preferences'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -144,25 +111,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAuthSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_auth/app/polar/subscriptions': {
-      id: '/_auth/app/polar/subscriptions'
-      path: '/app/polar/subscriptions'
-      fullPath: '/app/polar/subscriptions'
-      preLoaderRoute: typeof AuthAppPolarSubscriptionsRouteImport
-      parentRoute: typeof AuthRouteRoute
-    }
-    '/_auth/app/polar/portal': {
-      id: '/_auth/app/polar/portal'
-      path: '/app/polar/portal'
-      fullPath: '/app/polar/portal'
-      preLoaderRoute: typeof AuthAppPolarPortalRouteImport
-      parentRoute: typeof AuthRouteRoute
-    }
-    '/_auth/app/polar/checkout/success': {
-      id: '/_auth/app/polar/checkout/success'
-      path: '/app/polar/checkout/success'
-      fullPath: '/app/polar/checkout/success'
-      preLoaderRoute: typeof AuthAppPolarCheckoutSuccessRouteImport
+    '/_auth/app/settings/preferences': {
+      id: '/_auth/app/settings/preferences'
+      path: '/app/settings/preferences'
+      fullPath: '/app/settings/preferences'
+      preLoaderRoute: typeof AuthAppSettingsPreferencesRouteImport
       parentRoute: typeof AuthRouteRoute
     }
   }
@@ -170,16 +123,12 @@ declare module '@tanstack/react-router' {
 
 interface AuthRouteRouteChildren {
   AuthAppIndexRoute: typeof AuthAppIndexRoute
-  AuthAppPolarPortalRoute: typeof AuthAppPolarPortalRoute
-  AuthAppPolarSubscriptionsRoute: typeof AuthAppPolarSubscriptionsRoute
-  AuthAppPolarCheckoutSuccessRoute: typeof AuthAppPolarCheckoutSuccessRoute
+  AuthAppSettingsPreferencesRoute: typeof AuthAppSettingsPreferencesRoute
 }
 
 const AuthRouteRouteChildren: AuthRouteRouteChildren = {
   AuthAppIndexRoute: AuthAppIndexRoute,
-  AuthAppPolarPortalRoute: AuthAppPolarPortalRoute,
-  AuthAppPolarSubscriptionsRoute: AuthAppPolarSubscriptionsRoute,
-  AuthAppPolarCheckoutSuccessRoute: AuthAppPolarCheckoutSuccessRoute,
+  AuthAppSettingsPreferencesRoute: AuthAppSettingsPreferencesRoute,
 }
 
 const AuthRouteRouteWithChildren = AuthRouteRoute._addFileChildren(
