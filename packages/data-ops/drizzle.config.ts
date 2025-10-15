@@ -1,7 +1,7 @@
 import type { Config } from "drizzle-kit";
 const config: Config = {
-  out: "./src/drizzle",
-  schema: ["./src/drizzle/*.ts"],
+  schema: "./src/drizzle/schemas/*.ts",
+  out: "./src/drizzle/migrations",
   dialect: "sqlite",
   driver: "d1-http",
   dbCredentials: {
@@ -9,7 +9,7 @@ const config: Config = {
     databaseId: process.env.CLOUDFLARE_DATABASE_ID!,
     token: process.env.CLOUDFLARE_D1_TOKEN!,
   },
-  tablesFilter: ["!_cf_KV", "!auth_*"],
+  tablesFilter: ["!_cf_KV"],
 };
 
 export default config satisfies Config;

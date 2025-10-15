@@ -5,8 +5,11 @@
   "scripts": {
     "setup": "pnpm i && pnpm run build:data-ops",
     "build:data-ops": "pnpm run --filter data-ops build",
-    "dev:user-app": "pnpm run --filter user-app dev",
-    "deploy:user-app": "pnpm run build:data-ops && pnpm run --filter user-app deploy",
+    "build": "turbo run build",
+    "test": "turbo run test",
+    "deploy": "turbo run deploy",
+    "dev:webapp": "pnpm run --filter webapp dev",
+    "deploy:webapp": "pnpm run build:data-ops && pnpm run --filter webapp deploy",
     "dev:data-service": "pnpm run --filter data-service dev",
     "deploy:data-service": "pnpm run build:data-ops && pnpm run --filter data-service deploy"
   },
@@ -16,6 +19,7 @@
   "packageManager": "pnpm@10.14.0",
   "devDependencies": {
     "@types/node": "^24.7.2",
+    "turbo": "^2.5.8",
     "typescript": "^5.9.3"
   }
 }

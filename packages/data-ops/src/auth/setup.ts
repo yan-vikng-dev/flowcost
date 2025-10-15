@@ -13,16 +13,16 @@ export const createBetterAuth = (config: {
     },
     socialProviders: config.socialProviders,
     user: {
-      modelName: "auth_user",
+      modelName: "auth_users",
     },
     session: {
-      modelName: "auth_session",
+      modelName: "auth_sessions",
     },
     verification: {
-      modelName: "auth_verification",
+      modelName: "auth_verifications",
     },
     account: {
-      modelName: "auth_account",
+      modelName: "auth_accounts",
     },
   });
 };

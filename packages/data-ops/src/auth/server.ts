@@ -1,11 +1,11 @@
 import { createBetterAuth } from "@/auth/setup";
 import { getDb } from "@/database/setup";
 import {
-  auth_account,
-  auth_session,
-  auth_verification,
-  auth_user,
-} from "@/drizzle/auth-schema";
+  auth_accounts,
+  auth_sessions,
+  auth_verifications,
+  auth_users,
+} from "@/drizzle/schemas/auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 
 let betterAuth: ReturnType<typeof createBetterAuth>;
@@ -22,10 +22,10 @@ export function setAuth(
     database: drizzleAdapter(config.adapter.drizzleDb, {
       provider: config.adapter.provider,
       schema: {
-        auth_user,
-        auth_account,
-        auth_session,
-        auth_verification,
+        auth_users,
+        auth_accounts,
+        auth_sessions,
+        auth_verifications,
       },
     }),
     ...config,
