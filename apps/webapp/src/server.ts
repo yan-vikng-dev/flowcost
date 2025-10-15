@@ -1,4 +1,4 @@
-// src/server.ts - TanStack Start Server Entry
+// src/server.ts - TanStack Start Server Entry for cloudflare worker
 import { setAuth } from "@repo/data-ops/auth/server";
 import { initDatabase } from "@repo/data-ops/database/setup";
 import handler from "@tanstack/react-start/server-entry";
@@ -6,7 +6,7 @@ import { env } from "cloudflare:workers";
 
 export default {
   async fetch(request: Request) {
-    const db = initDatabase(env.DB); // D1 binding
+    const db = initDatabase(env.DB);
     setAuth({
       secret: env.BETTER_AUTH_SECRET,
       socialProviders: {
