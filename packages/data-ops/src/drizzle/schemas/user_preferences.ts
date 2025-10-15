@@ -12,10 +12,9 @@ export const user_preferences = sqliteTable("user_preferences", {
   createdAt: integer("created_at", { mode: "timestamp_ms" })
     .default(sql`(unixepoch() * 1000)`).notNull(),
   updatedAt: integer("updated_at", { mode: "timestamp_ms" })
-    .default(sql`(unixepoch() * 1000)`).$onUpdate(() => sql`(unixepoch() * 1000)`).notNull(),
+    .default(sql`(unixepoch() * 1000)`).$onUpdate(() => new Date()).notNull(),
 });
 
 export type InsertUserPreferences = typeof user_preferences.$inferInsert;
 export type SelectUserPreferences = typeof user_preferences.$inferSelect;
-
 

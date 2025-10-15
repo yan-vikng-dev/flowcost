@@ -36,27 +36,17 @@ export const updateUserPreferences = createServerFn({ method: "POST" })
     const db = getDb();
     const payload = ctx.data;
     // Upsert logic
-    const existing = await db
-      .select({ userId: user_preferences.userId })
-      .from(user_preferences)
-      .where(eq(user_preferences.userId, ctx.context.userId))
-      .limit(1);
-
-    if (existing[0]) {
-      await db
-        .update(user_preferences)
-        .set({
-          defaultEntryCurrency: payload.defaultEntryCurrency,
-          displayCurrency: payload.displayCurrency,
-        })
-        .where(eq(user_preferences.userId, ctx.context.userId));
-    } else {
-      await db.insert(user_preferences).values({
-        userId: ctx.context.userId,
+    await db.insert(user_preferences).values({
+      userId: ctx.context.userId,
+      defaultEntryCurrency: payload.defaultEntryCurrency,
+      displayCurrency: payload.displayCurrency,
+    }).onConflictDoUpdate({
+      target: user_preferences.userId,
+      set: {
         defaultEntryCurrency: payload.defaultEntryCurrency,
         displayCurrency: payload.displayCurrency,
-      });
-    }
+      },
+    }); 
     return { ok: true } as const;
   });
 

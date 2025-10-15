@@ -22,6 +22,6 @@ export const entries = sqliteTable("entries", {
 	createdAt: integer("created_at", { mode: "timestamp_ms" }).default(sql`(unixepoch() * 1000)`).notNull(),
 	updatedAt: integer("updated_at", { mode: "timestamp_ms" })
 		.default(sql`(unixepoch() * 1000)`)
-		.$onUpdate(() => sql`(unixepoch() * 1000)`)
+		.$onUpdate(() => new Date())
 		.notNull(),
 });

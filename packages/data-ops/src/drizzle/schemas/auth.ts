@@ -16,7 +16,7 @@ export const auth_accounts = sqliteTable("auth_accounts", {
 	createdAt: integer("created_at", { mode: "timestamp_ms" }).default(sql`(unixepoch() * 1000)`).notNull(),
 	updatedAt: integer("updated_at", { mode: "timestamp_ms" })
 		.default(sql`(unixepoch() * 1000)`)
-		.$onUpdate(() => sql`(unixepoch() * 1000)`)
+		.$onUpdate(() => new Date())
 		.notNull(),
 });
 
@@ -27,7 +27,7 @@ export const auth_sessions = sqliteTable("auth_sessions", {
 	createdAt: integer("created_at", { mode: "timestamp_ms" }).default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`).notNull(),
 	updatedAt: integer("updated_at", { mode: "timestamp_ms" })
 		.default(sql`(unixepoch() * 1000)`)
-		.$onUpdate(() => sql`(unixepoch() * 1000)`)
+		.$onUpdate(() => new Date())
 		.notNull(),
 	ipAddress: text("ip_address"),
 	userAgent: text("user_agent"),
@@ -45,7 +45,7 @@ export const auth_users = sqliteTable("auth_users", {
 	createdAt: integer("created_at", { mode: "timestamp_ms" }).default(sql`(unixepoch() * 1000)`).notNull(),
 	updatedAt: integer("updated_at", { mode: "timestamp_ms" })
 		.default(sql`(unixepoch() * 1000)`)
-		.$onUpdate(() => sql`(unixepoch() * 1000)`)
+		.$onUpdate(() => new Date())
 		.notNull(),
 	emailVerified: integer("email_verified", { mode: "boolean" }).default(false).notNull(),
 },
@@ -61,6 +61,6 @@ export const auth_verifications = sqliteTable("auth_verifications", {
 	createdAt: integer("created_at", { mode: "timestamp_ms" }).default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`).notNull(),
 	updatedAt: integer("updated_at", { mode: "timestamp_ms" })
 		.default(sql`(unixepoch() * 1000)`)
-		.$onUpdate(() => sql`(unixepoch() * 1000)`)
+		.$onUpdate(() => new Date())
 		.notNull(),
 });
