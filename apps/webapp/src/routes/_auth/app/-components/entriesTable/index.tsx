@@ -20,7 +20,7 @@ export function MonthlyEntriesTable() {
   })
 
   return (
-    <Card className="mt-6">
+    <Card>
       <CardHeader>
         <CardTitle>This Month's Entries</CardTitle>
       </CardHeader>

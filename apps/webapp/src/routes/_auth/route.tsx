@@ -21,14 +21,11 @@ function RouteComponent() {
   }
 
   return (
-    <div className="flex h-screen bg-background overflow-hidden">
-      <div className="flex flex-1 flex-col overflow-hidden">
+      <div className="flex-col">
         <Header />
-        
-        <main className="flex-1 overflow-y-auto bg-muted/20 p-4">
+        <main className="p-8">
           <Outlet />
         </main>
       </div>
-    </div>
   );
 }

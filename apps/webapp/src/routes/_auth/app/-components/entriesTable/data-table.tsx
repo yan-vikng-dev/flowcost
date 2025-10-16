@@ -26,10 +26,11 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { ChevronDown, MoreHorizontal, Copy, Trash } from "lucide-react"
+import { ChevronDown, MoreHorizontal, Copy, Trash, ChevronLeft, ChevronRight } from "lucide-react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { deleteEntries } from "@/core/functions/entries"
 import { toast } from "sonner"
+import { cn } from "@/lib/utils"
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
@@ -158,6 +159,60 @@ export function DataTable<TData, TValue>({
     },
   })
 
+  // Helper to compute pagination items with ellipses
+  const paginationItems = React.useMemo(() => {
+    const total = table.getPageCount()
+    const current = table.getState().pagination.pageIndex + 1 // 1-based for UI
+    const siblingCount = 1
+    const boundaryCount = 1
+    if (total <= 0) return [] as Array<number | "dots">
+
+    const range = (start: number, end: number) => {
+      const out: number[] = []
+      for (let i = start; i <= end; i++) out.push(i)
+      return out
+    }
+
+    const startPages = range(1, Math.min(boundaryCount, total))
+    const endStart = Math.max(total - boundaryCount + 1, boundaryCount + 1)
+    const endPages = range(endStart, total)
+
+    const siblingsStart = Math.max(
+      Math.min(
+        current - siblingCount,
+        total - boundaryCount - siblingCount * 2 - 1
+      ),
+      boundaryCount + 2
+    )
+    const siblingsEnd = Math.min(
+      Math.max(
+        current + siblingCount,
+        boundaryCount + siblingCount * 2 + 2
+      ),
+      Math.min(endStart - 2, total - 1)
+    )
+
+    const items: Array<number | "dots"> = []
+    items.push(...startPages)
+    if (siblingsStart > boundaryCount + 2) {
+      items.push("dots")
+    } else if (boundaryCount + 1 < total - boundaryCount) {
+      items.push(boundaryCount + 1)
+    }
+
+    items.push(...range(siblingsStart, siblingsEnd))
+
+    if (siblingsEnd < total - boundaryCount - 1) {
+      items.push("dots")
+    } else if (total - boundaryCount > boundaryCount) {
+      items.push(total - boundaryCount)
+    }
+
+    items.push(...endPages)
+    // De-duplicate in case of overlaps
+    return items.filter((v, i, arr) => i === 0 || v !== arr[i - 1])
+  }, [table])
+
   return (
     <div>
       <div className="flex items-center gap-2 py-4">
@@ -218,25 +273,6 @@ export function DataTable<TData, TValue>({
               ))}
           </DropdownMenuContent>
         </DropdownMenu>
-
-        <div className="ml-2 flex items-center gap-2">
-          <span className="text-sm text-muted-foreground">Rows per page</span>
-          <Select
-            value={String(table.getState().pagination.pageSize)}
-            onValueChange={(v) => table.setPageSize(Number(v))}
-          >
-            <SelectTrigger className="h-8 w-[100px]">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {[5, 10, 20, 50, 100].map((n) => (
-                <SelectItem key={n} value={String(n)}>
-                  {n}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
       </div>
 
       <div className="overflow-hidden rounded-md border">
@@ -244,13 +280,29 @@ export function DataTable<TData, TValue>({
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id}>
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(header.column.columnDef.header, header.getContext())}
-                  </TableHead>
-                ))}
+                {headerGroup.headers.map((header) => {
+                  const align = (header.column.columnDef as any)?.meta?.align as
+                    | "left"
+                    | "right"
+                    | "center"
+                    | undefined
+                  const thClass =
+                    align === "right"
+                      ? "text-right"
+                      : align === "center"
+                      ? "text-center"
+                      : "text-left"
+                  return (
+                    <TableHead key={header.id} className={thClass}>
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(
+                            header.column.columnDef.header,
+                            header.getContext()
+                          )}
+                    </TableHead>
+                  )
+                })}
               </TableRow>
             ))}
           </TableHeader>
@@ -259,7 +311,17 @@ export function DataTable<TData, TValue>({
               table.getRowModel().rows.map((row) => (
                 <TableRow key={row.id} data-state={row.getIsSelected() && "selected"}>
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
+                    <TableCell
+                      key={cell.id}
+                      className={cn(
+                        (cell.column.columnDef as any)?.meta?.align === "right"
+                          ? "text-right"
+                          : (cell.column.columnDef as any)?.meta?.align ===
+                            "center"
+                          ? "text-center"
+                          : undefined
+                      )}
+                    >
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </TableCell>
                   ))}
@@ -276,23 +338,80 @@ export function DataTable<TData, TValue>({
         </Table>
       </div>
 
-      <div className="flex items-center justify-end space-x-2 py-4">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => table.previousPage()}
-          disabled={!table.getCanPreviousPage()}
-        >
-          Previous
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => table.nextPage()}
-          disabled={!table.getCanNextPage()}
-        >
-          Next
-        </Button>
+      <div className="flex flex-wrap items-center justify-end gap-2 py-4">
+        {/* Pagination controls */}
+        <div className="flex items-center gap-1">
+          <Button
+            variant="outline"
+            size="icon-sm"
+            onClick={() => table.previousPage()}
+            disabled={!table.getCanPreviousPage()}
+            aria-label="Previous page"
+          >
+            <ChevronLeft />
+          </Button>
+          {paginationItems.map((item, idx) => {
+            if (item === "dots") {
+              return (
+                <Button
+                  key={`dots-${idx}`}
+                  variant="ghost"
+                  size="sm"
+                  disabled
+                  className="px-2"
+                  aria-hidden
+                >
+                  …
+                </Button>
+              )
+            }
+            const page = item as number
+            const isActive = table.getState().pagination.pageIndex === page - 1
+            return (
+              <Button
+                key={page}
+                variant={isActive ? "default" : "outline"}
+                size="sm"
+                onClick={() => table.setPageIndex(page - 1)}
+                aria-current={isActive ? "page" : undefined}
+              >
+                {page}
+              </Button>
+            )
+          })}
+          <Button
+            variant="outline"
+            size="icon-sm"
+            onClick={() => table.nextPage()}
+            disabled={!table.getCanNextPage()}
+            aria-label="Next page"
+          >
+            <ChevronRight />
+          </Button>
+        </div>
+
+        {/* Rows per page selector */}
+        <div className="ml-2 flex items-center gap-2">
+          <span className="text-sm text-muted-foreground">Rows per page</span>
+          <Select
+            value={String(table.getState().pagination.pageSize)}
+            onValueChange={(v) => {
+              table.setPageSize(Number(v))
+              table.setPageIndex(0)
+            }}
+          >
+            <SelectTrigger className="h-8 w-[100px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {[5, 10, 20, 50, 100].map((n) => (
+                <SelectItem key={n} value={String(n)}>
+                  {n}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>

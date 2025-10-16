@@ -2,6 +2,7 @@ import { WorkerEntrypoint } from "cloudflare:workers";
 import { app } from "@/hono/app";
 import { updateExchangeRates } from "@/handlers/updateExchangeRates.js";
 import { initDatabase } from "@repo/data-ops/database/setup";
+export { AiConversationServer } from "@/durable-objects/Assistant/AiConversationServer";
 
 export default class DataService extends WorkerEntrypoint<Env> {
   

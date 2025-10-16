@@ -8,7 +8,7 @@ export const Route = createFileRoute('/_auth/app/')({
 
 function RouteComponent() {
   return (
-    <div>
+    <div className="space-y-4">
       <EntriesForm />
       <MonthlyEntriesTable />
     </div>

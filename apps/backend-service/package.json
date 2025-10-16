@@ -18,9 +18,14 @@
     "wrangler": "^4.42.2"
   },
   "dependencies": {
+    "@ai-sdk/google": "^2.0.23",
+    "@posthog/ai": "^6.4.3",
     "@repo/data-ops": "workspace:^",
     "@repo/shared-config": "workspace:^",
+    "ai": "^5.0.72",
+    "drizzle-orm": "^0.44.6",
     "hono": "^4.9.11",
+    "posthog-node": "^5.10.0",
     "zod": "^4.1.12"
   }
 }

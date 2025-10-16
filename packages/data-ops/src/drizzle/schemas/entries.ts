@@ -17,10 +17,10 @@ export const entries = sqliteTable("entries", {
 	category: text({ enum: categories }).notNull(),
 	type: text({ enum: entryTypes }).notNull(),
 	description: text(),
-	userId: text("user_id").notNull().references(() => auth_users.id, { onDelete: "cascade" } ),
-	executedAt: integer("executed_at", { mode: "timestamp_ms" }).notNull(),
-	createdAt: integer("created_at", { mode: "timestamp_ms" }).default(sql`(unixepoch() * 1000)`).notNull(),
-	updatedAt: integer("updated_at", { mode: "timestamp_ms" })
+	userId: text().notNull().references(() => auth_users.id, { onDelete: "cascade" } ),
+	executedAt: integer({ mode: "timestamp_ms" }).notNull(),
+	createdAt: integer({ mode: "timestamp_ms" }).default(sql`(unixepoch() * 1000)`).notNull(),
+	updatedAt: integer({ mode: "timestamp_ms" })
 		.default(sql`(unixepoch() * 1000)`)
 		.$onUpdate(() => new Date())
 		.notNull(),

@@ -100,10 +100,15 @@ export function monthlyEntriesColumns(displayCurrency: string): ColumnDef<Monthl
   },
   {
     accessorKey: "amount",
+    meta: { align: "right" },
     header: ({ column }) => {
       const sorted = column.getIsSorted()
       return (
-        <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
+        <Button
+          variant="ghost"
+          className="ml-auto"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
           Original
           {sorted === "asc" ? (
             <ArrowUpIcon className="ml-2 h-4 w-4" />
@@ -123,10 +128,15 @@ export function monthlyEntriesColumns(displayCurrency: string): ColumnDef<Monthl
   },
   {
     accessorKey: "amountIls",
+    meta: { align: "right" },
     header: ({ column }) => {
       const sorted = column.getIsSorted()
       return (
-        <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
+        <Button
+          variant="ghost"
+          className="ml-auto"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
           Converted ({displayCurrency})
           {sorted === "asc" ? (
             <ArrowUpIcon className="ml-2 h-4 w-4" />

@@ -7,7 +7,7 @@ export function initDatabase(d1Db: D1Database) {
   if (db) {
     return db
   }
-  db = drizzle(d1Db);
+  db = drizzle(d1Db,{casing: "snake_case"});
   return db;
 }
  

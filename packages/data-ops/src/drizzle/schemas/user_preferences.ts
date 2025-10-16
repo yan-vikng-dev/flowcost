@@ -4,14 +4,14 @@ import { auth_users } from "./auth";
 import { currencies } from "@repo/shared-config";
 
 export const user_preferences = sqliteTable("user_preferences", {
-  userId: text("user_id")
-    .primaryKey()
-    .references(() => auth_users.id, { onDelete: "cascade" }),
-  defaultEntryCurrency: text("default_entry_currency", { enum: currencies }).notNull().default("USD"),
-  displayCurrency: text("display_currency", { enum: currencies }).notNull().default("USD"),
-  createdAt: integer("created_at", { mode: "timestamp_ms" })
+  userId: text()
+      .primaryKey()
+      .references(() => auth_users.id, { onDelete: "cascade" }),
+  defaultEntryCurrency: text({ enum: currencies }).notNull().default("USD"),
+  displayCurrency: text({ enum: currencies }).notNull().default("USD"),
+  createdAt: integer({ mode: "timestamp_ms" })
     .default(sql`(unixepoch() * 1000)`).notNull(),
-  updatedAt: integer("updated_at", { mode: "timestamp_ms" })
+  updatedAt: integer({ mode: "timestamp_ms" })
     .default(sql`(unixepoch() * 1000)`).$onUpdate(() => new Date()).notNull(),
 });
 

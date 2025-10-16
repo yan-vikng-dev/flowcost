@@ -9,6 +9,7 @@ const config: Config = {
     databaseId: process.env.CLOUDFLARE_DATABASE_ID!,
     token: process.env.CLOUDFLARE_D1_TOKEN!,
   },
+  casing: "snake_case",
   tablesFilter: ["!_cf_KV"],
 };
 

@@ -17,6 +17,9 @@
 		"0 0 * * *"
 	]
   },
+  "vars": {
+    "POSTHOG_HOST": "https://eu.i.posthog.com"
+  },
   "routes": [
 		{
 			"pattern": "backend.flowcost.co",
@@ -37,5 +40,19 @@
 			"id": "f52e1d3b9f2c4428a3b0f10a663cb5a7",
 			"remote": true
 		}
-	]  
+	],
+	"durable_objects": {
+		"bindings": [
+			{
+				"name": "AI_CONVERSATION_SERVER",
+				"class_name": "AiConversationServer"
+			}
+		]
+	},
+	"migrations": [
+		{
+			"tag": "v1",
+			"new_sqlite_classes": ["AiConversationServer"]
+		}
+	]
 }

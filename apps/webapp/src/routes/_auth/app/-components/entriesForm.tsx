@@ -46,7 +46,7 @@ export function EntriesForm() {
   })
 
   return (
-    <Card className="max-w-xl">
+    <Card>
       <CardHeader>
         <CardTitle>Add Entry</CardTitle>
       </CardHeader>
