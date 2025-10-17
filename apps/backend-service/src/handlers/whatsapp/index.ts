@@ -97,8 +97,8 @@ export async function handleIncomingMessage(env: Env, payload: NotificationPaylo
 
   const id = env.AI_CONVERSATION_SERVER.idFromName(link.userId);
   const stub = env.AI_CONVERSATION_SERVER.get(id);
-  const reply = await stub.handleMessage(messageId, text);
-  await sendWhatsAppText({ env, waId, text: reply });
+  const reply = await stub.handleMessage(text, { messageId, waId, userId: link.userId });
+  if (reply) await sendWhatsAppText({ env, waId, text: reply });
   return;
 }
 

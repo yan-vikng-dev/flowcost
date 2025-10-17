@@ -5,6 +5,12 @@ import { PostHog } from "posthog-node";
 import { withTracing } from "@posthog/ai"
 import { systemPrompt } from "./config";
 
+export type MessageContext = {
+  messageId: string;
+  waId: string;
+  userId: string;
+};
+
 export class AiConversationServer extends DurableObject {
   conversationHistory: ModelMessage[] = [];
   posthogClient: PostHog | null = null;
@@ -16,7 +22,7 @@ export class AiConversationServer extends DurableObject {
       const [conversationHistory, seenMessageIds, posthogClient] = await Promise.all([
         ctx.storage.get<ModelMessage[]>("conversationHistory"),
         ctx.storage.get<string[]>("seenMessageIds"),
-        new PostHog(env.POSTHOG_API_KEY, {host: env.POSTHOG_HOST})
+        new PostHog(env.POSTHOG_API_KEY, {host: env.POSTHOG_HOST, flushAt: 1, flushInterval: 0})
       ]);
       this.conversationHistory = conversationHistory || [{role: "system", content: systemPrompt}];
       this.seenMessageIds = new Set(seenMessageIds || []);
@@ -24,9 +30,9 @@ export class AiConversationServer extends DurableObject {
     });
   }
 
-  async handleMessage(messageId: string, message: string) {
-    if (this.seenMessageIds.has(messageId)) return "";
-    else this.seenMessageIds.add(messageId);
+  async handleMessage(message: string, messageContext: MessageContext) {
+    if (this.seenMessageIds.has(messageContext.messageId)) return null;
+    else this.seenMessageIds.add(messageContext.messageId);
     if (this.seenMessageIds.size > 100) {
       const toKeep = Array.from(this.seenMessageIds).slice(-50);
       this.seenMessageIds = new Set(toKeep);
@@ -34,8 +40,9 @@ export class AiConversationServer extends DurableObject {
 
     const googleProvider = createGoogleGenerativeAI({apiKey: this.env.GEMINI_API_KEY});
     const baseModel = googleProvider("gemini-2.5-flash-lite");
-    const model = withTracing(baseModel, this.posthogClient!, {
-      posthogDistinctId: messageId,
+    if (!this.posthogClient) throw new Error("Posthog client not initialized");
+    const model = withTracing(baseModel, this.posthogClient, {
+      posthogDistinctId: messageContext.userId,
       posthogTraceId: this.ctx.id.toString(),
       posthogPrivacyMode: false,
       // posthogGroups:{
@@ -45,9 +52,8 @@ export class AiConversationServer extends DurableObject {
     });
     const result = await generateText({
       model,
-      // tools,
       messages: [...this.conversationHistory, {role: "user", content: message}],
-      stopWhen: ({steps}) => steps.some((step) => step.finishReason === "stop")
+      stopWhen: [({steps}) => steps.some((step) => step.finishReason === "stop"), stepCountIs(10)]
     })
     this.conversationHistory.push(...result.response.messages);
 
@@ -55,7 +61,14 @@ export class AiConversationServer extends DurableObject {
       this.ctx.storage.put("conversationHistory", this.conversationHistory),
       this.ctx.storage.put("seenMessageIds", Array.from(this.seenMessageIds)),
     ]);
-    const finalMessage = result.text;
+    const finalMessage = result.text || "Something went wrong. Please try again.";
+    console.debug({
+      message: "generated text",
+      text: result.text,
+      finalMessage,
+      finishReason: result.finishReason,
+      stepCount: result.steps.length,
+    });
     return finalMessage;
   }
 }

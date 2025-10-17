@@ -3,22 +3,17 @@
   "version": "1.0.0",
   "description": "",
   "scripts": {
-    "setup": "pnpm i && pnpm run build:data-ops",
-    "build:data-ops": "pnpm run --filter data-ops build",
     "build": "turbo run build",
     "test": "turbo run test",
     "deploy": "turbo run deploy",
-    "dev:webapp": "pnpm run --filter webapp dev",
-    "deploy:webapp": "pnpm run build:data-ops && pnpm run --filter webapp deploy",
-    "dev:backend-service": "pnpm run --filter backend-service dev",
-    "deploy:backend-service": "pnpm run build:data-ops && pnpm run --filter backend-service deploy"
+    "dev:webapp": "pnpm run --filter webapp dev"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "packageManager": "pnpm@10.14.0",
   "devDependencies": {
-    "@types/node": "^24.7.2",
+    "@types/node": "^24.8.0",
     "turbo": "^2.5.8",
     "typescript": "^5.9.3"
   }

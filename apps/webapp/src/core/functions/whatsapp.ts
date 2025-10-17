@@ -2,6 +2,8 @@ import { createServerFn } from "@tanstack/react-start";
 import { protectedFunctionMiddleware } from "@/core/middleware/auth";
 import { getDb } from "@repo/data-ops/database/setup";
 import { whatsapp_link_tokens } from "@repo/data-ops/drizzle/schemas/whatsapp_link_tokens";
+import { whatsapp_links } from "@repo/data-ops/drizzle/schemas/whatsapp_links";
+import { eq } from "drizzle-orm";
 import { env } from "cloudflare:workers";
 import { z } from "zod";
 
@@ -40,6 +42,20 @@ export const startWhatsappLink = createServerFn({ method: "POST" })
     const waMeUrl = `https://wa.me/${phoneE164}?text=${encodeURIComponent(messageText)}`;
 
     return { url: waMeUrl } as const;
+  });
+
+export const getWhatsappLinkStatus = createServerFn()
+  .middleware([protectedFunctionMiddleware])
+  .handler(async (ctx) => {
+    const db = getDb();
+    const rows = await db
+      .select()
+      .from(whatsapp_links)
+      .where(eq(whatsapp_links.userId, ctx.context.userId))
+      .limit(1);
+    const link = rows[0];
+    if (!link) return { linked: false as const };
+    return { linked: true as const, waId: link.waId };
   });
 
 
