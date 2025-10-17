@@ -5,6 +5,8 @@ import { PostHog } from "posthog-node";
 import { withTracing } from "@posthog/ai"
 import { systemPrompt } from "./config";
 
+const contextWindowMs = 1000 * 60 * 60; // 1 hour
+
 export type MessageContext = {
   messageId: string;
   waId: string;
@@ -15,18 +17,15 @@ export class AiConversationServer extends DurableObject {
   conversationHistory: ModelMessage[] = [];
   posthogClient: PostHog | null = null;
   seenMessageIds: Set<string> = new Set();
+  traceId: string | null = null;
 
   constructor(ctx: DurableObjectState, env: Env) {
     super(ctx, env);
     ctx.blockConcurrencyWhile(async () => {
-      const [conversationHistory, seenMessageIds, posthogClient] = await Promise.all([
-        ctx.storage.get<ModelMessage[]>("conversationHistory"),
-        ctx.storage.get<string[]>("seenMessageIds"),
-        new PostHog(env.POSTHOG_API_KEY, {host: env.POSTHOG_HOST, flushAt: 1, flushInterval: 0})
-      ]);
-      this.conversationHistory = conversationHistory || [{role: "system", content: systemPrompt}];
-      this.seenMessageIds = new Set(seenMessageIds || []);
-      this.posthogClient = posthogClient;
+      this.conversationHistory = await ctx.storage.get<ModelMessage[]>("conversationHistory") || [{role: "system", content: systemPrompt}];
+      this.traceId = await ctx.storage.get<string>("traceId") || crypto.randomUUID();
+      this.seenMessageIds = new Set(await ctx.storage.get<string[]>("seenMessageIds"));
+      this.posthogClient = new PostHog(env.POSTHOG_API_KEY, {host: env.POSTHOG_HOST, flushAt: 1, flushInterval: 0});
     });
   }
 
@@ -37,30 +36,25 @@ export class AiConversationServer extends DurableObject {
       const toKeep = Array.from(this.seenMessageIds).slice(-50);
       this.seenMessageIds = new Set(toKeep);
     }
-
+    this.ctx.storage.setAlarm(Date.now() + contextWindowMs);
     const googleProvider = createGoogleGenerativeAI({apiKey: this.env.GEMINI_API_KEY});
     const baseModel = googleProvider("gemini-2.5-flash-lite");
     if (!this.posthogClient) throw new Error("Posthog client not initialized");
+    if (!this.traceId) throw new Error("Trace ID not initialized");
     const model = withTracing(baseModel, this.posthogClient, {
       posthogDistinctId: messageContext.userId,
-      posthogTraceId: this.ctx.id.toString(),
+      posthogTraceId: this.traceId,
       posthogPrivacyMode: false,
-      // posthogGroups:{
-      //   platform: "whatsapp",
-      //   channelId: "..."
-      // }
     });
+    this.conversationHistory.push({role: "user", content: message});
     const result = await generateText({
       model,
-      messages: [...this.conversationHistory, {role: "user", content: message}],
+      messages: this.conversationHistory,
       stopWhen: [({steps}) => steps.some((step) => step.finishReason === "stop"), stepCountIs(10)]
     })
     this.conversationHistory.push(...result.response.messages);
 
-    await Promise.all([
-      this.ctx.storage.put("conversationHistory", this.conversationHistory),
-      this.ctx.storage.put("seenMessageIds", Array.from(this.seenMessageIds)),
-    ]);
+    await this.ctx.storage.put("seenMessageIds", Array.from(this.seenMessageIds));
     const finalMessage = result.text || "Something went wrong. Please try again.";
     console.debug({
       message: "generated text",
@@ -70,5 +64,16 @@ export class AiConversationServer extends DurableObject {
       stepCount: result.steps.length,
     });
     return finalMessage;
+  }
+
+  async alarm() {
+    await this.reset();
+  }
+
+  async reset() {
+    this.conversationHistory = [{role: "system", content: systemPrompt}];
+    this.traceId = crypto.randomUUID();
+    await this.ctx.storage.put("conversationHistory", this.conversationHistory);
+    await this.ctx.storage.put("traceId", this.traceId);
   }
 }

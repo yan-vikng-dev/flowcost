@@ -33,6 +33,8 @@ export async function verifyWhatsAppSignature(rawBody: ArrayBuffer, signatureHea
   return timingSafeEqualHex(macHex, expected);
 }
 
+const slashCommands: readonly string[] = ["/new", "/help", "/link", "/unlink", "/help"];
+
 export async function handleIncomingMessage(env: Env, payload: NotificationPayload) {
   const db = getDb();
   const msg = payload.entry?.[0]?.changes?.[0]?.value?.messages?.[0];
@@ -50,6 +52,10 @@ export async function handleIncomingMessage(env: Env, payload: NotificationPaylo
   const tokenMatch = text.match(/^\/token\s*([A-Fa-f0-9]+)$/);
   if (tokenMatch) {
     const rawToken = tokenMatch[1];
+    if (!rawToken) {
+      await sendWhatsAppText({ env, waId, text: "Token invalid or expired. Please retry linking from the web app." });
+      return;
+    }
     const tokenHash = await sha256Hex(rawToken);
 
     const now = new Date();
@@ -89,14 +95,36 @@ export async function handleIncomingMessage(env: Env, payload: NotificationPaylo
     return;
   }
 
-  const link = (await db.select().from(whatsapp_links).where(eq(whatsapp_links.waId, waId)))[0];
+  const [link] = await db.select()
+                        .from(whatsapp_links)
+                        .where(eq(whatsapp_links.waId, waId))
+                        .limit(1);
   if (!link) {
-    await sendWhatsAppText({ env, waId, text: "This number is not linked. In the web app, tap ‘Link to WhatsApp’." });
+    await sendWhatsAppText({ env, waId, text: "Please visit https://flowcost.co/app/settings to link your WhatsApp number" });
     return;
   }
-
   const id = env.AI_CONVERSATION_SERVER.idFromName(link.userId);
   const stub = env.AI_CONVERSATION_SERVER.get(id);
+  if (slashCommands.includes(text)) {
+    console.debug("text included in slash commands", text);
+    switch (text) {
+      case "/new":
+        await stub.reset();
+        await sendWhatsAppText({ env, waId, text: "I forgor. clean slate." });
+        return;
+      case "/help":
+        await sendWhatsAppText({ env, waId, text: "You can either use slash commands (start with /) or just chat normally, I'll try my best to help you." });
+        return;
+      case "/link":
+        await sendWhatsAppText({ env, waId, text: "Please visit https://flowcost.co/app/settings to link your WhatsApp number" });
+        return;
+      case "/unlink":
+        await db.delete(whatsapp_links).where(eq(whatsapp_links.waId, waId));
+        await sendWhatsAppText({ env, waId, text: "Unlinked ✅" });
+        return;
+      default:
+    }
+  }
   const reply = await stub.handleMessage(text, { messageId, waId, userId: link.userId });
   if (reply) await sendWhatsAppText({ env, waId, text: reply });
   return;

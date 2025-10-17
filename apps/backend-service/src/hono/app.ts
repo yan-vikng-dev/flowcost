@@ -9,7 +9,7 @@ app.get("/health", (c) => {
 
 app.get("/whatsapp/webhook", async (c) => {
   const { 'hub.mode': mode, 'hub.challenge': challenge, 'hub.verify_token': token } = c.req.query();
-  if (mode === 'subscribe' && token === c.env.WHATSAPP_WEBHOOK_SECRET) {
+  if (mode === 'subscribe' && token === c.env.WHATSAPP_WEBHOOK_SECRET && challenge) {
     console.log('WEBHOOK VERIFIED');
     return c.text(challenge);
   } else {

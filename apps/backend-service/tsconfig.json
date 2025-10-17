@@ -23,7 +23,7 @@
 
     /* Disable emitting files from a compilation. */
     "noEmit": true,
-
+    "noUncheckedIndexedAccess": true,
     /* Ensure that each file can be safely transpiled without relying on other imports. */
     "isolatedModules": true,
     /* Allow 'import x from y' when a module doesn't have a default export. */
