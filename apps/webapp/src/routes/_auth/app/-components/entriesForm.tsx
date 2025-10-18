@@ -17,9 +17,9 @@ import {
   currencies,
   SERVICE_START_DATE,
 } from "@repo/shared-config";
-import { entryTypes, type EntryType } from "@repo/data-ops/drizzle/schemas/entries";
+import { entryTypes, type EntryType } from "@repo/data-ops/drizzle/schemas/entries/table";
 import { getUserPreferences } from "@/core/functions/preferences";
-import { useQuery, useQueryClient  } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "@tanstack/react-form";
 import { createEntry, type CreateEntryInput } from "@/core/functions/entries";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";

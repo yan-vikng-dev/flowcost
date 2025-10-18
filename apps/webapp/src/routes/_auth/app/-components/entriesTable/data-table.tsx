@@ -52,8 +52,8 @@ import { deleteEntries } from "@/core/functions/entries";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
-type RowWithId = { id?: string }
-type ColumnMeta = { align?: 'left' | 'right' | 'center' }
+type RowWithId = { id?: string };
+type ColumnMeta = { align?: "left" | "right" | "center" };
 
 interface DataTableProps<TData extends RowWithId, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -136,11 +136,9 @@ export function DataTable<TData extends RowWithId, TValue>({
               <DropdownMenuItem
                 onClick={() => {
                   if (!id) return;
-                  void navigator.clipboard
-                    .writeText(id)
-                    .then(() => {
-                      toast.success("Copied entry ID");
-                    });
+                  void navigator.clipboard.writeText(id).then(() => {
+                    toast.success("Copied entry ID");
+                  });
                 }}
               >
                 <Copy className="mr-2 h-4 w-4" /> Copy ID
@@ -267,11 +265,9 @@ export function DataTable<TData extends RowWithId, TValue>({
                   .rows.map((r) => (r.original as RowWithId).id)
                   .filter(Boolean) as string[];
                 if (ids.length === 0) return;
-                void navigator.clipboard
-                  .writeText(ids.join("\n"))
-                  .then(() => {
-                    toast.success(`Copied ${ids.length} id(s)`);
-                  });
+                void navigator.clipboard.writeText(ids.join("\n")).then(() => {
+                  toast.success(`Copied ${ids.length} id(s)`);
+                });
               }}
             >
               <Copy className="h-4 w-4" /> Copy selected
@@ -335,10 +331,11 @@ export function DataTable<TData extends RowWithId, TValue>({
                     <TableCell
                       key={cell.id}
                       className={cn(
-                        ((cell.column.columnDef as { meta?: ColumnMeta }).meta?.align) === 'right'
-                          ? 'text-right'
-                          : ((cell.column.columnDef as { meta?: ColumnMeta }).meta?.align) === 'center'
-                            ? 'text-center'
+                        (cell.column.columnDef as { meta?: ColumnMeta }).meta?.align === "right"
+                          ? "text-right"
+                          : (cell.column.columnDef as { meta?: ColumnMeta }).meta?.align ===
+                              "center"
+                            ? "text-center"
                             : undefined,
                       )}
                     >

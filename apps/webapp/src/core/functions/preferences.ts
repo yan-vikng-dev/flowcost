@@ -1,9 +1,9 @@
 import { createServerFn } from "@tanstack/react-start";
 import { protectedFunctionMiddleware } from "@/core/middleware/auth";
 import { getDb } from "@repo/data-ops/database/setup";
-import { user_preferences } from "@repo/data-ops/drizzle/schemas/user_preferences";
+import { user_preferences } from "@repo/data-ops/drizzle/schemas/user_preferences/table";
 import { eq } from "drizzle-orm";
-import {z} from "zod";
+import { z } from "zod";
 import { currencies } from "@repo/shared-config";
 
 export const getUserPreferences = createServerFn()

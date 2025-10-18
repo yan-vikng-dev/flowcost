@@ -1,9 +1,9 @@
 import { createServerFn } from "@tanstack/react-start";
 import { protectedFunctionMiddleware } from "@/core/middleware/auth";
 import { getDb } from "@repo/data-ops/database/setup";
-import { entries, entryTypes, type SelectEntry } from "@repo/data-ops/drizzle/schemas/entries";
-import { exchange_rates, SelectExchangeRate } from "@repo/data-ops/drizzle/schemas/exchange_rates";
-import { user_preferences } from "@repo/data-ops/drizzle/schemas/user_preferences";
+import { entries, entryTypes, type SelectEntry } from "@repo/data-ops/drizzle/schemas/entries/table";
+import { exchange_rates, SelectExchangeRate } from "@repo/data-ops/drizzle/schemas/exchange_rates/table";
+import { user_preferences } from "@repo/data-ops/drizzle/schemas/user_preferences/table";
 import { z } from "zod";
 import { categories, currencies, type Currency } from "@repo/shared-config";
 import { and, desc, eq, gte, lt, inArray, count } from "drizzle-orm";

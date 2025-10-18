@@ -18,7 +18,9 @@ export function NotFound({ children }: { children?: React.ReactNode }) {
             <div className="space-y-2">
               <h1 className="text-2xl font-semibold tracking-tight">Page Not Found</h1>
               <div className="text-muted-foreground">
-                {children || <p>The page you&apos;re looking for doesn&apos;t exist or has been moved.</p>}
+                {children || (
+                  <p>The page you&apos;re looking for doesn&apos;t exist or has been moved.</p>
+                )}
               </div>
             </div>
 

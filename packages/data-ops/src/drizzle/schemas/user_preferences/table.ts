@@ -1,5 +1,5 @@
 import { sqliteTable, text, integer } from "drizzle-orm/sqlite-core";
-import { sql } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 import { auth_users } from "../auth_users";
 import { currencies } from "@repo/shared-config";
 
@@ -17,6 +17,14 @@ export const user_preferences = sqliteTable("user_preferences", {
     .$onUpdate(() => new Date())
     .notNull(),
 });
+
+export const userPreferencesRelations = relations(user_preferences, ({ one }) => ({
+  user: one(auth_users, {
+    fields: [user_preferences.userId],
+    references: [auth_users.id],
+  }),
+}));
+
 
 export type InsertUserPreferences = typeof user_preferences.$inferInsert;
 export type SelectUserPreferences = typeof user_preferences.$inferSelect;

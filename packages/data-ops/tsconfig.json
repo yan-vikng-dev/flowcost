@@ -12,14 +12,12 @@
     "strict": true,
     "skipLibCheck": true,
     "outDir": "./dist",
+    "rootDir": "./src",
     "lib": ["ESNext"],
     "paths": {
       "@/*": ["./src/*"]
     },
     "types": ["@cloudflare/workers-types"]
   },
-  "include": [
-    "src",
-    "drizzle-kit.config.ts"
-  ]
+  "include": ["src"]
 }

@@ -1,17 +1,18 @@
 // packages/data-ops/src/database/setup.ts
-import { drizzle } from "drizzle-orm/d1";
+import { drizzle, type DrizzleD1Database } from "drizzle-orm/d1";
+import * as schema from "@/drizzle/schemas";
+let db: DrizzleD1Database<typeof schema> | undefined;
 
-let db: ReturnType<typeof drizzle>;
-
-export function initDatabase(d1Db: D1Database) {
+export function initDatabase(d1Db: D1Database): DrizzleD1Database<typeof schema> {
   if (db) {
     return db;
   }
-  db = drizzle(d1Db, { casing: "snake_case" });
+  console.log("test build")
+  db = drizzle(d1Db, { casing: "snake_case", schema });
   return db;
 }
 
-export function getDb() {
+export function getDb(): DrizzleD1Database<typeof schema> {
   if (!db) {
     throw new Error("Database not initialized");
   }

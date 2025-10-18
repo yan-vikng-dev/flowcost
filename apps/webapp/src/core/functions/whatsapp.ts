@@ -1,8 +1,8 @@
 import { createServerFn } from "@tanstack/react-start";
 import { protectedFunctionMiddleware } from "@/core/middleware/auth";
 import { getDb } from "@repo/data-ops/database/setup";
-import { whatsapp_link_tokens } from "@repo/data-ops/drizzle/schemas/whatsapp_link_tokens";
-import { whatsapp_links } from "@repo/data-ops/drizzle/schemas/whatsapp_links";
+import { whatsapp_link_tokens } from "@repo/data-ops/drizzle/schemas/whatsapp_link_tokens/table";
+import { whatsapp_links } from "@repo/data-ops/drizzle/schemas/whatsapp_links/table";
 import { eq } from "drizzle-orm";
 import { env } from "cloudflare:workers";
 import { z } from "zod";

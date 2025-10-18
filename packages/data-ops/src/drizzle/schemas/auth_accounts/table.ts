@@ -1,5 +1,5 @@
 import { sqliteTable, text, integer } from "drizzle-orm/sqlite-core";
-import { sql } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 import { auth_users } from "../auth_users/table";
 
 export const auth_accounts = sqliteTable("auth_accounts", {
@@ -24,3 +24,10 @@ export const auth_accounts = sqliteTable("auth_accounts", {
     .$onUpdate(() => new Date())
     .notNull(),
 });
+
+export const authAccountsRelations = relations(auth_accounts, ({ one }) => ({
+  authUser: one(auth_users, {
+    fields: [auth_accounts.userId],
+    references: [auth_users.id],
+  }),
+}));

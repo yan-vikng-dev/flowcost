@@ -230,7 +230,11 @@ export function NavigationBar() {
                       </div>
                     </div>
                   ) : (
-                    <Button onClick={() => void handleGoogleSignIn()} variant="default" className="w-full gap-2">
+                    <Button
+                      onClick={() => void handleGoogleSignIn()}
+                      variant="default"
+                      className="w-full gap-2"
+                    >
                       <LogInIcon className="h-4 w-4" />
                       Sign In with Google
                     </Button>

@@ -1,5 +1,5 @@
 import { sqliteTable, text, integer, uniqueIndex } from "drizzle-orm/sqlite-core";
-import { sql } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 import { auth_users } from "../auth_users";
 
 export const auth_sessions = sqliteTable(
@@ -23,3 +23,10 @@ export const auth_sessions = sqliteTable(
   },
   (table) => [uniqueIndex("auth_sessions_token_unique").on(table.token)],
 );
+
+export const authSessionsRelations = relations(auth_sessions, ({ one }) => ({
+  authUser: one(auth_users, {
+    fields: [auth_sessions.userId],
+    references: [auth_users.id],
+  }),
+}));

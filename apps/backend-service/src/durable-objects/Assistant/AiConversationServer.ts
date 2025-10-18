@@ -4,6 +4,8 @@ import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { PostHog } from "posthog-node";
 import { withTracing } from "@posthog/ai";
 import { systemPrompt } from "./config";
+import { makeCreateEntryTool } from "./tools/createEntry";
+import { Currency } from "@repo/shared-config";
 
 const contextWindowMs = 1000 * 60 * 60; // 1 hour
 
@@ -11,6 +13,7 @@ export type MessageContext = {
   messageId: string;
   waId: string;
   userId: string;
+  defaultCurrency: Currency;
 };
 
 export class AiConversationServer extends DurableObject {
@@ -53,8 +56,12 @@ export class AiConversationServer extends DurableObject {
       posthogPrivacyMode: false,
     });
     this.conversationHistory.push({ role: "user", content: message });
+    const tools = {
+      create_entry: makeCreateEntryTool({ userId: messageContext.userId, defaultCurrency: messageContext.defaultCurrency }),
+    }
     const result = await generateText({
       model,
+      tools,
       messages: this.conversationHistory,
       stopWhen: [
         ({ steps }) => steps.some((step) => step.finishReason === "stop"),

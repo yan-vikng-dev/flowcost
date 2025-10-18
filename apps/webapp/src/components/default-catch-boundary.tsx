@@ -56,7 +56,12 @@ export function DefaultCatchBoundary({ error }: ErrorComponentProps) {
 
           {/* Action Buttons */}
           <div className="flex flex-col sm:flex-row gap-3">
-            <Button onClick={() => { void router.invalidate(); }} className="flex items-center gap-2">
+            <Button
+              onClick={() => {
+                void router.invalidate();
+              }}
+              className="flex items-center gap-2"
+            >
               <RefreshCw className="h-4 w-4" />
               Try Again
             </Button>

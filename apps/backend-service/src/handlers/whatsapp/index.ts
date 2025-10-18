@@ -1,9 +1,10 @@
 import { and, eq, isNull, gt } from "drizzle-orm";
 import { getDb } from "@repo/data-ops/database/setup";
-import { whatsapp_link_tokens } from "@repo/data-ops/drizzle/schemas/whatsapp_link_tokens";
-import { whatsapp_links } from "@repo/data-ops/drizzle/schemas/whatsapp_links";
+import { whatsapp_link_tokens } from "@repo/data-ops/drizzle/schemas/whatsapp_link_tokens/table";
+import { whatsapp_links } from "@repo/data-ops/drizzle/schemas/whatsapp_links/table";
 import { sendWhatsAppText } from "./helpers";
 import { NotificationPayload } from "./types";
+import { MessageContext } from "@/durable-objects/Assistant/AiConversationServer";
 
 export async function sha256Hex(input: ArrayBuffer | string): Promise<string> {
   const data = typeof input === "string" ? new TextEncoder().encode(input) : new Uint8Array(input);
@@ -125,11 +126,25 @@ export async function handleIncomingMessage(env: Env, payload: NotificationPaylo
     return;
   }
 
-  const [link] = await db
-    .select()
-    .from(whatsapp_links)
-    .where(eq(whatsapp_links.waId, waId))
-    .limit(1);
+  const link = await db.query.whatsapp_links.findFirst({
+    where: eq(whatsapp_links.waId, waId),
+    columns: {},
+    with: {
+      user: {
+        columns: {
+          id: true,
+        },
+        with: {
+          preferences: {
+            columns: {
+              defaultEntryCurrency: true
+            }
+          }
+        }
+      }
+    }
+  })
+
   if (!link) {
     await sendWhatsAppText({
       env,
@@ -138,7 +153,7 @@ export async function handleIncomingMessage(env: Env, payload: NotificationPaylo
     });
     return;
   }
-  const id = env.AI_CONVERSATION_SERVER.idFromName(link.userId);
+  const id = env.AI_CONVERSATION_SERVER.idFromName(link.user.id);
   const stub = env.AI_CONVERSATION_SERVER.get(id);
   if (slashCommands.includes(text)) {
     console.debug("text included in slash commands", text);
@@ -168,7 +183,13 @@ export async function handleIncomingMessage(env: Env, payload: NotificationPaylo
       default:
     }
   }
-  const reply = await stub.handleMessage(text, { messageId, waId, userId: link.userId });
+  const messageContext: MessageContext = {
+    messageId,
+    waId,
+    userId: link.user.id,
+    defaultCurrency: link.user.preferences.defaultEntryCurrency,
+  }
+  const reply = await stub.handleMessage(text, messageContext);
   if (reply) await sendWhatsAppText({ env, waId, text: reply });
   return;
 }
