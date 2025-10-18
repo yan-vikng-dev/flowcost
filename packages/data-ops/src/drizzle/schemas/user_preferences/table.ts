@@ -9,6 +9,7 @@ export const user_preferences = sqliteTable("user_preferences", {
     .references(() => auth_users.id, { onDelete: "cascade" }),
   defaultEntryCurrency: text({ enum: currencies }).notNull().default("USD"),
   displayCurrency: text({ enum: currencies }).notNull().default("USD"),
+  timezone: text().notNull().default("UTC"),
   createdAt: integer({ mode: "timestamp_ms" })
     .default(sql`(unixepoch() * 1000)`)
     .notNull(),

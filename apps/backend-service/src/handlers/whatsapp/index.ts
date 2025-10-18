@@ -3,23 +3,8 @@ import { getDb } from "@repo/data-ops/database/setup";
 import { whatsapp_link_tokens } from "@repo/data-ops/drizzle/schemas/whatsapp_link_tokens/table";
 import { whatsapp_links } from "@repo/data-ops/drizzle/schemas/whatsapp_links/table";
 import { sendWhatsAppText } from "./helpers";
-import { NotificationPayload } from "./types";
 import { MessageContext } from "@/durable-objects/Assistant/AiConversationServer";
-
-export async function sha256Hex(input: ArrayBuffer | string): Promise<string> {
-  const data = typeof input === "string" ? new TextEncoder().encode(input) : new Uint8Array(input);
-  const digest = await crypto.subtle.digest("SHA-256", data);
-  return Array.from(new Uint8Array(digest))
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
-}
-
-function timingSafeEqualHex(a: string, b: string): boolean {
-  if (a.length !== b.length) return false;
-  let res = 0;
-  for (let i = 0; i < a.length; i++) res |= a.charCodeAt(i) ^ b.charCodeAt(i);
-  return res === 0;
-}
+import { sha256Hex, timingSafeEqualHex } from "@repo/shared-config/crypto";
 
 export async function verifyWhatsAppSignature(
   rawBody: ArrayBuffer,
@@ -56,7 +41,7 @@ export async function handleIncomingMessage(env: Env, args: HandleIncomingMessag
     messageId,
   });
 
-  const tokenMatch = text.match(/^\/token\s*([A-Fa-f0-9]+)$/);
+  const tokenMatch = text.match(/^\/verify\s*([A-Za-z0-9]{4}-[A-Za-z0-9]{4})$/);
   if (tokenMatch) {
     const rawToken = tokenMatch[1];
     if (!rawToken) {
