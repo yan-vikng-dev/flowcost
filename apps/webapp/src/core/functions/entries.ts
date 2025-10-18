@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { protectedFunctionMiddleware } from "@/core/middleware/auth";
 import { getDb } from "@repo/data-ops/database/setup";
 import { entries, entryTypes, type SelectEntry } from "@repo/data-ops/drizzle/schemas/entries/table";
-import { exchange_rates, SelectExchangeRate } from "@repo/data-ops/drizzle/schemas/exchange_rates/table";
+import { exchange_rates, type SelectExchangeRate } from "@repo/data-ops/drizzle/schemas/exchange_rates/table";
 import { user_preferences } from "@repo/data-ops/drizzle/schemas/user_preferences/table";
 import { z } from "zod";
 import { categories, currencies, type Currency } from "@repo/shared-config";
@@ -24,7 +24,7 @@ export const createEntry = createServerFn({ method: "POST" })
   .inputValidator(createEntryInput)
   .handler(async (ctx) => {
     const db = getDb();
-    const result = await db
+    const [result] = await db
       .insert(entries)
       .values({
         amount: ctx.data.amount,
@@ -37,7 +37,7 @@ export const createEntry = createServerFn({ method: "POST" })
       })
       .returning({ id: entries.id });
 
-    return { id: result[0]?.id };
+    return { id: result?.id };
   });
 
 export const deleteEntriesInput = z.object({

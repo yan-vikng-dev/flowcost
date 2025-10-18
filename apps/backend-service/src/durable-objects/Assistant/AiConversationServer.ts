@@ -6,6 +6,7 @@ import { withTracing } from "@posthog/ai";
 import { systemPrompt } from "./config";
 import { makeCreateEntryTool } from "./tools/createEntry";
 import { Currency } from "@repo/shared-config";
+import { initDatabase } from "@repo/data-ops/database/setup";
 
 const contextWindowMs = 1000 * 60 * 60; // 1 hour
 
@@ -25,6 +26,7 @@ export class AiConversationServer extends DurableObject {
   constructor(ctx: DurableObjectState, env: Env) {
     super(ctx, env);
     void ctx.blockConcurrencyWhile(async () => {
+      initDatabase(env.DB);
       this.conversationHistory = (await ctx.storage.get<ModelMessage[]>("conversationHistory")) || [
         { role: "system", content: systemPrompt },
       ];
@@ -69,6 +71,10 @@ export class AiConversationServer extends DurableObject {
       ],
     });
     this.conversationHistory.push(...result.response.messages);
+    console.debug({
+      message: "generateText result",
+      result
+    });
 
     await this.ctx.storage.put("seenMessageIds", Array.from(this.seenMessageIds));
     const finalMessage = result.text || "Something went wrong. Please try again.";

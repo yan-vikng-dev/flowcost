@@ -46,7 +46,7 @@ const slashCommands: readonly string[] = ["/new", "/help", "/link", "/unlink", "
 
 export async function handleIncomingMessage(env: Env, payload: NotificationPayload) {
   const db = getDb();
-  const msg = payload.entry?.[0]?.changes?.[0]?.value?.messages?.[0];
+  const msg = payload.entry[0]?.changes[0]?.value.messages?.[0];
   const waId = msg?.from;
   const text = msg?.text?.body;
   const messageId = msg?.id;
