@@ -1,0 +1,25 @@
+import { z } from "zod";
+import { tool } from "ai";
+import { DrizzleD1Database } from "drizzle-orm/d1";
+import { categories } from "@repo/shared-config";
+
+export function makeCreateEntryTool(_db: DrizzleD1Database) {
+  return tool({
+    name: "create_entry",
+    description: "Create a financial entry",
+    inputSchema: z.object({
+      type: z.enum(["expense", "income"]).describe("Whether the entry is an expense or income"),
+      amount: z.number().gt(0).describe("The absolute amount of the entry"),
+      currency: z
+        .string()
+        .optional()
+        .describe(
+          "The currency code of the entry, e.g. USD, EUR, etc. Optional; defaults to the user's preferred new entry currency.",
+        ),
+      category: z.enum(categories).describe("strict known category name from the app"),
+      description: z.string().optional().describe("Short note or merchant, optional"),
+      executedAt: z.string().optional().describe("YYYY-MM-DD; defaults to today if omitted"),
+    }),
+    execute: async (_input) => {},
+  });
+}

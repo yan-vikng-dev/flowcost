@@ -10,49 +10,47 @@
   "compatibility_flags": ["nodejs_compat"],
   "observability": {
     "enabled": true,
-		"head_sampling_rate": 1
+    "head_sampling_rate": 1,
   },
   "triggers": {
-	"crons": [
-		"0 0 * * *"
-	]
+    "crons": ["0 0 * * *"],
   },
   "vars": {
-    "POSTHOG_HOST": "https://eu.i.posthog.com"
+    "POSTHOG_HOST": "https://eu.i.posthog.com",
   },
   "routes": [
-		{
-			"pattern": "backend.flowcost.co",
-			"custom_domain": true
-		}
-	],
-	"d1_databases": [
-		{
-			"remote": true,
-			"binding": "DB",
-			"database_name": "flowcost-db",
-			"database_id": "e2dc49b0-3d97-4ada-9135-0a0c1410f54c"
-		}
-	],
-	"kv_namespaces": [
-		{
-			"binding": "CACHE",
-			"id": "f52e1d3b9f2c4428a3b0f10a663cb5a7",
-			"remote": true
-		}
-	],
-	"durable_objects": {
-		"bindings": [
-			{
-				"name": "AI_CONVERSATION_SERVER",
-				"class_name": "AiConversationServer"
-			}
-		]
-	},
-	"migrations": [
-		{
-			"tag": "v1",
-			"new_sqlite_classes": ["AiConversationServer"]
-		}
-	]
+    {
+      "pattern": "backend.flowcost.co",
+      "custom_domain": true,
+    },
+  ],
+  "d1_databases": [
+    {
+      "remote": true,
+      "binding": "DB",
+      "database_name": "flowcost-db",
+      "database_id": "e2dc49b0-3d97-4ada-9135-0a0c1410f54c",
+    },
+  ],
+  "kv_namespaces": [
+    {
+      "binding": "CACHE",
+      "id": "f52e1d3b9f2c4428a3b0f10a663cb5a7",
+      "remote": true,
+    },
+  ],
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "AI_CONVERSATION_SERVER",
+        "class_name": "AiConversationServer",
+      },
+    ],
+  },
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": ["AiConversationServer"],
+    },
+  ],
 }

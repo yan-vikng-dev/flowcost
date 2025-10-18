@@ -7,6 +7,11 @@
     "build": "vite build",
     "deploy": "wrangler deploy",
     "serve": "vite preview",
+    "lint": "eslint . --fix",
+    "lint:check": "eslint .",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "format": "prettier -w .",
+    "format:check": "prettier -c .",
     "cf-typegen": "wrangler types"
   },
   "dependencies": {

@@ -8,7 +8,9 @@ import { NotificationPayload } from "./types";
 export async function sha256Hex(input: ArrayBuffer | string): Promise<string> {
   const data = typeof input === "string" ? new TextEncoder().encode(input) : new Uint8Array(input);
   const digest = await crypto.subtle.digest("SHA-256", data);
-  return Array.from(new Uint8Array(digest)).map((b) => b.toString(16).padStart(2, "0")).join("");
+  return Array.from(new Uint8Array(digest))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
 }
 
 function timingSafeEqualHex(a: string, b: string): boolean {
@@ -18,7 +20,11 @@ function timingSafeEqualHex(a: string, b: string): boolean {
   return res === 0;
 }
 
-export async function verifyWhatsAppSignature(rawBody: ArrayBuffer, signatureHeader: string | null, appSecret: string): Promise<boolean> {
+export async function verifyWhatsAppSignature(
+  rawBody: ArrayBuffer,
+  signatureHeader: string | null,
+  appSecret: string,
+): Promise<boolean> {
   if (!signatureHeader) return false;
   const expected = signatureHeader.replace(/^sha256=/, "");
   const key = await crypto.subtle.importKey(
@@ -29,7 +35,9 @@ export async function verifyWhatsAppSignature(rawBody: ArrayBuffer, signatureHea
     ["sign"],
   );
   const mac = await crypto.subtle.sign("HMAC", key, rawBody);
-  const macHex = Array.from(new Uint8Array(mac)).map((b) => b.toString(16).padStart(2, "0")).join("");
+  const macHex = Array.from(new Uint8Array(mac))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
   return timingSafeEqualHex(macHex, expected);
 }
 
@@ -53,41 +61,63 @@ export async function handleIncomingMessage(env: Env, payload: NotificationPaylo
   if (tokenMatch) {
     const rawToken = tokenMatch[1];
     if (!rawToken) {
-      await sendWhatsAppText({ env, waId, text: "Token invalid or expired. Please retry linking from the web app." });
+      await sendWhatsAppText({
+        env,
+        waId,
+        text: "Token invalid or expired. Please retry linking from the web app.",
+      });
       return;
     }
     const tokenHash = await sha256Hex(rawToken);
 
     const now = new Date();
-    const rows = await db.select().from(whatsapp_link_tokens).where(
-      and(
-        eq(whatsapp_link_tokens.tokenHash, tokenHash),
-        gt(whatsapp_link_tokens.expiresAt, now),
-        isNull(whatsapp_link_tokens.usedAt),
-      ),
-    );
+    const rows = await db
+      .select()
+      .from(whatsapp_link_tokens)
+      .where(
+        and(
+          eq(whatsapp_link_tokens.tokenHash, tokenHash),
+          gt(whatsapp_link_tokens.expiresAt, now),
+          isNull(whatsapp_link_tokens.usedAt),
+        ),
+      );
     const token = rows[0];
     if (!token) {
-      await sendWhatsAppText({ env, waId, text: "Token invalid or expired. Please retry linking from the web app." });
+      await sendWhatsAppText({
+        env,
+        waId,
+        text: "Token invalid or expired. Please retry linking from the web app.",
+      });
       return;
     }
 
     // Relink logic: if this waId belongs to another user, move it
-    const existingByWa = await db.select().from(whatsapp_links).where(eq(whatsapp_links.waId, waId));
+    const existingByWa = await db
+      .select()
+      .from(whatsapp_links)
+      .where(eq(whatsapp_links.waId, waId));
     if (existingByWa[0] && existingByWa[0].userId !== token.userId) {
-      await sendWhatsAppText({ env, waId, text: "This number was linked to a different account. Relinking to your current account." });
+      await sendWhatsAppText({
+        env,
+        waId,
+        text: "This number was linked to a different account. Relinking to your current account.",
+      });
     }
 
-    await db.insert(whatsapp_links).values({
-      userId: token.userId,
-      waId,
-    }).onConflictDoUpdate({
-      target: whatsapp_links.waId,
-      set: { userId: token.userId, updatedAt: new Date() },
-    });
+    await db
+      .insert(whatsapp_links)
+      .values({
+        userId: token.userId,
+        waId,
+      })
+      .onConflictDoUpdate({
+        target: whatsapp_links.waId,
+        set: { userId: token.userId, updatedAt: new Date() },
+      });
 
     // Mark token as used
-    await db.update(whatsapp_link_tokens)
+    await db
+      .update(whatsapp_link_tokens)
       .set({ usedAt: now, updatedAt: now })
       .where(eq(whatsapp_link_tokens.id, token.id));
 
@@ -95,12 +125,17 @@ export async function handleIncomingMessage(env: Env, payload: NotificationPaylo
     return;
   }
 
-  const [link] = await db.select()
-                        .from(whatsapp_links)
-                        .where(eq(whatsapp_links.waId, waId))
-                        .limit(1);
+  const [link] = await db
+    .select()
+    .from(whatsapp_links)
+    .where(eq(whatsapp_links.waId, waId))
+    .limit(1);
   if (!link) {
-    await sendWhatsAppText({ env, waId, text: "Please visit https://flowcost.co/app/settings to link your WhatsApp number" });
+    await sendWhatsAppText({
+      env,
+      waId,
+      text: "Please visit https://flowcost.co/app/settings to link your WhatsApp number",
+    });
     return;
   }
   const id = env.AI_CONVERSATION_SERVER.idFromName(link.userId);
@@ -113,10 +148,18 @@ export async function handleIncomingMessage(env: Env, payload: NotificationPaylo
         await sendWhatsAppText({ env, waId, text: "I forgor. clean slate." });
         return;
       case "/help":
-        await sendWhatsAppText({ env, waId, text: "You can either use slash commands (start with /) or just chat normally, I'll try my best to help you." });
+        await sendWhatsAppText({
+          env,
+          waId,
+          text: "You can either use slash commands (start with /) or just chat normally, I'll try my best to help you.",
+        });
         return;
       case "/link":
-        await sendWhatsAppText({ env, waId, text: "Please visit https://flowcost.co/app/settings to link your WhatsApp number" });
+        await sendWhatsAppText({
+          env,
+          waId,
+          text: "Please visit https://flowcost.co/app/settings to link your WhatsApp number",
+        });
         return;
       case "/unlink":
         await db.delete(whatsapp_links).where(eq(whatsapp_links.waId, waId));
@@ -129,5 +172,3 @@ export async function handleIncomingMessage(env: Env, payload: NotificationPaylo
   if (reply) await sendWhatsAppText({ env, waId, text: reply });
   return;
 }
-
-

@@ -20,7 +20,12 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsc -p tsconfig.json --outDir ./dist"
+    "build": "tsc -p tsconfig.json --outDir ./dist",
+    "lint": "eslint . --fix",
+    "lint:check": "eslint .",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "format": "prettier -w .",
+    "format:check": "prettier -c ."
   },
   "keywords": [],
   "author": "",
@@ -30,4 +35,3 @@
     "typescript": "^5.9.3"
   }
 }
-

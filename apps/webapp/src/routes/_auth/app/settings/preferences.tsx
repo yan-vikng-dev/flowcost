@@ -1,10 +1,20 @@
 import * as React from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getUserPreferences, updateUserPreferences, type UpdateUserPreferencesInput } from "@/core/functions/preferences";
+import {
+  getUserPreferences,
+  updateUserPreferences,
+  type UpdateUserPreferencesInput,
+} from "@/core/functions/preferences";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { currencies } from "@repo/shared-config";
 import { getWhatsappLinkStatus, startWhatsappLink } from "@/core/functions/whatsapp";
@@ -27,7 +37,7 @@ function RouteComponent() {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["userPreferences"] }),
         queryClient.invalidateQueries({ queryKey: ["entries"] }),
-      ])
+      ]);
     },
   });
 
@@ -67,7 +77,12 @@ function RouteComponent() {
             <Label>Default Entry Currency</Label>
             <Select
               value={local.defaultEntryCurrency}
-              onValueChange={(v) => setLocal((s) => ({ ...s, defaultEntryCurrency: v as typeof s.defaultEntryCurrency }))}
+              onValueChange={(v) =>
+                setLocal((s) => ({
+                  ...s,
+                  defaultEntryCurrency: v as typeof s.defaultEntryCurrency,
+                }))
+              }
             >
               <SelectTrigger>
                 <SelectValue />
@@ -86,7 +101,9 @@ function RouteComponent() {
             <Label>Display Currency</Label>
             <Select
               value={local.displayCurrency}
-              onValueChange={(v) => setLocal((s) => ({ ...s, displayCurrency: v as typeof s.displayCurrency }))}
+              onValueChange={(v) =>
+                setLocal((s) => ({ ...s, displayCurrency: v as typeof s.displayCurrency }))
+              }
             >
               <SelectTrigger>
                 <SelectValue />
@@ -101,32 +118,32 @@ function RouteComponent() {
             </Select>
           </div>
 
-        <div className="grid gap-2">
-          <Label>WhatsApp</Label>
-          <div className="flex items-center justify-between">
-            <div className="text-sm text-muted-foreground">
-              {whatsappStatusQuery.isLoading ? "Checking status..." : whatsappStatusQuery.data?.linked ? "Linked" : "Not linked"}
+          <div className="grid gap-2">
+            <Label>WhatsApp</Label>
+            <div className="flex items-center justify-between">
+              <div className="text-sm text-muted-foreground">
+                {whatsappStatusQuery.isLoading
+                  ? "Checking status..."
+                  : whatsappStatusQuery.data?.linked
+                    ? "Linked"
+                    : "Not linked"}
+              </div>
+              <Button
+                variant="secondary"
+                disabled={startLinkMutation.isPending}
+                onClick={() => startLinkMutation.mutate()}
+              >
+                {startLinkMutation.isPending
+                  ? "Opening..."
+                  : whatsappStatusQuery.data?.linked
+                    ? "Relink WhatsApp"
+                    : "Link WhatsApp"}
+              </Button>
             </div>
-            <Button
-              variant="secondary"
-              disabled={startLinkMutation.isPending}
-              onClick={() => startLinkMutation.mutate()}
-            >
-              {startLinkMutation.isPending
-                ? "Opening..."
-                : whatsappStatusQuery.data?.linked
-                ? "Relink WhatsApp"
-                : "Link WhatsApp"}
-            </Button>
           </div>
-        </div>
 
           <div className="flex justify-end gap-2">
-            <Button
-              variant="ghost"
-              onClick={() => setLocal(current)}
-              disabled={mutation.isPending}
-            >
+            <Button variant="ghost" onClick={() => setLocal(current)} disabled={mutation.isPending}>
               Reset
             </Button>
             <Button
@@ -141,5 +158,3 @@ function RouteComponent() {
     </Card>
   );
 }
-
-

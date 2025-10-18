@@ -8,6 +8,11 @@
     "dev": "wrangler dev --x-remote-bindings",
     "start": "wrangler dev",
     "test": "vitest",
+    "lint": "eslint . --fix",
+    "lint:check": "eslint .",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "format": "prettier -w .",
+    "format:check": "prettier -c .",
     "cf-typegen": "wrangler types --env-interface BaseEnv"
   },
   "devDependencies": {

@@ -3,6 +3,7 @@
     "target": "ESNext",
     "module": "ESNext",
     "moduleResolution": "bundler",
+    "baseUrl": ".",
 
     "resolveJsonModule": true,
     "isolatedModules": true,
@@ -17,5 +18,8 @@
     },
     "types": ["@cloudflare/workers-types"]
   },
-  "include": ["src"]
+  "include": [
+    "src",
+    "drizzle-kit.config.ts"
+  ]
 }

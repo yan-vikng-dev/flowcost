@@ -5,17 +5,17 @@ import { initDatabase } from "@repo/data-ops/database/setup";
 export { AiConversationServer } from "@/durable-objects/Assistant/AiConversationServer";
 
 export default class DataService extends WorkerEntrypoint<Env> {
-  
   fetch(request: Request) {
     initDatabase(this.env.DB);
     return app.fetch(request, this.env, this.ctx);
   }
 
-  async scheduled(controller: ScheduledController) {
+  scheduled(controller: ScheduledController) {
     initDatabase(this.env.DB);
     switch (controller.cron) {
       case "0 0 * * *":
-        this.ctx.waitUntil(updateExchangeRates(controller, this.env, this.ctx))
+        this.ctx.waitUntil(updateExchangeRates(this.env));
+        break;
       default:
         break;
     }

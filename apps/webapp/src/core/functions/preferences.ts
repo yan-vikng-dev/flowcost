@@ -3,7 +3,7 @@ import { protectedFunctionMiddleware } from "@/core/middleware/auth";
 import { getDb } from "@repo/data-ops/database/setup";
 import { user_preferences } from "@repo/data-ops/drizzle/schemas/user_preferences";
 import { eq } from "drizzle-orm";
-import z from "zod";
+import {z} from "zod";
 import { currencies } from "@repo/shared-config";
 
 export const getUserPreferences = createServerFn()
@@ -36,18 +36,19 @@ export const updateUserPreferences = createServerFn({ method: "POST" })
     const db = getDb();
     const payload = ctx.data;
     // Upsert logic
-    await db.insert(user_preferences).values({
-      userId: ctx.context.userId,
-      defaultEntryCurrency: payload.defaultEntryCurrency,
-      displayCurrency: payload.displayCurrency,
-    }).onConflictDoUpdate({
-      target: user_preferences.userId,
-      set: {
+    await db
+      .insert(user_preferences)
+      .values({
+        userId: ctx.context.userId,
         defaultEntryCurrency: payload.defaultEntryCurrency,
         displayCurrency: payload.displayCurrency,
-      },
-    }); 
+      })
+      .onConflictDoUpdate({
+        target: user_preferences.userId,
+        set: {
+          defaultEntryCurrency: payload.defaultEntryCurrency,
+          displayCurrency: payload.displayCurrency,
+        },
+      });
     return { ok: true } as const;
   });
-
-

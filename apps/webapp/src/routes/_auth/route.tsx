@@ -21,11 +21,11 @@ function RouteComponent() {
   }
 
   return (
-      <div className="flex-col">
-        <Header />
-        <main className="p-8">
-          <Outlet />
-        </main>
-      </div>
+    <div className="flex-col">
+      <Header />
+      <main className="p-8">
+        <Outlet />
+      </main>
+    </div>
   );
 }

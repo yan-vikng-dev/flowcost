@@ -2,7 +2,7 @@ import { DurableObject } from "cloudflare:workers";
 import { generateText, stepCountIs, type ModelMessage } from "ai";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { PostHog } from "posthog-node";
-import { withTracing } from "@posthog/ai"
+import { withTracing } from "@posthog/ai";
 import { systemPrompt } from "./config";
 
 const contextWindowMs = 1000 * 60 * 60; // 1 hour
@@ -21,11 +21,17 @@ export class AiConversationServer extends DurableObject {
 
   constructor(ctx: DurableObjectState, env: Env) {
     super(ctx, env);
-    ctx.blockConcurrencyWhile(async () => {
-      this.conversationHistory = await ctx.storage.get<ModelMessage[]>("conversationHistory") || [{role: "system", content: systemPrompt}];
-      this.traceId = await ctx.storage.get<string>("traceId") || crypto.randomUUID();
+    void ctx.blockConcurrencyWhile(async () => {
+      this.conversationHistory = (await ctx.storage.get<ModelMessage[]>("conversationHistory")) || [
+        { role: "system", content: systemPrompt },
+      ];
+      this.traceId = (await ctx.storage.get<string>("traceId")) || crypto.randomUUID();
       this.seenMessageIds = new Set(await ctx.storage.get<string[]>("seenMessageIds"));
-      this.posthogClient = new PostHog(env.POSTHOG_API_KEY, {host: env.POSTHOG_HOST, flushAt: 1, flushInterval: 0});
+      this.posthogClient = new PostHog(env.POSTHOG_API_KEY, {
+        host: env.POSTHOG_HOST,
+        flushAt: 1,
+        flushInterval: 0,
+      });
     });
   }
 
@@ -36,8 +42,8 @@ export class AiConversationServer extends DurableObject {
       const toKeep = Array.from(this.seenMessageIds).slice(-50);
       this.seenMessageIds = new Set(toKeep);
     }
-    this.ctx.storage.setAlarm(Date.now() + contextWindowMs);
-    const googleProvider = createGoogleGenerativeAI({apiKey: this.env.GEMINI_API_KEY});
+    await this.ctx.storage.setAlarm(Date.now() + contextWindowMs);
+    const googleProvider = createGoogleGenerativeAI({ apiKey: this.env.GEMINI_API_KEY });
     const baseModel = googleProvider("gemini-2.5-flash-lite");
     if (!this.posthogClient) throw new Error("Posthog client not initialized");
     if (!this.traceId) throw new Error("Trace ID not initialized");
@@ -46,12 +52,15 @@ export class AiConversationServer extends DurableObject {
       posthogTraceId: this.traceId,
       posthogPrivacyMode: false,
     });
-    this.conversationHistory.push({role: "user", content: message});
+    this.conversationHistory.push({ role: "user", content: message });
     const result = await generateText({
       model,
       messages: this.conversationHistory,
-      stopWhen: [({steps}) => steps.some((step) => step.finishReason === "stop"), stepCountIs(10)]
-    })
+      stopWhen: [
+        ({ steps }) => steps.some((step) => step.finishReason === "stop"),
+        stepCountIs(10),
+      ],
+    });
     this.conversationHistory.push(...result.response.messages);
 
     await this.ctx.storage.put("seenMessageIds", Array.from(this.seenMessageIds));
@@ -71,7 +80,7 @@ export class AiConversationServer extends DurableObject {
   }
 
   async reset() {
-    this.conversationHistory = [{role: "system", content: systemPrompt}];
+    this.conversationHistory = [{ role: "system", content: systemPrompt }];
     this.traceId = crypto.randomUUID();
     await this.ctx.storage.put("conversationHistory", this.conversationHistory);
     await this.ctx.storage.put("traceId", this.traceId);

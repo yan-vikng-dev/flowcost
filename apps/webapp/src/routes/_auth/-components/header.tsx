@@ -5,10 +5,9 @@ import { BellIcon } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
 import { Link } from "@tanstack/react-router";
 
-
 export function Header() {
   const { data: session } = authClient.useSession();
-  
+
   const user = session?.user;
   const fallbackText = user?.name
     ? user.name.charAt(0).toUpperCase()

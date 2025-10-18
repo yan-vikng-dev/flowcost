@@ -1,38 +1,36 @@
 {
-	"$schema": "node_modules/wrangler/config-schema.json",
-	"name": "flowcost",
-	"compatibility_date": "2025-09-02",
-	"compatibility_flags": [
-		"nodejs_compat"
-	],
-	"main": "./src/server.ts",
-	"observability": {
-		"enabled": true,
-		"head_sampling_rate": 1
-	},
-	"vars": {
-		"GOOGLE_CLIENT_ID": "929719393907-apf36l038e899nof9ncpj21vlk92s9ed.apps.googleusercontent.com",
-		"WHATSAPP_E164": "+84906432245"
-	},
-	"routes": [
-		{
-			"pattern": "flowcost.co",
-			"custom_domain": true
-		}
-	],
-	"d1_databases": [
-		{
-			"remote": true,
-			"binding": "DB",
-			"database_name": "flowcost-db",
-			"database_id": "e2dc49b0-3d97-4ada-9135-0a0c1410f54c"
-		}
-	],
-	"kv_namespaces": [
-		{
-			"binding": "ER_KV",
-			"id": "f52e1d3b9f2c4428a3b0f10a663cb5a7",
-			"remote": true
-		}
-	]
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "flowcost",
+  "compatibility_date": "2025-09-02",
+  "compatibility_flags": ["nodejs_compat"],
+  "main": "./src/server.ts",
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1,
+  },
+  "vars": {
+    "GOOGLE_CLIENT_ID": "929719393907-apf36l038e899nof9ncpj21vlk92s9ed.apps.googleusercontent.com",
+    "WHATSAPP_E164": "+84906432245",
+  },
+  "routes": [
+    {
+      "pattern": "flowcost.co",
+      "custom_domain": true,
+    },
+  ],
+  "d1_databases": [
+    {
+      "remote": true,
+      "binding": "DB",
+      "database_name": "flowcost-db",
+      "database_id": "e2dc49b0-3d97-4ada-9135-0a0c1410f54c",
+    },
+  ],
+  "kv_namespaces": [
+    {
+      "binding": "ER_KV",
+      "id": "f52e1d3b9f2c4428a3b0f10a663cb5a7",
+      "remote": true,
+    },
+  ],
 }

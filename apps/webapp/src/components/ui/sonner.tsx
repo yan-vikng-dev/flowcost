@@ -1,17 +1,17 @@
-"use client"
-import * as React from "react"
+"use client";
+import * as React from "react";
 import {
   CircleCheckIcon,
   InfoIcon,
   Loader2Icon,
   OctagonXIcon,
   TriangleAlertIcon,
-} from "lucide-react"
-import { Toaster as Sonner, type ToasterProps } from "sonner"
-import { useTheme } from "@/components/theme"
+} from "lucide-react";
+import { Toaster as Sonner, type ToasterProps } from "sonner";
+import { useTheme } from "@/components/theme";
 
 export function Toaster(props: ToasterProps) {
-  const { resolvedTheme = "light" } = useTheme()
+  const { resolvedTheme = "light" } = useTheme();
 
   return (
     <Sonner
@@ -24,13 +24,15 @@ export function Toaster(props: ToasterProps) {
         error: <OctagonXIcon className="size-4" />,
         loading: <Loader2Icon className="size-4 animate-spin" />,
       }}
-      style={{
-        "--normal-bg": "var(--popover)",
-        "--normal-text": "var(--popover-foreground)",
-        "--normal-border": "var(--border)",
-        "--border-radius": "var(--radius)",
-      } as React.CSSProperties}
+      style={
+        {
+          "--normal-bg": "var(--popover)",
+          "--normal-text": "var(--popover-foreground)",
+          "--normal-border": "var(--border)",
+          "--border-radius": "var(--radius)",
+        } as React.CSSProperties
+      }
       {...props}
     />
-  )
+  );
 }

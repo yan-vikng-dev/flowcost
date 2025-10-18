@@ -12,8 +12,8 @@ export function HeroSection() {
         </h1>
 
         <p className="text-lg leading-8 text-muted-foreground max-w-2xl">
-          Track your expenses, income, and budgets with ease.
-          Talk to your personal AI assistant to manage your data and get insights from anywhere, using our free WhatsApp integration.
+          Track your expenses, income, and budgets with ease. Talk to your personal AI assistant to
+          manage your data and get insights from anywhere, using our free WhatsApp integration.
         </p>
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -31,7 +31,7 @@ export function HeroSection() {
               rel="noopener noreferrer"
               className="inline-flex items-center"
             >
-              <Github className="mr-2"/>
+              <Github className="mr-2" />
               Coming soon
             </a>
           </Button>

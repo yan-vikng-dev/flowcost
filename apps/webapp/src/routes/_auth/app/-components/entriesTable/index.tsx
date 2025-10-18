@@ -1,28 +1,38 @@
-import { useQuery, keepPreviousData } from "@tanstack/react-query"
-import { listEntriesThisMonthPaginated, type MonthlyEntry } from "@/core/functions/entries"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { DataTable } from "./data-table"
-import { monthlyEntriesColumns } from "./monthly-entries-columns"
-import { getUserPreferences } from "@/core/functions/preferences"
-import * as React from "react"
-import type { PaginationState } from "@tanstack/react-table"
+import { useQuery, keepPreviousData } from "@tanstack/react-query";
+import { listEntriesThisMonthPaginated, type MonthlyEntry } from "@/core/functions/entries";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { DataTable } from "./data-table";
+import { monthlyEntriesColumns } from "./monthly-entries-columns";
+import { getUserPreferences } from "@/core/functions/preferences";
+import * as React from "react";
+import type { PaginationState } from "@tanstack/react-table";
 
 export function MonthlyEntriesTable() {
-  const [pagination, setPagination] = React.useState<PaginationState>({ pageIndex: 0, pageSize: 10 })
+  const [pagination, setPagination] = React.useState<PaginationState>({
+    pageIndex: 0,
+    pageSize: 10,
+  });
 
-  const prefs = useQuery({ queryKey: ["userPreferences"], queryFn: () => getUserPreferences(), staleTime: 5 * 60 * 1000 })
-  const displayCurrency = prefs.data?.displayCurrency ?? "USD"
+  const prefs = useQuery({
+    queryKey: ["userPreferences"],
+    queryFn: () => getUserPreferences(),
+    staleTime: 5 * 60 * 1000,
+  });
+  const displayCurrency = prefs.data?.displayCurrency ?? "USD";
 
   const { data, isLoading, isError } = useQuery<{ items: MonthlyEntry[]; total: number }>({
     queryKey: ["entries", displayCurrency, pagination.pageIndex, pagination.pageSize],
-    queryFn: () => listEntriesThisMonthPaginated({ data: { page: pagination.pageIndex, pageSize: pagination.pageSize } }),
+    queryFn: () =>
+      listEntriesThisMonthPaginated({
+        data: { page: pagination.pageIndex, pageSize: pagination.pageSize },
+      }),
     placeholderData: keepPreviousData,
-  })
+  });
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>This Month's Entries</CardTitle>
+        <CardTitle>This Month&apos;s Entries</CardTitle>
       </CardHeader>
       <CardContent>
         {isError ? (
@@ -39,5 +49,5 @@ export function MonthlyEntriesTable() {
         )}
       </CardContent>
     </Card>
-  )
+  );
 }

@@ -1,22 +1,10 @@
 import { Link, rootRouteId, useMatch, useRouter } from "@tanstack/react-router";
 import type { ErrorComponentProps } from "@tanstack/react-router";
-import {
-  AlertTriangle,
-  RefreshCw,
-  ArrowLeft,
-  Home,
-  ChevronDown,
-  Bug,
-  Mail,
-} from "lucide-react";
+import { AlertTriangle, RefreshCw, ArrowLeft, Home, ChevronDown, Bug, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useState } from "react";
 
 export function DefaultCatchBoundary({ error }: ErrorComponentProps) {
@@ -63,17 +51,12 @@ export function DefaultCatchBoundary({ error }: ErrorComponentProps) {
           {/* Error Alert */}
           <Alert variant="destructive">
             <AlertTriangle className="h-4 w-4" />
-            <AlertDescription className="font-medium">
-              {errorMessage}
-            </AlertDescription>
+            <AlertDescription className="font-medium">{errorMessage}</AlertDescription>
           </Alert>
 
           {/* Action Buttons */}
           <div className="flex flex-col sm:flex-row gap-3">
-            <Button
-              onClick={() => router.invalidate()}
-              className="flex items-center gap-2"
-            >
+            <Button onClick={() => { void router.invalidate(); }} className="flex items-center gap-2">
               <RefreshCw className="h-4 w-4" />
               Try Again
             </Button>
@@ -115,9 +98,7 @@ export function DefaultCatchBoundary({ error }: ErrorComponentProps) {
               </CollapsibleTrigger>
               <CollapsibleContent className="space-y-2">
                 <div className="rounded-lg bg-muted p-4">
-                  <h4 className="text-sm font-medium mb-2">
-                    Error Stack Trace:
-                  </h4>
+                  <h4 className="text-sm font-medium mb-2">Error Stack Trace:</h4>
                   <pre className="text-xs text-muted-foreground whitespace-pre-wrap break-words max-h-40 overflow-y-auto">
                     {errorStack}
                   </pre>

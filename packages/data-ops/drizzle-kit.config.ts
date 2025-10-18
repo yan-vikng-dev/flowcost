@@ -1,6 +1,6 @@
 import type { Config } from "drizzle-kit";
 const config: Config = {
-  schema: "./src/drizzle/schemas/*.ts",
+  schema: ["./src/drizzle/schemas/**/relations.ts", "./src/drizzle/schemas/**/table.ts"],
   out: "./src/drizzle/migrations",
   dialect: "sqlite",
   driver: "d1-http",

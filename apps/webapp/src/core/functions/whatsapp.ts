@@ -10,12 +10,16 @@ import { z } from "zod";
 function randomHex(bytes: number = 32): string {
   const b = new Uint8Array(bytes);
   crypto.getRandomValues(b);
-  return Array.from(b).map((x) => x.toString(16).padStart(2, "0")).join("");
+  return Array.from(b)
+    .map((x) => x.toString(16).padStart(2, "0"))
+    .join("");
 }
 
 async function sha256Hex(input: string): Promise<string> {
   const d = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(input));
-  return Array.from(new Uint8Array(d)).map((x) => x.toString(16).padStart(2, "0")).join("");
+  return Array.from(new Uint8Array(d))
+    .map((x) => x.toString(16).padStart(2, "0"))
+    .join("");
 }
 
 export const startWhatsappLink = createServerFn({ method: "POST" })
@@ -57,5 +61,3 @@ export const getWhatsappLinkStatus = createServerFn()
     if (!link) return { linked: false as const };
     return { linked: true as const, waId: link.waId };
   });
-
-

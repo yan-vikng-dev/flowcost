@@ -93,9 +93,7 @@ export function NavigationBar() {
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 lg:h-20">
           {/* Logo and Brand */}
-          <Link
-            to="/"
-          >
+          <Link to="/">
             <div className="flex items-center gap-2">
               <img src="/logo/logo192.png" alt="Flowcost" className="size-12" />
               <span className="text-lg lg:text-xl font-bold bg-gradient-to-r from-primary to-foreground bg-clip-text text-transparent hover:from-foreground hover:to-primary transition-all duration-300">
@@ -116,7 +114,7 @@ export function NavigationBar() {
                     className="flex items-center space-x-2 px-4 py-2 gap-2 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground transition-all duration-300 hover:bg-accent/50 group"
                   >
                     {!item.hideLabel && item.label}
-                    {item.icon && <item.icon className="size-4"/>}
+                    {item.icon && <item.icon className="size-4" />}
                   </a>
                 ) : (
                   <Link
@@ -143,30 +141,18 @@ export function NavigationBar() {
           <div className="hidden lg:block">
             {session ? (
               <AccountDialog>
-                <Button
-                  variant="ghost"
-                  className="flex items-center gap-2 px-3"
-                >
+                <Button variant="ghost" className="flex items-center gap-2 px-3">
                   <Avatar className="h-7 w-7">
-                    <AvatarImage
-                      src={user?.image || undefined}
-                      alt={user?.name || "User"}
-                    />
+                    <AvatarImage src={user?.image || undefined} alt={user?.name || "User"} />
                     <AvatarFallback className="bg-primary text-primary-foreground text-xs">
                       {fallbackText}
                     </AvatarFallback>
                   </Avatar>
-                  <span className="text-sm font-medium">
-                    {user?.name || "Account"}
-                  </span>
+                  <span className="text-sm font-medium">{user?.name || "Account"}</span>
                 </Button>
               </AccountDialog>
             ) : (
-              <Button
-                onClick={handleGoogleSignIn}
-                variant="default"
-                className="gap-2"
-              >
+              <Button onClick={() => void handleGoogleSignIn()} variant="default" className="gap-2">
                 <LogInIcon className="h-4 w-4" />
                 Sign In
               </Button>
@@ -233,29 +219,18 @@ export function NavigationBar() {
                   {session ? (
                     <div className="flex items-center gap-3 px-4 py-3 rounded-lg bg-accent/30">
                       <Avatar className="h-10 w-10">
-                        <AvatarImage
-                          src={user?.image || undefined}
-                          alt={user?.name || "User"}
-                        />
+                        <AvatarImage src={user?.image || undefined} alt={user?.name || "User"} />
                         <AvatarFallback className="bg-primary text-primary-foreground text-sm">
                           {fallbackText}
                         </AvatarFallback>
                       </Avatar>
                       <div className="flex-1">
-                        <p className="text-sm font-medium">
-                          {user?.name || "User"}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {user?.email}
-                        </p>
+                        <p className="text-sm font-medium">{user?.name || "User"}</p>
+                        <p className="text-xs text-muted-foreground">{user?.email}</p>
                       </div>
                     </div>
                   ) : (
-                    <Button
-                      onClick={handleGoogleSignIn}
-                      variant="default"
-                      className="w-full gap-2"
-                    >
+                    <Button onClick={() => void handleGoogleSignIn()} variant="default" className="w-full gap-2">
                       <LogInIcon className="h-4 w-4" />
                       Sign In with Google
                     </Button>

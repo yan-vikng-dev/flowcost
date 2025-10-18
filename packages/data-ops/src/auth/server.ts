@@ -1,11 +1,9 @@
 import { createBetterAuth } from "@/auth/setup";
 import { getDb } from "@/database/setup";
-import {
-  auth_accounts,
-  auth_sessions,
-  auth_verifications,
-  auth_users,
-} from "@/drizzle/schemas/auth";
+import { auth_users } from "@/drizzle/schemas/auth_users/table";
+import { auth_accounts } from "@/drizzle/schemas/auth_accounts/table";
+import { auth_sessions } from "@/drizzle/schemas/auth_sessions/table";
+import { auth_verifications } from "@/drizzle/schemas/auth_verifications/table";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 
 let betterAuth: ReturnType<typeof createBetterAuth>;
