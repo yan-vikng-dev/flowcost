@@ -44,19 +44,17 @@ export async function verifyWhatsAppSignature(
 
 const slashCommands: readonly string[] = ["/new", "/help", "/link", "/unlink", "/help"];
 
-export async function handleIncomingMessage(env: Env, payload: NotificationPayload) {
+export type HandleIncomingMessageArgs = { waId: string; text: string; messageId: string };
+
+export async function handleIncomingMessage(env: Env, args: HandleIncomingMessageArgs) {
   const db = getDb();
-  const msg = payload.entry[0]?.changes[0]?.value.messages?.[0];
-  const waId = msg?.from;
-  const text = msg?.text?.body;
-  const messageId = msg?.id;
+  const { waId, text, messageId } = args;
   console.debug({
     message: "handling whatsapp webhook message",
     waId,
     text,
     messageId,
   });
-  if (!waId || !text || !messageId) return;
 
   const tokenMatch = text.match(/^\/token\s*([A-Fa-f0-9]+)$/);
   if (tokenMatch) {

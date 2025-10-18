@@ -17,7 +17,7 @@ const createEntrySchema = z.object({
     .regex(/^[A-Z]{3}$/)
     .optional()
     .describe("The currency code of the entry, e.g. USD, EUR, etc. Optional; backend resolves to the user's preference for new entries if omitted",),
-  category: z.enum(categories).describe("Category of the entry from a pre-defined list"),
+  category: z.enum(categories).describe("Category of the entry from a pre-defined list. Pick the one that makes the most sense for the user's message."),
   description: z.string().describe("Short note describing the entry"),
   executionDate: z.string().optional().describe("YYYY-MM-DD; defaults to today if omitted"),
 });

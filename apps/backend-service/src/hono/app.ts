@@ -34,6 +34,17 @@ app.post("/whatsapp/webhook", async (c) => {
     return c.text("invalid json", 400);
   }
   const payload = notificationPayloadSchema.parse(json);
-  c.executionCtx.waitUntil(handleIncomingMessage(c.env, payload));
+  const msg = payload.entry[0]?.changes[0]?.value.messages?.[0];
+  const waId = msg?.from;
+  const text = msg?.text?.body;
+  const messageId = msg?.id;
+  if (!waId || !text || !messageId) {
+    return c.text("OK");
+  }
+  console.debug({
+    message: "whatsapp webhook raw json",
+    json
+  })
+  c.executionCtx.waitUntil(handleIncomingMessage(c.env, { waId, text, messageId }));
   return c.text("OK");
 });
