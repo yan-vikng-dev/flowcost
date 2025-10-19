@@ -34,7 +34,7 @@ export const makeCreateEntryTool = (context: MessageContext, db: DrizzleDb) =>
       const executedAt = input.executionDate
         ? DateTime.fromISO(input.executionDate, { zone: context.userTimezone }).toJSDate()
         : new Date();
-      const currency = input.currency ? (input.currency as Currency) : context.defaultCurrency;
+      const currency = input.currency ? (input.currency as Currency) : context.defaultEntryCurrency;
       if (!currencies.includes(currency)) throw new Error(`Unsupported currency: ${currency}`);
       const newEntry: InsertEntry = {
         userId: context.userId,
