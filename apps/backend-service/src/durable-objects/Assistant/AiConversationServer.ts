@@ -3,8 +3,8 @@ import { generateText, stepCountIs, type ModelMessage } from "ai";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { PostHog } from "posthog-node";
 import { withTracing } from "@posthog/ai";
-import { systemPrompt } from "./config";
-import { makeCreateEntryTool, makeGetEntriesTool } from "./tools";
+import { getSystemMessage } from "./config";
+import { makeCreateEntryTool, makeGetEntriesTool, makeUpdatePreferencesTool } from "./tools";
 import { Currency } from "@repo/shared-config";
 import { initDatabase, getDb } from "@repo/data-ops/database/setup";
 
@@ -14,7 +14,8 @@ export type MessageContext = {
   messageId: string;
   waId: string;
   userId: string;
-  defaultCurrency: Currency;
+  defaultEntryCurrency: Currency;
+  displayCurrency: Currency;
   userTimezone: string;
 };
 
@@ -28,9 +29,9 @@ export class AiConversationServer extends DurableObject {
     super(ctx, env);
     void ctx.blockConcurrencyWhile(async () => {
       initDatabase(env.DB);
-      this.conversationHistory = (await ctx.storage.get<ModelMessage[]>("conversationHistory")) || [
-        { role: "system", content: systemPrompt },
-      ];
+      const storedHistory = await ctx.storage.get<ModelMessage[]>("conversationHistory");
+      this.conversationHistory = storedHistory ?? [getSystemMessage()];
+
       this.traceId = (await ctx.storage.get<string>("traceId")) || crypto.randomUUID();
       this.seenMessageIds = new Set(await ctx.storage.get<string[]>("seenMessageIds"));
       this.posthogClient = new PostHog(env.POSTHOG_API_KEY, {
@@ -63,6 +64,7 @@ export class AiConversationServer extends DurableObject {
     const tools = {
       create_entry: makeCreateEntryTool(messageContext, db),
       get_entries: makeGetEntriesTool(messageContext, db),
+      update_preferences: makeUpdatePreferencesTool(messageContext, db),
     };
     const result = await generateText({
       model,
@@ -74,11 +76,6 @@ export class AiConversationServer extends DurableObject {
       ],
     });
     this.conversationHistory.push(...result.response.messages);
-    console.debug({
-      message: "generateText result",
-      result,
-    });
-
     await this.ctx.storage.put("seenMessageIds", Array.from(this.seenMessageIds));
     const finalMessage = result.text || "Something went wrong. Please try again.";
     console.debug({
@@ -96,7 +93,7 @@ export class AiConversationServer extends DurableObject {
   }
 
   async reset() {
-    this.conversationHistory = [{ role: "system", content: systemPrompt }];
+    this.conversationHistory = [getSystemMessage()];
     this.traceId = crypto.randomUUID();
     await this.ctx.storage.put("conversationHistory", this.conversationHistory);
     await this.ctx.storage.put("traceId", this.traceId);

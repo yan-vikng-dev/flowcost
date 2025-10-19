@@ -31,7 +31,7 @@ export const makeCreateEntryTool = (context: MessageContext, db: DrizzleDb) =>
     description: "Create a financial entry",
     inputSchema: createEntrySchema,
     execute: async (input) => {
-      const executedAt = input.executionDate 
+      const executedAt = input.executionDate
         ? DateTime.fromISO(input.executionDate, { zone: context.userTimezone }).toJSDate()
         : new Date();
       const currency = input.currency ? (input.currency as Currency) : context.defaultCurrency;
@@ -45,7 +45,14 @@ export const makeCreateEntryTool = (context: MessageContext, db: DrizzleDb) =>
         description: input.description,
         executedAt,
       };
-      const [result] = await db.insert(entries).values(newEntry).returning();
-      return { result };
+      const [inserted] = await db.insert(entries).values(newEntry).returning();
+      if (!inserted) throw new Error("Failed to create entry");
+      const safe = {
+        ...inserted,
+        executedAt: inserted.executedAt.toISOString(),
+        createdAt: inserted.createdAt.toISOString(),
+        updatedAt: inserted.updatedAt.toISOString(),
+      };
+      return { result: safe };
     },
   });

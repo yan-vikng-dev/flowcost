@@ -5,27 +5,49 @@ import { type DrizzleDb } from "@repo/data-ops/database/setup";
 import { and, desc, gte, lt, eq } from "drizzle-orm";
 import { entries } from "@repo/data-ops/drizzle/schemas/entries/table";
 import { DateTime } from "luxon";
+import { exchange_rates } from "@repo/data-ops/drizzle/schemas/exchange_rates/table";
 
 const getEntriesSchema = z.object({
-  date: z
-    .string()
-    .optional()
-    .describe("YYYY-MM-DD; defaults to today if omitted")
+  date: z.string().optional().describe("YYYY-MM-DD; defaults to today if omitted"),
 });
 
 export const makeGetEntriesTool = (context: MessageContext, db: DrizzleDb) =>
   tool({
     name: "get_entries",
-    description: "Get the entries for the user for a given date",
+    description:
+      "Get the entries for the user for a given date, with a conversion to the user's preferred display currency",
     inputSchema: getEntriesSchema,
     execute: async (input) => {
-        const inputDate = input.date ?? DateTime.now().toISODate();
+      const inputDate = input.date ?? DateTime.now().toISODate();
       const { startDate, endDate } = getZonedDayRangeUtc(inputDate, context.userTimezone);
-        const foundEntries = await db.query.entries.findMany({
-            where: and(eq(entries.userId, context.userId), gte(entries.executedAt, startDate), lt(entries.executedAt, endDate)),
-            orderBy: desc(entries.executedAt),
+      const foundEntries = await db.query.entries.findMany({
+        where: and(
+          eq(entries.userId, context.userId),
+          gte(entries.executedAt, startDate),
+          lt(entries.executedAt, endDate),
+        ),
+        columns: {
+          userId: false,
+          createdAt: false,
+          updatedAt: false,
+        },
+        orderBy: desc(entries.executedAt),
+      });
+      let exchangeRates = await db.query.exchange_rates.findFirst({
+        where: eq(exchange_rates.date, inputDate),
+      })
+      if(!exchangeRates) {
+        exchangeRates = await db.query.exchange_rates.findFirst({
+          orderBy: desc(exchange_rates.createdAt),
         })
-      return { entries: foundEntries };
+      }
+      if(!exchangeRates) throw new Error("Failed to find exchange rates");
+      const safeEntries = foundEntries.map((e) => ({
+        ...e,
+        executedAt: e.executedAt.toISOString(),
+        convertedAmount: e.amount * (exchangeRates.rates[context.displayCurrency]/exchangeRates.rates[e.currency]),
+      }));
+      return { entries: safeEntries, targetCurrency: context.displayCurrency };
     },
   });
 

@@ -162,6 +162,8 @@ export const currencies = [
   "ZAR",
   "ZMW",
   "ZWL",
+  "CLF",
+  "CNH",
 ] as const;
 
 export type Currency = (typeof currencies)[number];
@@ -330,4 +332,6 @@ export const currencySymbols: Record<Currency, string> = {
   ZAR: "R",
   ZMW: "ZK",
   ZWL: "$",
+  CLF: "UF",
+  CNH: "¥",
 } as const;

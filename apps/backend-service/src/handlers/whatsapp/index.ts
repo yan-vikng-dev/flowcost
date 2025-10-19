@@ -122,6 +122,7 @@ export async function handleIncomingMessage(env: Env, args: HandleIncomingMessag
             columns: {
               defaultEntryCurrency: true,
               timezone: true,
+              displayCurrency: true,
             },
           },
         },
@@ -144,7 +145,7 @@ export async function handleIncomingMessage(env: Env, args: HandleIncomingMessag
     switch (text) {
       case "/new":
         await stub.reset();
-        await sendWhatsAppText({ env, waId, text: "I forgor. clean slate." });
+        await sendWhatsAppText({ env, waId, text: "I forgor." });
         return;
       case "/help":
         await sendWhatsAppText({
@@ -171,10 +172,16 @@ export async function handleIncomingMessage(env: Env, args: HandleIncomingMessag
     messageId,
     waId,
     userId: link.user.id,
-    defaultCurrency: link.user.preferences.defaultEntryCurrency,
+    defaultEntryCurrency: link.user.preferences.defaultEntryCurrency,
+    displayCurrency: link.user.preferences.displayCurrency,
     userTimezone: link.user.preferences.timezone,
   };
-  const reply = await stub.handleMessage(text, messageContext);
-  if (reply) await sendWhatsAppText({ env, waId, text: reply });
+  try {
+    const reply = await stub.handleMessage(text, messageContext);
+    if (reply) await sendWhatsAppText({ env, waId, text: reply });
+  } catch (error) {
+    await sendWhatsAppText({ env, waId, text: "Something went wrong. Please try again." });
+    throw error;
+  }
   return;
 }

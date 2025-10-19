@@ -3,12 +3,11 @@ import {
   exchange_rates,
   InsertExchangeRate,
 } from "@repo/data-ops/drizzle/schemas/exchange_rates/table";
-import { currencies } from "@repo/shared-config";
 import { z } from "zod";
 
 const exchangeRateResponseSchema = z.object({
   base_code: z.string(),
-  conversion_rates: z.record(z.enum(currencies), z.number()),
+  conversion_rates: z.record(z.string().regex(/^[A-Z]{3}$/), z.number()),
 });
 
 export const updateExchangeRates = async (env: Env) => {
