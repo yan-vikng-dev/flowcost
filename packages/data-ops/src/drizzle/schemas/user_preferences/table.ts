@@ -26,6 +26,5 @@ export const userPreferencesRelations = relations(user_preferences, ({ one }) =>
   }),
 }));
 
-
 export type InsertUserPreferences = typeof user_preferences.$inferInsert;
 export type SelectUserPreferences = typeof user_preferences.$inferSelect;

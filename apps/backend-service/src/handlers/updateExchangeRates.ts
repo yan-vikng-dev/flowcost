@@ -1,5 +1,8 @@
 import { getDb } from "@repo/data-ops/database/setup";
-import { exchange_rates, InsertExchangeRate } from "@repo/data-ops/drizzle/schemas/exchange_rates/table";
+import {
+  exchange_rates,
+  InsertExchangeRate,
+} from "@repo/data-ops/drizzle/schemas/exchange_rates/table";
 import { currencies } from "@repo/shared-config";
 import { z } from "zod";
 

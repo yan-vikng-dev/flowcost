@@ -4,9 +4,9 @@ import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { PostHog } from "posthog-node";
 import { withTracing } from "@posthog/ai";
 import { systemPrompt } from "./config";
-import { makeCreateEntryTool } from "./tools/createEntry";
+import { makeCreateEntryTool, makeGetEntriesTool } from "./tools";
 import { Currency } from "@repo/shared-config";
-import { initDatabase } from "@repo/data-ops/database/setup";
+import { initDatabase, getDb } from "@repo/data-ops/database/setup";
 
 const contextWindowMs = 1000 * 60 * 60; // 1 hour
 
@@ -15,6 +15,7 @@ export type MessageContext = {
   waId: string;
   userId: string;
   defaultCurrency: Currency;
+  userTimezone: string;
 };
 
 export class AiConversationServer extends DurableObject {
@@ -58,9 +59,11 @@ export class AiConversationServer extends DurableObject {
       posthogPrivacyMode: false,
     });
     this.conversationHistory.push({ role: "user", content: message });
+    const db = getDb();
     const tools = {
-      create_entry: makeCreateEntryTool({ userId: messageContext.userId, defaultCurrency: messageContext.defaultCurrency }),
-    }
+      create_entry: makeCreateEntryTool(messageContext, db),
+      get_entries: makeGetEntriesTool(messageContext, db),
+    };
     const result = await generateText({
       model,
       tools,
@@ -73,7 +76,7 @@ export class AiConversationServer extends DurableObject {
     this.conversationHistory.push(...result.response.messages);
     console.debug({
       message: "generateText result",
-      result
+      result,
     });
 
     await this.ctx.storage.put("seenMessageIds", Array.from(this.seenMessageIds));

@@ -1,8 +1,15 @@
 import { createServerFn } from "@tanstack/react-start";
 import { protectedFunctionMiddleware } from "@/core/middleware/auth";
 import { getDb } from "@repo/data-ops/database/setup";
-import { entries, entryTypes, type SelectEntry } from "@repo/data-ops/drizzle/schemas/entries/table";
-import { exchange_rates, type SelectExchangeRate } from "@repo/data-ops/drizzle/schemas/exchange_rates/table";
+import {
+  entries,
+  entryTypes,
+  type SelectEntry,
+} from "@repo/data-ops/drizzle/schemas/entries/table";
+import {
+  exchange_rates,
+  type SelectExchangeRate,
+} from "@repo/data-ops/drizzle/schemas/exchange_rates/table";
 import { user_preferences } from "@repo/data-ops/drizzle/schemas/user_preferences/table";
 import { z } from "zod";
 import { categories, currencies, type Currency } from "@repo/shared-config";
@@ -134,7 +141,7 @@ export const listEntriesThisMonth = createServerFn()
     const mapped: MonthlyEntry[] = rows.map((row) => {
       const dateStr = toDateStr(row.executedAt);
       const rateMap = rateByDate.get(dateStr) ?? latestRates;
-      const srcRate = rateMap[row.currency as Currency];
+      const srcRate = rateMap[row.currency];
       const targetRate = rateMap[displayCurrency];
 
       const amountIls =
@@ -218,7 +225,7 @@ export const listEntriesThisMonthPaginated = createServerFn()
     const items: MonthlyEntry[] = rows.map((row) => {
       const dateStr = toDateStr(row.executedAt);
       const rateMap = rateByDate.get(dateStr) ?? latestRates;
-      const srcRate = rateMap[row.currency as Currency];
+      const srcRate = rateMap[row.currency];
       const targetRate = rateMap[displayCurrency];
       const amountIls =
         typeof srcRate === "number" && srcRate > 0 && typeof targetRate === "number"

@@ -120,13 +120,14 @@ export async function handleIncomingMessage(env: Env, args: HandleIncomingMessag
         with: {
           preferences: {
             columns: {
-              defaultEntryCurrency: true
-            }
-          }
-        }
-      }
-    }
-  })
+              defaultEntryCurrency: true,
+              timezone: true,
+            },
+          },
+        },
+      },
+    },
+  });
 
   if (!link) {
     await sendWhatsAppText({
@@ -171,7 +172,8 @@ export async function handleIncomingMessage(env: Env, args: HandleIncomingMessag
     waId,
     userId: link.user.id,
     defaultCurrency: link.user.preferences.defaultEntryCurrency,
-  }
+    userTimezone: link.user.preferences.timezone,
+  };
   const reply = await stub.handleMessage(text, messageContext);
   if (reply) await sendWhatsAppText({ env, waId, text: reply });
   return;

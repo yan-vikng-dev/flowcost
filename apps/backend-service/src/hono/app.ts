@@ -43,8 +43,8 @@ app.post("/whatsapp/webhook", async (c) => {
   }
   console.debug({
     message: "whatsapp webhook raw json",
-    json
-  })
+    json,
+  });
   c.executionCtx.waitUntil(handleIncomingMessage(c.env, { waId, text, messageId }));
   return c.text("OK");
 });

@@ -23,6 +23,7 @@ export default [
       '**/*.d.ts',
       'apps/**/routeTree.gen.ts',
       'apps/**/worker-configuration.d.ts',
+      'packages/data-ops/drizzle-kit.config.ts',
     ],
   },
 

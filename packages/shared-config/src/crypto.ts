@@ -7,9 +7,9 @@
 export function token44(): string {
   const A = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
   let s = "";
-  const getRand = (arr: Uint8Array) => globalThis.crypto.getRandomValues(arr) as Uint8Array;
+  const getRand = (arr: Uint8Array) => globalThis.crypto.getRandomValues(arr);
   while (s.length < 8) {
-    const b = getRand(new Uint8Array(1))[0]!;
+    const b = getRand(new Uint8Array(1))[0];
     if (b < 252) s += A[b % 36];
   }
   return s.slice(0, 4) + "-" + s.slice(4);

@@ -18,6 +18,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { currencies } from "@repo/shared-config";
 import { getWhatsappLinkStatus, startWhatsappLink } from "@/core/functions/whatsapp";
+import { useTimezoneSelect } from "react-timezone-select";
 
 export const Route = createFileRoute("/_auth/app/settings/preferences")({
   component: RouteComponent,
@@ -59,11 +60,48 @@ function RouteComponent() {
     },
   });
 
-  const current = prefsQuery.data ?? { defaultEntryCurrency: "USD", displayCurrency: "USD" };
-  const [local, setLocal] = React.useState(current);
+  type Currency = (typeof currencies)[number];
+  type PrefsState = { defaultEntryCurrency: Currency; displayCurrency: Currency; timezone: string };
+
+  const current: PrefsState = prefsQuery.data
+    ? {
+        defaultEntryCurrency: prefsQuery.data.defaultEntryCurrency,
+        displayCurrency: prefsQuery.data.displayCurrency,
+        timezone: prefsQuery.data.timezone,
+      }
+    : { defaultEntryCurrency: "USD", displayCurrency: "USD", timezone: "UTC" };
+
+  const [local, setLocal] = React.useState<PrefsState>(current);
+
+  const { options: timezoneOptions } = useTimezoneSelect({ labelStyle: "original" });
+
+  const updatePref = React.useCallback(
+    (patch: Partial<PrefsState>) => {
+      const next: PrefsState = {
+        defaultEntryCurrency: patch.defaultEntryCurrency ?? local.defaultEntryCurrency,
+        displayCurrency: patch.displayCurrency ?? local.displayCurrency,
+        timezone: patch.timezone ?? local.timezone ?? "UTC",
+      };
+      const prev = local;
+      setLocal(next);
+      // Persist immediately
+      mutation.mutate(next, {
+        onError: () => {
+          setLocal(prev);
+        },
+      });
+    },
+    [local, mutation],
+  );
 
   React.useEffect(() => {
-    if (prefsQuery.data) setLocal(prefsQuery.data);
+    if (prefsQuery.data) {
+      setLocal({
+        defaultEntryCurrency: prefsQuery.data.defaultEntryCurrency,
+        displayCurrency: prefsQuery.data.displayCurrency,
+        timezone: prefsQuery.data.timezone,
+      });
+    }
   }, [prefsQuery.data]);
 
   return (
@@ -77,12 +115,7 @@ function RouteComponent() {
             <Label>Default Entry Currency</Label>
             <Select
               value={local.defaultEntryCurrency}
-              onValueChange={(v) =>
-                setLocal((s) => ({
-                  ...s,
-                  defaultEntryCurrency: v as typeof s.defaultEntryCurrency,
-                }))
-              }
+              onValueChange={(v) => updatePref({ defaultEntryCurrency: v as Currency })}
             >
               <SelectTrigger>
                 <SelectValue />
@@ -101,9 +134,7 @@ function RouteComponent() {
             <Label>Display Currency</Label>
             <Select
               value={local.displayCurrency}
-              onValueChange={(v) =>
-                setLocal((s) => ({ ...s, displayCurrency: v as typeof s.displayCurrency }))
-              }
+              onValueChange={(v) => updatePref({ displayCurrency: v as Currency })}
             >
               <SelectTrigger>
                 <SelectValue />
@@ -116,6 +147,31 @@ function RouteComponent() {
                 ))}
               </SelectContent>
             </Select>
+          </div>
+
+          <div className="grid gap-2">
+            <Label>Timezone</Label>
+            {(() => {
+              const hasCurated = timezoneOptions.some(
+                (opt) => opt.value === (local.timezone ?? ""),
+              );
+              const selectValue = hasCurated ? (local.timezone ?? undefined) : undefined;
+              const placeholder = local.timezone ?? "UTC";
+              return (
+                <Select value={selectValue} onValueChange={(v) => updatePref({ timezone: v })}>
+                  <SelectTrigger>
+                    <SelectValue placeholder={placeholder} />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-64">
+                    {timezoneOptions.map((opt) => (
+                      <SelectItem key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              );
+            })()}
           </div>
 
           <div className="grid gap-2">
@@ -142,17 +198,7 @@ function RouteComponent() {
             </div>
           </div>
 
-          <div className="flex justify-end gap-2">
-            <Button variant="ghost" onClick={() => setLocal(current)} disabled={mutation.isPending}>
-              Reset
-            </Button>
-            <Button
-              onClick={() => mutation.mutate(local)}
-              disabled={mutation.isPending || !local.defaultEntryCurrency || !local.displayCurrency}
-            >
-              {mutation.isPending ? "Saving..." : "Save"}
-            </Button>
-          </div>
+          {/* Per-field autosave; no global Save/Reset controls */}
         </div>
       </CardContent>
     </Card>

@@ -27,9 +27,11 @@
     "@posthog/ai": "^6.4.3",
     "@repo/data-ops": "workspace:^",
     "@repo/shared-config": "workspace:^",
+    "@types/luxon": "^3.7.1",
     "ai": "^5.0.75",
     "drizzle-orm": "^0.44.6",
     "hono": "^4.10.0",
+    "luxon": "^3.7.2",
     "posthog-node": "^5.10.0",
     "zod": "^4.1.12"
   }
