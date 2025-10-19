@@ -9,8 +9,8 @@ import { DateTime } from "luxon";
 const getEntriesSchema = z.object({
   date: z
     .string()
+    .optional()
     .describe("YYYY-MM-DD; defaults to today if omitted")
-    .default(DateTime.now().toISODate()),
 });
 
 export const makeGetEntriesTool = (context: MessageContext, db: DrizzleDb) =>
@@ -19,7 +19,8 @@ export const makeGetEntriesTool = (context: MessageContext, db: DrizzleDb) =>
     description: "Get the entries for the user for a given date",
     inputSchema: getEntriesSchema,
     execute: async (input) => {
-      const { startDate, endDate } = getZonedDayRangeUtc(input.date, context.userTimezone);
+        const inputDate = input.date ?? DateTime.now().toISODate();
+      const { startDate, endDate } = getZonedDayRangeUtc(inputDate, context.userTimezone);
         const foundEntries = await db.query.entries.findMany({
             where: and(eq(entries.userId, context.userId), gte(entries.executedAt, startDate), lt(entries.executedAt, endDate)),
             orderBy: desc(entries.executedAt),
@@ -28,7 +29,6 @@ export const makeGetEntriesTool = (context: MessageContext, db: DrizzleDb) =>
     },
   });
 
-// Compute [start, end) of a calendar day in a given IANA timezone, returned as UTC epoch ms
 function getZonedDayRangeUtc(
   dateStr: string,
   timeZone: string,

@@ -4,6 +4,7 @@ import { categories, currencies, Currency } from "@repo/shared-config";
 import { entries, InsertEntry } from "@repo/data-ops/drizzle/schemas/entries/table";
 import { type DrizzleDb } from "@repo/data-ops/database/setup";
 import { MessageContext } from "../AiConversationServer";
+import { DateTime } from "luxon";
 
 const createEntrySchema = z.object({
   type: z.enum(["expense", "income"]).describe("Whether the entry is an expense or income"),
@@ -30,11 +31,11 @@ export const makeCreateEntryTool = (context: MessageContext, db: DrizzleDb) =>
     description: "Create a financial entry",
     inputSchema: createEntrySchema,
     execute: async (input) => {
-      const executedAt = input.executionDate
-        ? new Date(input.executionDate + new Date().toISOString().split(/(?=T)/)[1])
+      const executedAt = input.executionDate 
+        ? DateTime.fromISO(input.executionDate, { zone: context.userTimezone }).toJSDate()
         : new Date();
       const currency = input.currency ? (input.currency as Currency) : context.defaultCurrency;
-      if (!currencies.includes(currency)) throw new Error(`Invalid currency: ${currency}`);
+      if (!currencies.includes(currency)) throw new Error(`Unsupported currency: ${currency}`);
       const newEntry: InsertEntry = {
         userId: context.userId,
         amount: input.amount,
