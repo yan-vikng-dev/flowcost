@@ -299,7 +299,7 @@ export function DataTable<TData extends RowWithId, TValue>({
         </DropdownMenu>
       </div>
 
-      <div className="overflow-hidden rounded-md border">
+      <div className="w-full overflow-x-auto rounded-md border overscroll-x-contain">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
