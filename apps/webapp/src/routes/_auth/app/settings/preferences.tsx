@@ -16,11 +16,31 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { currencies } from "@repo/shared-config";
-import { getWhatsappLinkStatus, startWhatsappLink } from "@/core/functions/whatsapp";
+import { getWhatsappLinkStatus, startWhatsappLink, unlinkWhatsapp } from "@/core/functions/whatsapp";
 import { useTimezoneSelect } from "react-timezone-select";
 
 export const Route = createFileRoute("/_auth/app/settings/preferences")({
+  loader: async ({ context }) => {
+    await Promise.all([
+      context.queryClient.ensureQueryData({
+        queryKey: ["userPreferences"],
+        queryFn: () => getUserPreferences(),
+      }),
+      context.queryClient.ensureQueryData({
+        queryKey: ["whatsappLinkStatus"],
+        queryFn: () => getWhatsappLinkStatus(),
+      }),
+    ]);
+  },
   component: RouteComponent,
 });
 
@@ -60,6 +80,16 @@ function RouteComponent() {
     },
   });
 
+  const unlinkMutation = useMutation({
+    mutationFn: async () => {
+      await unlinkWhatsapp();
+    },
+    onSuccess: async () => {
+      await whatsappStatusQuery.refetch();
+      setUnlinkOpen(false);
+    },
+  });
+
   type Currency = (typeof currencies)[number];
   type PrefsState = { defaultEntryCurrency: Currency; displayCurrency: Currency; timezone: string };
 
@@ -72,6 +102,7 @@ function RouteComponent() {
     : { defaultEntryCurrency: "USD", displayCurrency: "USD", timezone: "UTC" };
 
   const [local, setLocal] = React.useState<PrefsState>(current);
+  const [unlinkOpen, setUnlinkOpen] = React.useState(false);
 
   const { options: timezoneOptions } = useTimezoneSelect({ labelStyle: "original" });
 
@@ -186,17 +217,52 @@ function RouteComponent() {
               </div>
               <Button
                 variant="secondary"
-                disabled={startLinkMutation.isPending}
-                onClick={() => startLinkMutation.mutate()}
+                disabled={
+                  whatsappStatusQuery.data?.linked
+                    ? unlinkMutation.isPending
+                    : startLinkMutation.isPending
+                }
+                onClick={() => {
+                  if (whatsappStatusQuery.data?.linked) {
+                    setUnlinkOpen(true);
+                  } else {
+                    startLinkMutation.mutate();
+                  }
+                }}
               >
-                {startLinkMutation.isPending
-                  ? "Opening..."
-                  : whatsappStatusQuery.data?.linked
-                    ? "Relink WhatsApp"
+                {whatsappStatusQuery.data?.linked
+                  ? unlinkMutation.isPending
+                    ? "Unlinking..."
+                    : "Unlink WhatsApp"
+                  : startLinkMutation.isPending
+                    ? "Opening..."
                     : "Link WhatsApp"}
               </Button>
             </div>
           </div>
+
+          <Dialog open={unlinkOpen} onOpenChange={setUnlinkOpen}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Unlink WhatsApp?</DialogTitle>
+                <DialogDescription>
+                  This will remove your WhatsApp link. You can link it again later.
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter>
+                <Button variant="ghost" onClick={() => setUnlinkOpen(false)}>
+                  Cancel
+                </Button>
+                <Button
+                  variant="destructive"
+                  disabled={unlinkMutation.isPending}
+                  onClick={() => unlinkMutation.mutate()}
+                >
+                  {unlinkMutation.isPending ? "Unlinking..." : "Unlink"}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
 
           {/* Per-field autosave; no global Save/Reset controls */}
         </div>

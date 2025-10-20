@@ -47,3 +47,12 @@ export const getWhatsappLinkStatus = createServerFn()
     if (!link) return { linked: false as const };
     return { linked: true as const, waId: link.waId };
   });
+
+export const unlinkWhatsapp = createServerFn({ method: "POST" })
+  .middleware([protectedFunctionMiddleware])
+  .inputValidator(z.void())
+  .handler(async (ctx) => {
+    const db = getDb();
+    await db.delete(whatsapp_links).where(eq(whatsapp_links.userId, ctx.context.userId));
+    return { ok: true } as const;
+  });
