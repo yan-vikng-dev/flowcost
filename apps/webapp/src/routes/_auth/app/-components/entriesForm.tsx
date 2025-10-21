@@ -62,14 +62,14 @@ export function EntriesForm() {
           }}
           className="space-y-4"
         >
-          <div className="grid grid-cols-[14rem_1fr] items-end gap-4">
+          <div className="grid grid-cols-[max-content_1fr] sm:grid-cols-[14rem_1fr] items-end gap-4">
             <div className="grid gap-2">
               <Label>Type</Label>
               <form.Field name="entryType">
                 {(field) => (
                   <>
                     <EntryTypeCombobox
-                      className="w-full"
+                      className="w-auto sm:w-full"
                       value={field.state.value}
                       onChange={(val) => field.handleChange(val)}
                     />
@@ -144,14 +144,14 @@ export function EntriesForm() {
           </div>
 
           {/* Row 2: Currency, Amount */}
-          <div className="grid grid-cols-[14rem_1fr] items-end gap-4">
+          <div className="grid grid-cols-[max-content_1fr] sm:grid-cols-[14rem_1fr] items-end gap-4">
             <div className="grid gap-2">
               <Label>Currency</Label>
               <form.Field name="currency">
                 {(field) => (
                   <>
                     <CurrencyCombobox
-                      className="w-full"
+                      className="w-auto sm:w-full"
                       value={field.state.value}
                       onChange={(val) => field.handleChange(val)}
                     />
@@ -208,14 +208,14 @@ export function EntriesForm() {
           </div>
 
           {/* Row 3: Category, Description */}
-          <div className="grid grid-cols-[14rem_1fr] items-end gap-4">
+          <div className="grid grid-cols-[max-content_1fr] sm:grid-cols-[14rem_1fr] items-end gap-4">
             <div className="grid gap-2">
               <Label>Category</Label>
               <form.Field name="category">
                 {(field) => (
                   <>
                     <CategoryCombobox
-                      className="w-full"
+                      className="w-auto sm:w-full"
                       value={field.state.value}
                       onChange={(val) => field.handleChange(val)}
                     />

@@ -20,18 +20,29 @@ export function EntryTypeCombobox({
       value={value}
       onChange={onChange}
       className={className}
-      items={entryTypes.map((t) => ({
-        value: t,
-        label: (
-          <span className="flex items-center gap-2">
-            {(() => {
-              const Icon = getEntryTypeIcon(t);
-              return <Icon className="size-4" />;
-            })()}
-            <span>{t}</span>
-          </span>
-        ),
-      }))}
+      items={entryTypes.map((t) => {
+        const Icon = getEntryTypeIcon(t);
+        return {
+          value: t,
+          ariaLabel: t,
+          label: (
+            <span className="flex items-center gap-2">
+              <span aria-hidden className="inline-flex w-5 sm:w-6 justify-center shrink-0 leading-none">
+                <Icon className="size-4" />
+              </span>
+              <span>{t}</span>
+            </span>
+          ),
+          triggerLabel: (
+            <span className="flex items-center gap-2">
+              <span aria-hidden className="inline-flex w-5 sm:w-6 justify-center shrink-0 leading-none">
+                <Icon className="size-4" />
+              </span>
+              <span className="hidden sm:inline">{t}</span>
+            </span>
+          ),
+        };
+      })}
       placeholder={placeholder}
       disabled={disabled}
     />

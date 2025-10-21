@@ -13,11 +13,25 @@ export const Route = createFileRoute("/_auth/app/")({
 
     const initialPageIndex = 0;
     const initialPageSize = 10;
+    const initialSortBy = "executedAt" as const;
+    const initialSortDir = "desc" as const;
     await context.queryClient.ensureQueryData({
-      queryKey: ["entries", prefs.displayCurrency, initialPageIndex, initialPageSize],
+      queryKey: [
+        "entries",
+        prefs.displayCurrency,
+        initialPageIndex,
+        initialPageSize,
+        initialSortBy,
+        initialSortDir,
+      ],
       queryFn: () =>
         listEntriesThisMonthPaginated({
-          data: { page: initialPageIndex, pageSize: initialPageSize },
+          data: {
+            page: initialPageIndex,
+            pageSize: initialPageSize,
+            sortBy: initialSortBy,
+            sortDir: initialSortDir,
+          },
         }),
     });
   },

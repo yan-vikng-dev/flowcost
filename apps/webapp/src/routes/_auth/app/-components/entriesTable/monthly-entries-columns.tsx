@@ -70,7 +70,9 @@ export function monthlyEntriesColumns(displayCurrency: string): ColumnDef<Monthl
         const Icon = getEntryTypeIcon(entryType as any);
         return (
           <span className="flex items-center gap-2">
-            <Icon className="size-4" />
+            <span aria-hidden className="inline-flex w-5 sm:w-6 justify-center shrink-0 leading-none">
+              <Icon className="size-4" />
+            </span>
             <span>{entryType}</span>
           </span>
         );
@@ -101,7 +103,9 @@ export function monthlyEntriesColumns(displayCurrency: string): ColumnDef<Monthl
         const Icon = getCategoryIcon(category);
         return (
           <span className="flex items-center gap-2">
-            <Icon className="size-4" />
+            <span aria-hidden className="inline-flex w-5 sm:w-6 justify-center shrink-0 leading-none">
+              <Icon className="size-4" />
+            </span>
             <span>{category}</span>
           </span>
         );
@@ -109,24 +113,8 @@ export function monthlyEntriesColumns(displayCurrency: string): ColumnDef<Monthl
     },
     {
       accessorKey: "description",
-      header: ({ column }) => {
-        const sorted = column.getIsSorted();
-        return (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          >
-            Description
-            {sorted === "asc" ? (
-              <ArrowUpIcon className="ml-2 h-4 w-4" />
-            ) : sorted === "desc" ? (
-              <ArrowDownIcon className="ml-2 h-4 w-4" />
-            ) : (
-              <ArrowUpDownIcon className="ml-2 h-4 w-4 text-muted-foreground" />
-            )}
-          </Button>
-        );
-      },
+      enableSorting: false,
+      header: "Description",
       cell: ({ row }) => String(row.getValue("description") ?? ""),
     },
     {
@@ -140,7 +128,7 @@ export function monthlyEntriesColumns(displayCurrency: string): ColumnDef<Monthl
             className="ml-auto"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
           >
-            Original
+            Amount
             {sorted === "asc" ? (
               <ArrowUpIcon className="ml-2 h-4 w-4" />
             ) : sorted === "desc" ? (
@@ -160,25 +148,8 @@ export function monthlyEntriesColumns(displayCurrency: string): ColumnDef<Monthl
     {
       accessorKey: "amountIls",
       meta: { align: "right" },
-      header: ({ column }) => {
-        const sorted = column.getIsSorted();
-        return (
-          <Button
-            variant="ghost"
-            className="ml-auto"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          >
-            Converted ({displayCurrency})
-            {sorted === "asc" ? (
-              <ArrowUpIcon className="ml-2 h-4 w-4" />
-            ) : sorted === "desc" ? (
-              <ArrowDownIcon className="ml-2 h-4 w-4" />
-            ) : (
-              <ArrowUpDownIcon className="ml-2 h-4 w-4 text-muted-foreground" />
-            )}
-          </Button>
-        );
-      },
+      enableSorting: false,
+      header: () => <div className="ml-auto text-right">Converted</div>,
       cell: ({ row }) => {
         const val = row.getValue("amountIls");
         return (

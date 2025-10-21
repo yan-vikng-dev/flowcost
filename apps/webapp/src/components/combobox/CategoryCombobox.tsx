@@ -20,18 +20,29 @@ export function CategoryCombobox({
       value={value}
       onChange={onChange}
       className={className}
-      items={categories.map((cat) => ({
-        value: cat,
-        label: (
-          <span className="flex items-center gap-2">
-            {(() => {
-              const Icon = getCategoryIcon(cat);
-              return <Icon className="size-4" />;
-            })()}
-            <span>{cat}</span>
-          </span>
-        ),
-      }))}
+      items={categories.map((cat) => {
+        const Icon = getCategoryIcon(cat);
+        return {
+          value: cat,
+          ariaLabel: cat,
+          label: (
+            <span className="flex items-center gap-2">
+              <span aria-hidden className="inline-flex w-5 sm:w-6 justify-center shrink-0 leading-none">
+                <Icon className="size-4" />
+              </span>
+              <span>{cat}</span>
+            </span>
+          ),
+          triggerLabel: (
+            <span className="flex items-center gap-2">
+              <span aria-hidden className="inline-flex w-5 sm:w-6 justify-center shrink-0 leading-none">
+                <Icon className="size-4" />
+              </span>
+              <span className="hidden sm:inline">{cat}</span>
+            </span>
+          ),
+        };
+      })}
       placeholder={placeholder}
       disabled={disabled}
     />

@@ -13,7 +13,7 @@ import {
 import { user_preferences } from "@repo/data-ops/drizzle/schemas/user_preferences/table";
 import { z } from "zod";
 import { categories, currencies, type Currency } from "@repo/shared-config";
-import { and, desc, eq, gte, lt, inArray, count } from "drizzle-orm";
+import { and, desc, asc, eq, gte, lt, inArray, count } from "drizzle-orm";
 
 export const createEntryInput = z.object({
   entryType: z.enum(entryTypes),
@@ -158,6 +158,11 @@ export const listEntriesThisMonth = createServerFn()
 export const listEntriesThisMonthPaginatedInput = z.object({
   page: z.number().int().min(0).default(0),
   pageSize: z.number().int().min(1).max(100).default(10),
+  sortBy: z
+    .enum(["executedAt", "amount", "category", "entryType"]) // whitelist sortable columns
+    .optional()
+    .default("executedAt"),
+  sortDir: z.enum(["asc", "desc"]).optional().default("desc"),
 });
 
 export type ListEntriesThisMonthPaginatedInput = z.infer<typeof listEntriesThisMonthPaginatedInput>;
@@ -169,7 +174,7 @@ export const listEntriesThisMonthPaginated = createServerFn()
     const db = getDb();
     const { startMs, endMs } = getMonthRange();
 
-    const { page, pageSize } = ctx.data;
+    const { page, pageSize, sortBy, sortDir } = ctx.data;
     const offset = page * pageSize;
 
     const baseWhere = and(
@@ -182,11 +187,21 @@ export const listEntriesThisMonthPaginated = createServerFn()
     const totalRows = await db.select({ count: count() }).from(entries).where(baseWhere);
     const total = totalRows[0]?.count ?? 0;
 
+    const sortableColumns = {
+      executedAt: entries.executedAt,
+      amount: entries.amount,
+      category: entries.category,
+      entryType: entries.entryType,
+    } as const;
+
+    const sortColumn = sortableColumns[sortBy] ?? entries.executedAt;
+    const orderExpr = sortDir === "asc" ? asc(sortColumn) : desc(sortColumn);
+
     const rows = await db
       .select()
       .from(entries)
       .where(baseWhere)
-      .orderBy(desc(entries.executedAt))
+      .orderBy(orderExpr)
       .limit(pageSize)
       .offset(offset);
 

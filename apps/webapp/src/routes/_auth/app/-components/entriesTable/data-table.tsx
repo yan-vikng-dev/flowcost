@@ -60,6 +60,11 @@ interface DataTableProps<TData extends RowWithId, TValue> {
   pageCount?: number;
   pagination?: PaginationState;
   onPaginationChange?: OnChangeFn<PaginationState>;
+  manualSorting?: boolean;
+  sorting?: SortingState;
+  onSortingChange?: OnChangeFn<SortingState>;
+  isLoading?: boolean; // initial load
+  isFetching?: boolean; // background refetch
 }
 
 export function DataTable<TData extends RowWithId, TValue>({
@@ -69,8 +74,14 @@ export function DataTable<TData extends RowWithId, TValue>({
   pageCount,
   pagination,
   onPaginationChange,
+  manualSorting = false,
+  sorting: controlledSorting,
+  onSortingChange,
+  isLoading = false,
+  isFetching = false,
 }: DataTableProps<TData, TValue>) {
-  const [sorting, setSorting] = React.useState<SortingState>([]);
+  const [uncontrolledSorting, setUncontrolledSorting] = React.useState<SortingState>([]);
+  const sorting = controlledSorting ?? uncontrolledSorting;
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
   const [rowSelection, setRowSelection] = React.useState({});
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
@@ -168,13 +179,14 @@ export function DataTable<TData extends RowWithId, TValue>({
     columns: enhancedColumns,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
-    getSortedRowModel: getSortedRowModel(),
+    getSortedRowModel: manualSorting ? undefined : getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
-    onSortingChange: setSorting,
+    onSortingChange: onSortingChange ?? setUncontrolledSorting,
     onColumnFiltersChange: setColumnFilters,
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: setRowSelection,
     manualPagination,
+    manualSorting,
     pageCount,
     onPaginationChange,
     state: {
@@ -236,6 +248,14 @@ export function DataTable<TData extends RowWithId, TValue>({
 
   return (
     <div>
+      {/* Top loading bar for background fetches */}
+      {isFetching && !isLoading ? (
+        <div className="fixed left-0 right-0 top-0 z-30">
+          <div className="h-0.5 w-full overflow-hidden bg-muted">
+            <div className="h-0.5 w-1/3 animate-pulse bg-primary" />
+          </div>
+        </div>
+      ) : null}
       <div className="flex items-center gap-2 py-4">
         {table.getFilteredSelectedRowModel().rows.length > 0 && (
           <>
@@ -298,62 +318,87 @@ export function DataTable<TData extends RowWithId, TValue>({
       </div>
 
       <div className="w-full overflow-x-auto rounded-md border overscroll-x-contain">
-        <Table>
-          <TableHeader>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => {
-                  const align = (header.column.columnDef as { meta?: ColumnMeta }).meta?.align;
-                  const thClass =
-                    align === "right"
-                      ? "text-right"
-                      : align === "center"
-                        ? "text-center"
-                        : "text-left";
-                  return (
-                    <TableHead key={header.id} className={thClass}>
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(header.column.columnDef.header, header.getContext())}
-                    </TableHead>
-                  );
-                })}
+        {isLoading ? (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                {enhancedColumns.map((col, idx) => (
+                  <TableHead key={String((col as { id?: string }).id ?? idx)}>
+                    <div className="h-4 w-24 animate-pulse rounded bg-muted" />
+                  </TableHead>
+                ))}
               </TableRow>
-            ))}
-          </TableHeader>
-          <TableBody>
-            {table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row) => (
-                <TableRow key={row.id} data-state={row.getIsSelected() && "selected"}>
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell
-                      key={cell.id}
-                      className={cn(
-                        (cell.column.columnDef as { meta?: ColumnMeta }).meta?.align === "right"
-                          ? "text-right"
-                          : (cell.column.columnDef as { meta?: ColumnMeta }).meta?.align ===
-                              "center"
-                            ? "text-center"
-                            : undefined,
-                      )}
-                    >
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+            </TableHeader>
+            <TableBody>
+              {Array.from({ length: 8 }).map((_, r) => (
+                <TableRow key={`sk-${r}`}>
+                  {enhancedColumns.map((_, c) => (
+                    <TableCell key={`sk-${r}-${c}`}>
+                      <div className="h-4 w-full max-w-[200px] animate-pulse rounded bg-muted" />
                     </TableCell>
                   ))}
                 </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell
-                  colSpan={table.getVisibleLeafColumns().length}
-                  className="h-24 text-center"
-                >
-                  No results.
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
+              ))}
+            </TableBody>
+          </Table>
+        ) : (
+          <Table>
+            <TableHeader>
+              {table.getHeaderGroups().map((headerGroup) => (
+                <TableRow key={headerGroup.id}>
+                  {headerGroup.headers.map((header) => {
+                    const align = (header.column.columnDef as { meta?: ColumnMeta }).meta?.align;
+                    const thClass =
+                      align === "right"
+                        ? "text-right"
+                        : align === "center"
+                          ? "text-center"
+                          : "text-left";
+                    return (
+                      <TableHead key={header.id} className={thClass}>
+                        {header.isPlaceholder
+                          ? null
+                          : flexRender(header.column.columnDef.header, header.getContext())}
+                      </TableHead>
+                    );
+                  })}
+                </TableRow>
+              ))}
+            </TableHeader>
+            <TableBody>
+              {table.getRowModel().rows?.length ? (
+                table.getRowModel().rows.map((row) => (
+                  <TableRow key={row.id} data-state={row.getIsSelected() && "selected"}>
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell
+                        key={cell.id}
+                        className={cn(
+                          (cell.column.columnDef as { meta?: ColumnMeta }).meta?.align === "right"
+                            ? "text-right"
+                            : (cell.column.columnDef as { meta?: ColumnMeta }).meta?.align ===
+                                "center"
+                              ? "text-center"
+                              : undefined,
+                        )}
+                      >
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell
+                    colSpan={table.getVisibleLeafColumns().length}
+                    className="h-24 text-center"
+                  >
+                    No results.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        )}
       </div>
 
       <div className="flex flex-wrap items-center justify-end gap-2 py-4">
