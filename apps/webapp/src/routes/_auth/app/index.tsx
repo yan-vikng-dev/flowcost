@@ -14,12 +14,7 @@ export const Route = createFileRoute("/_auth/app/")({
     const initialPageIndex = 0;
     const initialPageSize = 10;
     await context.queryClient.ensureQueryData({
-      queryKey: [
-        "entries",
-        prefs.displayCurrency,
-        initialPageIndex,
-        initialPageSize,
-      ],
+      queryKey: ["entries", prefs.displayCurrency, initialPageIndex, initialPageSize],
       queryFn: () =>
         listEntriesThisMonthPaginated({
           data: { page: initialPageIndex, pageSize: initialPageSize },

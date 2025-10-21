@@ -3,7 +3,7 @@ import { relations, sql } from "drizzle-orm";
 import { auth_users } from "../auth_users";
 import { categories, currencies } from "@repo/shared-config";
 
-export const entryTypes = ["expense", "income"] as const;
+export const entryTypes = ["Expense", "Income"] as const;
 export type EntryType = (typeof entryTypes)[number];
 
 export type InsertEntry = typeof entries.$inferInsert;
@@ -16,7 +16,7 @@ export const entries = sqliteTable("entries", {
   amount: real().notNull(),
   currency: text({ enum: currencies }).notNull(),
   category: text({ enum: categories }).notNull(),
-  type: text({ enum: entryTypes }).notNull(),
+  entryType: text({ enum: entryTypes }).notNull(),
   description: text(),
   userId: text()
     .notNull()

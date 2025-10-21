@@ -7,8 +7,6 @@ links:
 ---
 
 ```tsx
-"use client"
-
 import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
@@ -129,8 +127,6 @@ toast("Event has been created.")
 ## Examples
 
 ```tsx
-"use client"
-
 import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
@@ -200,8 +196,6 @@ export function SonnerTypes() {
 We've updated the Sonner component to use icons from `lucide`. Update your `sonner.tsx` file to use the new icons.
 
 ```tsx showLineNumbers title="components/ui/sonner.tsx" {3-9,20-26}
-"use client"
-
 import {
   CircleCheckIcon,
   InfoIcon,

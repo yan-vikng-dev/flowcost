@@ -7,7 +7,7 @@ import { MessageContext } from "../AiConversationServer";
 import { DateTime } from "luxon";
 
 const createEntrySchema = z.object({
-  type: z.enum(["expense", "income"]).describe("Whether the entry is an expense or income"),
+  entryType: z.enum(["Expense", "Income"]).describe("Whether the entry is an expense or income"),
   amount: z.number().gt(0).describe("The absolute amount of the entry"),
   currency: z
     .string()
@@ -41,7 +41,7 @@ export const makeCreateEntryTool = (context: MessageContext, db: DrizzleDb) =>
         amount: input.amount,
         currency,
         category: input.category,
-        type: input.type,
+        entryType: input.entryType,
         description: input.description,
         executedAt,
       };

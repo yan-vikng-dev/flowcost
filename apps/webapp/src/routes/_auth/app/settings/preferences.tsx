@@ -8,13 +8,6 @@ import {
 } from "@/core/functions/preferences";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -25,7 +18,13 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { currencies } from "@repo/shared-config";
-import { getWhatsappLinkStatus, startWhatsappLink, unlinkWhatsapp } from "@/core/functions/whatsapp";
+import { CurrencyCombobox } from "@/components/combobox/CurrencyCombobox";
+import { TimezoneCombobox } from "@/components/combobox/TimezoneCombobox";
+import {
+  getWhatsappLinkStatus,
+  startWhatsappLink,
+  unlinkWhatsapp,
+} from "@/core/functions/whatsapp";
 import { useTimezoneSelect } from "react-timezone-select";
 
 export const Route = createFileRoute("/_auth/app/settings/preferences")({
@@ -144,40 +143,18 @@ function RouteComponent() {
         <div className="grid gap-4">
           <div className="grid gap-2">
             <Label>Default Entry Currency</Label>
-            <Select
+            <CurrencyCombobox
               value={local.defaultEntryCurrency}
-              onValueChange={(v) => updatePref({ defaultEntryCurrency: v as Currency })}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="max-h-64">
-                {currencies.map((c) => (
-                  <SelectItem key={c} value={c}>
-                    {c}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              onChange={(val) => updatePref({ defaultEntryCurrency: val })}
+            />
           </div>
 
           <div className="grid gap-2">
             <Label>Display Currency</Label>
-            <Select
+            <CurrencyCombobox
               value={local.displayCurrency}
-              onValueChange={(v) => updatePref({ displayCurrency: v as Currency })}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="max-h-64">
-                {currencies.map((c) => (
-                  <SelectItem key={c} value={c}>
-                    {c}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              onChange={(val) => updatePref({ displayCurrency: val })}
+            />
           </div>
 
           <div className="grid gap-2">
@@ -186,21 +163,15 @@ function RouteComponent() {
               const hasCurated = timezoneOptions.some(
                 (opt) => opt.value === (local.timezone ?? ""),
               );
-              const selectValue = hasCurated ? (local.timezone ?? undefined) : undefined;
               const placeholder = local.timezone ?? "UTC";
               return (
-                <Select value={selectValue} onValueChange={(v) => updatePref({ timezone: v })}>
-                  <SelectTrigger>
-                    <SelectValue placeholder={placeholder} />
-                  </SelectTrigger>
-                  <SelectContent className="max-h-64">
-                    {timezoneOptions.map((opt) => (
-                      <SelectItem key={opt.value} value={opt.value}>
-                        {opt.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <TimezoneCombobox
+                  // If current value not in curated list, show placeholder and wait for selection
+                  value={hasCurated ? local.timezone : "__placeholder__"}
+                  onChange={(v) => updatePref({ timezone: v })}
+                  options={timezoneOptions}
+                  placeholder={placeholder}
+                />
               );
             })()}
           </div>

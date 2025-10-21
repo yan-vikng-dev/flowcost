@@ -1,9 +1,9 @@
-"use client";
-
 import { ColumnDef } from "@tanstack/react-table";
 import type { MonthlyEntry } from "@/core/functions/entries";
 import { Button } from "@/components/ui/button";
 import { ArrowUpDownIcon, ArrowUpIcon, ArrowDownIcon } from "lucide-react";
+import { getCategoryIcon } from "@/config/categories";
+import { getEntryTypeIcon } from "@/config/entryTypes";
 
 function formatCurrency(amount: number, currency: string, locale = "en-US") {
   try {
@@ -46,7 +46,7 @@ export function monthlyEntriesColumns(displayCurrency: string): ColumnDef<Monthl
       sortingFn: (a, b) => a.original.executedAt.getTime() - b.original.executedAt.getTime(),
     },
     {
-      accessorKey: "type",
+      accessorKey: "entryType",
       header: ({ column }) => {
         const sorted = column.getIsSorted();
         return (
@@ -65,7 +65,16 @@ export function monthlyEntriesColumns(displayCurrency: string): ColumnDef<Monthl
           </Button>
         );
       },
-      cell: ({ row }) => String(row.getValue("type")),
+      cell: ({ row }) => {
+        const entryType = String(row.getValue("entryType"));
+        const Icon = getEntryTypeIcon(entryType as any);
+        return (
+          <span className="flex items-center gap-2">
+            <Icon className="size-4" />
+            <span>{entryType}</span>
+          </span>
+        );
+      },
     },
     {
       accessorKey: "category",
@@ -87,7 +96,16 @@ export function monthlyEntriesColumns(displayCurrency: string): ColumnDef<Monthl
           </Button>
         );
       },
-      cell: ({ row }) => String(row.getValue("category")),
+      cell: ({ row }) => {
+        const category = String(row.getValue("category"));
+        const Icon = getCategoryIcon(category);
+        return (
+          <span className="flex items-center gap-2">
+            <Icon className="size-4" />
+            <span>{category}</span>
+          </span>
+        );
+      },
     },
     {
       accessorKey: "description",

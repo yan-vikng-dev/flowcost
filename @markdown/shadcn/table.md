@@ -7,8 +7,6 @@ links:
 ---
 
 ```tsx
-"use client"
-
 import * as React from "react"
 import {
   ColumnDef,
@@ -423,8 +421,6 @@ Let's start by building a basic table.
 First, we'll define our columns.
 
 ```tsx showLineNumbers title="app/payments/columns.tsx" {3,14-27}
-"use client"
-
 import { ColumnDef } from "@tanstack/react-table"
 
 // This type is used to define the shape of our data.
@@ -465,8 +461,6 @@ formatted, sorted and filtered.
 Next, we'll create a `<DataTable />` component to render our table.
 
 ```tsx showLineNumbers title="app/payments/data-table.tsx"
-"use client"
-
 import {
   ColumnDef,
   flexRender,
@@ -632,8 +626,6 @@ Let's add row actions to our table. We'll use a `<Dropdown />` component for thi
 Update our columns definition to add a new `actions` column. The `actions` cell returns a `<Dropdown />` component.
 
 ```tsx showLineNumbers title="app/payments/columns.tsx" {4,6-14,18-45}
-"use client"
-
 import { ColumnDef } from "@tanstack/react-table"
 import { MoreHorizontal } from "lucide-react"
 
@@ -780,8 +772,6 @@ Let's make the email column sortable.
 ### Update `<DataTable>`
 
 ```tsx showLineNumbers title="app/payments/data-table.tsx" showLineNumbers {3,6,10,18,25-28}
-"use client"
-
 import * as React from "react"
 import {
   ColumnDef,
@@ -826,8 +816,6 @@ export function DataTable<TData, TValue>({
 We can now update the `email` header cell to add sorting controls.
 
 ```tsx showLineNumbers title="app/payments/columns.tsx" {4,9-19}
-"use client"
-
 import { ColumnDef } from "@tanstack/react-table"
 import { ArrowUpDown } from "lucide-react"
 
@@ -862,8 +850,6 @@ Let's add a search input to filter emails in our table.
 ### Update `<DataTable>`
 
 ```tsx showLineNumbers title="app/payments/data-table.tsx" {6,10,17,24-26,35-36,39,45-54}
-"use client"
-
 import * as React from "react"
 import {
   ColumnDef,
@@ -937,8 +923,6 @@ Adding column visibility is fairly simple using `@tanstack/react-table` visibili
 ### Update `<DataTable>`
 
 ```tsx showLineNumbers title="app/payments/data-table.tsx" {8,18-23,33-34,45,49,64-91}
-"use client"
-
 import * as React from "react"
 import {
   ColumnDef,
@@ -1050,8 +1034,6 @@ Next, we're going to add row selection to our table.
 ### Update column definitions
 
 ```tsx showLineNumbers title="app/payments/columns.tsx" {6,9-27}
-"use client"
-
 import { ColumnDef } from "@tanstack/react-table"
 
 import { Badge } from "@/components/ui/badge"

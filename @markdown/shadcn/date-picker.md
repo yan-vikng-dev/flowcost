@@ -5,7 +5,6 @@ component: true
 ---
 
 ```tsx
-"use client"
 
 import * as React from "react"
 import { ChevronDownIcon } from "lucide-react"
@@ -66,7 +65,6 @@ See installation instructions for the [Popover](/docs/components/popover#install
 ## Usage
 
 ```tsx showLineNumbers title="components/example-date-picker.tsx"
-"use client"
 
 import * as React from "react"
 import { format } from "date-fns"
@@ -111,7 +109,6 @@ See the [React DayPicker](https://react-day-picker.js.org) documentation for mor
 ### Date of Birth Picker
 
 ```tsx
-"use client"
 
 import * as React from "react"
 import { ChevronDownIcon } from "lucide-react"
@@ -166,7 +163,6 @@ export function Calendar22() {
 ### Picker with Input
 
 ```tsx
-"use client"
 
 import * as React from "react"
 import { CalendarIcon } from "lucide-react"
@@ -275,7 +271,6 @@ export function Calendar28() {
 ### Date and Time Picker
 
 ```tsx
-"use client"
 
 import * as React from "react"
 import { ChevronDownIcon } from "lucide-react"
@@ -347,8 +342,6 @@ export function Calendar24() {
 This component uses the `chrono-node` library to parse natural language dates.
 
 ```tsx
-"use client"
-
 import * as React from "react"
 import { parseDate } from "chrono-node"
 import { CalendarIcon } from "lucide-react"

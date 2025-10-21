@@ -28,7 +28,7 @@ import {
   SquirrelIcon,
 } from "lucide-react";
 
-export const category_icons: Record<Category, LucideIcon> = {
+export const categoryIcons: Record<Category, LucideIcon> = {
   Food: ForkKnifeIcon,
   Groceries: ShoppingCartIcon,
   Transportation: CarIcon,
@@ -57,5 +57,5 @@ export const category_icons: Record<Category, LucideIcon> = {
 } as const;
 
 export const getCategoryIcon = (category: string) => {
-  return category_icons[category as Category] ?? SquirrelIcon;
+  return categoryIcons[category as Category] ?? SquirrelIcon;
 };

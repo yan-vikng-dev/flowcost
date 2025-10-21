@@ -16,7 +16,7 @@ import { categories, currencies, type Currency } from "@repo/shared-config";
 import { and, desc, eq, gte, lt, inArray, count } from "drizzle-orm";
 
 export const createEntryInput = z.object({
-  type: z.enum(entryTypes),
+  entryType: z.enum(entryTypes),
   amount: z.number().gt(0),
   currency: z.enum(currencies),
   category: z.enum(categories),
@@ -37,7 +37,7 @@ export const createEntry = createServerFn({ method: "POST" })
         amount: ctx.data.amount,
         currency: ctx.data.currency,
         category: ctx.data.category,
-        type: ctx.data.type,
+        entryType: ctx.data.entryType,
         description: ctx.data.description,
         executedAt: ctx.data.executedAt,
         userId: ctx.context.userId,

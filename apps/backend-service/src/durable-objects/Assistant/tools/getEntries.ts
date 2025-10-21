@@ -35,17 +35,19 @@ export const makeGetEntriesTool = (context: MessageContext, db: DrizzleDb) =>
       });
       let exchangeRates = await db.query.exchange_rates.findFirst({
         where: eq(exchange_rates.date, inputDate),
-      })
-      if(!exchangeRates) {
+      });
+      if (!exchangeRates) {
         exchangeRates = await db.query.exchange_rates.findFirst({
           orderBy: desc(exchange_rates.createdAt),
-        })
+        });
       }
-      if(!exchangeRates) throw new Error("Failed to find exchange rates");
+      if (!exchangeRates) throw new Error("Failed to find exchange rates");
       const safeEntries = foundEntries.map((e) => ({
         ...e,
         executedAt: e.executedAt.toISOString(),
-        convertedAmount: e.amount * (exchangeRates.rates[context.displayCurrency]/exchangeRates.rates[e.currency]),
+        convertedAmount:
+          e.amount *
+          (exchangeRates.rates[context.displayCurrency] / exchangeRates.rates[e.currency]),
       }));
       return { entries: safeEntries, targetCurrency: context.displayCurrency };
     },

@@ -30,8 +30,10 @@ export const makeUpdatePreferencesTool = (context: MessageContext, db: DrizzleDb
     description: "update the user's preferences. any omitted properties will be left unchanged.",
     inputSchema: updatePreferencesSchema,
     execute: async (input) => {
-      const displayCurrency = input.displayCurrency as Currency | undefined ?? context.displayCurrency;
-      const defaultEntryCurrency = input.defaultEntryCurrency as Currency | undefined ?? context.defaultEntryCurrency;
+      const displayCurrency =
+        (input.displayCurrency as Currency | undefined) ?? context.displayCurrency;
+      const defaultEntryCurrency =
+        (input.defaultEntryCurrency as Currency | undefined) ?? context.defaultEntryCurrency;
       const timezone = input.timezone ?? context.userTimezone;
       if (!currencies.includes(displayCurrency))
         throw new Error(`invalid currency provided ${displayCurrency}`);
