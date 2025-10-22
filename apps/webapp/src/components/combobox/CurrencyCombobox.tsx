@@ -24,7 +24,10 @@ export function CurrencyCombobox({
         ariaLabel: c,
         label: (
           <span className="flex items-center gap-2">
-            <span aria-hidden className="inline-flex w-5 sm:w-6 justify-center shrink-0 leading-none font-mono tabular-nums text-muted-foreground">
+            <span
+              aria-hidden
+              className="inline-flex w-5 sm:w-6 justify-center shrink-0 leading-none font-mono tabular-nums text-muted-foreground"
+            >
               {getCurrencySymbol(c)}
             </span>
             <span>{c}</span>
@@ -32,7 +35,10 @@ export function CurrencyCombobox({
         ),
         triggerLabel: (
           <span className="flex items-center gap-2">
-            <span aria-hidden className="inline-flex w-5 sm:w-6 justify-center shrink-0 leading-none font-mono tabular-nums text-muted-foreground">
+            <span
+              aria-hidden
+              className="inline-flex w-5 sm:w-6 justify-center shrink-0 leading-none font-mono tabular-nums text-muted-foreground"
+            >
               {getCurrencySymbol(c)}
             </span>
             <span className="hidden sm:inline">{c}</span>

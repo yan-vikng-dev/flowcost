@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Drawer, DrawerContent, DrawerTrigger } from "@/components/ui/drawer";
-import { useMediaQuery } from "@/hooks/use-media-query";
+import { useIsDesktop } from "@/hooks/use-is-desktop";
 
 export type ComboItem<T extends string> = {
   value: T;
@@ -39,7 +39,7 @@ export function ResponsiveCombobox<T extends string>({
   contentWidthClass?: string;
 }) {
   const [open, setOpen] = React.useState(false);
-  const isDesktop = useMediaQuery("(min-width: 768px)");
+  const isDesktop = useIsDesktop();
 
   const current = items.find((i) => i.value === value);
 
@@ -51,7 +51,7 @@ export function ResponsiveCombobox<T extends string>({
   );
 
   const list = (
-    <Command>
+    <Command className={cn(!isDesktop && "rounded-none")}>
       <CommandInput placeholder="Search..." className="h-9" />
       <CommandList>
         <CommandEmpty>No results found.</CommandEmpty>
@@ -86,11 +86,11 @@ export function ResponsiveCombobox<T extends string>({
             role="combobox"
             aria-expanded={open}
             disabled={disabled}
-            aria-label={current ? current.ariaLabel ?? String(current.value) : placeholder}
+            aria-label={current ? (current.ariaLabel ?? String(current.value)) : placeholder}
             className={triggerClass}
             data-placeholder={current ? undefined : true}
           >
-            {current ? current.triggerLabel ?? current.label : <>{placeholder}</>}
+            {current ? (current.triggerLabel ?? current.label) : <>{placeholder}</>}
             <ChevronsUpDownIcon className="size-4 opacity-50" />
           </button>
         </PopoverTrigger>
@@ -109,11 +109,11 @@ export function ResponsiveCombobox<T extends string>({
           role="combobox"
           aria-expanded={open}
           disabled={disabled}
-          aria-label={current ? current.ariaLabel ?? String(current.value) : placeholder}
+          aria-label={current ? (current.ariaLabel ?? String(current.value)) : placeholder}
           className={triggerClass}
           data-placeholder={current ? undefined : true}
         >
-          {current ? current.triggerLabel ?? current.label : <>{placeholder}</>}
+          {current ? (current.triggerLabel ?? current.label) : <>{placeholder}</>}
           <ChevronsUpDownIcon className="size-4 opacity-50" />
         </button>
       </DrawerTrigger>

@@ -13,7 +13,7 @@ function formatCurrency(amount: number, currency: string, locale = "en-US") {
   }
 }
 
-export function monthlyEntriesColumns(displayCurrency: string): ColumnDef<MonthlyEntry>[] {
+export function entriesTableColumns(displayCurrency: string): ColumnDef<MonthlyEntry>[] {
   return [
     {
       accessorKey: "executedAt",
@@ -70,7 +70,10 @@ export function monthlyEntriesColumns(displayCurrency: string): ColumnDef<Monthl
         const Icon = getEntryTypeIcon(entryType as any);
         return (
           <span className="flex items-center gap-2">
-            <span aria-hidden className="inline-flex w-5 sm:w-6 justify-center shrink-0 leading-none">
+            <span
+              aria-hidden
+              className="inline-flex w-5 sm:w-6 justify-center shrink-0 leading-none"
+            >
               <Icon className="size-4" />
             </span>
             <span>{entryType}</span>
@@ -103,7 +106,10 @@ export function monthlyEntriesColumns(displayCurrency: string): ColumnDef<Monthl
         const Icon = getCategoryIcon(category);
         return (
           <span className="flex items-center gap-2">
-            <span aria-hidden className="inline-flex w-5 sm:w-6 justify-center shrink-0 leading-none">
+            <span
+              aria-hidden
+              className="inline-flex w-5 sm:w-6 justify-center shrink-0 leading-none"
+            >
               <Icon className="size-4" />
             </span>
             <span>{category}</span>

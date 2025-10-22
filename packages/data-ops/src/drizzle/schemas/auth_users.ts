@@ -1,10 +1,10 @@
 import { sqliteTable, text, integer, uniqueIndex } from "drizzle-orm/sqlite-core";
 import { relations, sql } from "drizzle-orm";
-import { auth_accounts } from "../auth_accounts/table";
-import { auth_sessions } from "../auth_sessions/table";
-import { entries } from "../entries/table";
-import { whatsapp_links } from "../whatsapp_links/table";
-import { user_preferences } from "../user_preferences/table";
+import { auth_accounts } from "./auth_accounts";
+import { auth_sessions } from "./auth_sessions";
+import { entries } from "./entries";
+import { whatsapp_links } from "./whatsapp_links";
+import { user_preferences } from "./user_preferences";
 
 export const auth_users = sqliteTable(
   "auth_users",

@@ -1,6 +1,6 @@
 import { sqliteTable, text, integer } from "drizzle-orm/sqlite-core";
 import { sql } from "drizzle-orm";
-import { auth_users } from "../auth_users";
+import { auth_users } from "./auth_users";
 
 export const whatsapp_link_tokens = sqliteTable("whatsapp_link_tokens", {
   id: text().primaryKey(),

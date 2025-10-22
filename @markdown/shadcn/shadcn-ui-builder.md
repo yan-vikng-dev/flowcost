@@ -18,8 +18,9 @@ Your core responsibilities:
 **Critical Rules You Must Follow:**
 
 - NEVER hardcode Tailwind colors - always use CSS variables and theme tokens (e.g., `bg-background`, `text-foreground`, `border-border`)
-- Use lowercase kebab-case for all file names (e.g., `user-profile.tsx`, not `UserProfile.tsx`)
-- Organize components in logical subfolders within `src/components/` (e.g., `src/components/forms/`, `src/components/layout/`)
+- Use CapitalCase for component file names (e.g., `UserProfile.tsx`, not `user-profile.tsx`)
+- Place shared components in `src/components/` organized in logical subfolders (e.g., `src/components/forms/`, `src/components/layout/`)
+- Co-locate one-off, route-specific components inside the route's `-components/` folder (see codebase)
 - Use the Shadcn MCP server to add new components when needed with `pnpx shadcn@latest add <component>`
 - Follow the project's Tailwind CSS v4 setup with CSS variables enabled
 
@@ -52,8 +53,9 @@ Your core responsibilities:
 
 **File Organization Examples:**
 
-- Forms: `src/components/forms/login-form.tsx`, `src/components/forms/contact-form.tsx`
-- Layout: `src/components/layout/header.tsx`, `src/components/layout/sidebar.tsx`
-- UI Elements: `src/components/ui/custom-button.tsx`, `src/components/ui/data-table.tsx`
+- Forms: `src/components/forms/LoginForm.tsx`, `src/components/forms/ContactForm.tsx`
+- Layout: `src/components/layout/Header.tsx`, `src/components/layout/Sidebar.tsx`
+- UI Elements: `src/components/ui/CustomButton.tsx`, `src/components/ui/DataTable.tsx`
+- Route-specific: `src/routes/_auth/app/-components/EntriesTable.tsx`
 
 When creating components, always consider the complete user journey, provide clear feedback for all interactions, and ensure the component integrates seamlessly with the existing TanStack Start application architecture. Ask for clarification if requirements are ambiguous, and suggest UX improvements when you identify opportunities to enhance the user experience.

@@ -2,7 +2,7 @@ import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { listEntriesThisMonthPaginated, type MonthlyEntry } from "@/core/functions/entries";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DataTable } from "./data-table";
-import { monthlyEntriesColumns } from "./monthly-entries-columns";
+import { entriesTableColumns } from "./entries-table-columns";
 import { getUserPreferences } from "@/core/functions/preferences";
 import * as React from "react";
 import type { PaginationState, SortingState } from "@tanstack/react-table";
@@ -12,9 +12,7 @@ export function MonthlyEntriesTable() {
     pageIndex: 0,
     pageSize: 10,
   });
-  const [sorting, setSorting] = React.useState<SortingState>([
-    { id: "executedAt", desc: true },
-  ]);
+  const [sorting, setSorting] = React.useState<SortingState>([{ id: "executedAt", desc: true }]);
 
   const prefs = useQuery({
     queryKey: ["userPreferences"],
@@ -23,7 +21,10 @@ export function MonthlyEntriesTable() {
   });
   const displayCurrency = prefs.data?.displayCurrency ?? "USD";
 
-  const { data, isLoading, isError, isFetching } = useQuery<{ items: MonthlyEntry[]; total: number }>({
+  const { data, isLoading, isError, isFetching } = useQuery<{
+    items: MonthlyEntry[];
+    total: number;
+  }>({
     queryKey: [
       "entries",
       displayCurrency,
@@ -37,7 +38,8 @@ export function MonthlyEntriesTable() {
         data: {
           page: pagination.pageIndex,
           pageSize: pagination.pageSize,
-          sortBy: (sorting[0]?.id as "executedAt" | "amount" | "category" | "entryType") ?? "executedAt",
+          sortBy:
+            (sorting[0]?.id as "executedAt" | "amount" | "category" | "entryType") ?? "executedAt",
           sortDir: sorting[0]?.desc ? "desc" : "asc",
         },
       }),
@@ -55,7 +57,7 @@ export function MonthlyEntriesTable() {
           <div className="text-sm text-red-500">Failed to load entries.</div>
         ) : (
           <DataTable
-            columns={monthlyEntriesColumns(displayCurrency)}
+            columns={entriesTableColumns(displayCurrency)}
             data={isLoading || !data ? [] : data.items}
             manualPagination
             manualSorting

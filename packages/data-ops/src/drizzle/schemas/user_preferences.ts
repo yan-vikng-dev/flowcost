@@ -1,6 +1,6 @@
 import { sqliteTable, text, integer } from "drizzle-orm/sqlite-core";
 import { relations, sql } from "drizzle-orm";
-import { auth_users } from "../auth_users";
+import { auth_users } from "./auth_users";
 import { currencies } from "@repo/shared-config";
 
 export const user_preferences = sqliteTable("user_preferences", {

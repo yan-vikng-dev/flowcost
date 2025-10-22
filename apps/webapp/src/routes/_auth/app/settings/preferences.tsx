@@ -57,6 +57,7 @@ function RouteComponent() {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["userPreferences"] }),
         queryClient.invalidateQueries({ queryKey: ["entries"] }),
+        queryClient.invalidateQueries({ queryKey: ["monthlyEntriesForCharts"] }),
       ]);
     },
   });

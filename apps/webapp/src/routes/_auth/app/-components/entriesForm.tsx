@@ -43,7 +43,10 @@ export function EntriesForm() {
         amount,
       };
       await createEntry({ data: payload });
-      await queryClient.invalidateQueries({ queryKey: ["entries"] });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["entries"] }),
+        queryClient.invalidateQueries({ queryKey: ["monthlyEntriesForCharts"] }),
+      ]);
     },
   });
 

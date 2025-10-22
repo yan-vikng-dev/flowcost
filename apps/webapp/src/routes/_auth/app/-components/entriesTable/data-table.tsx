@@ -90,7 +90,10 @@ export function DataTable<TData extends RowWithId, TValue>({
   const deleteMut = useMutation({
     mutationFn: (ids: string[]) => deleteEntries({ data: { ids } }),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ["entries"] });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["entries"] }),
+        queryClient.invalidateQueries({ queryKey: ["monthlyEntriesForCharts"] }),
+      ]);
     },
   });
 

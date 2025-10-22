@@ -1,6 +1,6 @@
 import { sqliteTable, text, integer } from "drizzle-orm/sqlite-core";
 import { relations, sql } from "drizzle-orm";
-import { auth_users } from "../auth_users/table";
+import { auth_users } from "./auth_users";
 
 export const auth_accounts = sqliteTable("auth_accounts", {
   id: text().primaryKey().notNull(),
