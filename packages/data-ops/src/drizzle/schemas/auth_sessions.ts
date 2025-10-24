@@ -3,7 +3,6 @@ import {
 	integer,
 	sqliteTable,
 	text,
-	uniqueIndex,
 } from "drizzle-orm/sqlite-core"
 import { timestamps } from "../helpers"
 import { auth_users } from "./auth_users"
@@ -13,7 +12,7 @@ export const auth_sessions = sqliteTable(
 	{
 		id: text().primaryKey().notNull(),
 		expiresAt: integer({ mode: "timestamp_ms" }).notNull(),
-		token: text().notNull(),
+		token: text().notNull().unique(),
 		ipAddress: text(),
 		userAgent: text(),
 		userId: text()
@@ -21,7 +20,6 @@ export const auth_sessions = sqliteTable(
 			.references(() => auth_users.id, { onDelete: "cascade" }),
 		...timestamps,
 	},
-	(table) => [uniqueIndex("auth_sessions_token_unique").on(table.token)],
 )
 
 export const authSessionsRelations = relations(auth_sessions, ({ one }) => ({

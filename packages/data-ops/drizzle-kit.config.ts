@@ -13,5 +13,4 @@ const config: Config = {
 	casing: "snake_case",
 	tablesFilter: ["!_cf_KV"],
 }
-
 export default config satisfies Config

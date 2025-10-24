@@ -9,3 +9,5 @@ onlyBuiltDependencies:
   - workerd
 
 minimumReleaseAge: 1440 # 24 hours in minutes
+minimumReleaseAgeExclude:
+  - 'drizzle-orm'

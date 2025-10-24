@@ -20,5 +20,8 @@
 		"globals": "^16.4.0",
 		"turbo": "latest",
 		"typescript": "^5.9.3"
+	},
+	"dependencies": {
+		"drizzle-kit": "0.31.5"
 	}
 }

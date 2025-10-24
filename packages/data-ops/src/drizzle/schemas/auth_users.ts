@@ -3,7 +3,6 @@ import {
 	integer,
 	sqliteTable,
 	text,
-	uniqueIndex,
 } from "drizzle-orm/sqlite-core"
 import { timestamps } from "../helpers"
 import { auth_accounts } from "./auth_accounts"
@@ -17,12 +16,11 @@ export const auth_users = sqliteTable(
 	{
 		id: text().primaryKey().notNull(),
 		name: text().notNull(),
-		email: text().notNull(),
+		email: text().notNull().unique(),
 		image: text(),
 		emailVerified: integer({ mode: "boolean" }).default(false).notNull(),
 		...timestamps,
 	},
-	(table) => [uniqueIndex("auth_users_email_unique").on(table.email)],
 )
 
 export const authUsersRelations = relations(auth_users, ({ many, one }) => ({
