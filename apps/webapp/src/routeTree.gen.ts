@@ -13,7 +13,8 @@ import { Route as AuthRouteRouteImport } from './routes/_auth/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthAppIndexRouteImport } from './routes/_auth/app/index'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth.$'
-import { Route as AuthAppSettingsPreferencesRouteImport } from './routes/_auth/app/settings/preferences'
+import { Route as AuthAppSettingsIndexRouteImport } from './routes/_auth/app/settings/index'
+import { Route as AuthAppAdvancedIndexRouteImport } from './routes/_auth/app/advanced/index'
 
 const AuthRouteRoute = AuthRouteRouteImport.update({
   id: '/_auth',
@@ -34,24 +35,30 @@ const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   path: '/api/auth/$',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthAppSettingsPreferencesRoute =
-  AuthAppSettingsPreferencesRouteImport.update({
-    id: '/app/settings/preferences',
-    path: '/app/settings/preferences',
-    getParentRoute: () => AuthRouteRoute,
-  } as any)
+const AuthAppSettingsIndexRoute = AuthAppSettingsIndexRouteImport.update({
+  id: '/app/settings/',
+  path: '/app/settings/',
+  getParentRoute: () => AuthRouteRoute,
+} as any)
+const AuthAppAdvancedIndexRoute = AuthAppAdvancedIndexRouteImport.update({
+  id: '/app/advanced/',
+  path: '/app/advanced/',
+  getParentRoute: () => AuthRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/app': typeof AuthAppIndexRoute
-  '/app/settings/preferences': typeof AuthAppSettingsPreferencesRoute
+  '/app/advanced': typeof AuthAppAdvancedIndexRoute
+  '/app/settings': typeof AuthAppSettingsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/app': typeof AuthAppIndexRoute
-  '/app/settings/preferences': typeof AuthAppSettingsPreferencesRoute
+  '/app/advanced': typeof AuthAppAdvancedIndexRoute
+  '/app/settings': typeof AuthAppSettingsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -59,20 +66,22 @@ export interface FileRoutesById {
   '/_auth': typeof AuthRouteRouteWithChildren
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/_auth/app/': typeof AuthAppIndexRoute
-  '/_auth/app/settings/preferences': typeof AuthAppSettingsPreferencesRoute
+  '/_auth/app/advanced/': typeof AuthAppAdvancedIndexRoute
+  '/_auth/app/settings/': typeof AuthAppSettingsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/api/auth/$' | '/app' | '/app/settings/preferences'
+  fullPaths: '/' | '/api/auth/$' | '/app' | '/app/advanced' | '/app/settings'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/api/auth/$' | '/app' | '/app/settings/preferences'
+  to: '/' | '/api/auth/$' | '/app' | '/app/advanced' | '/app/settings'
   id:
     | '__root__'
     | '/'
     | '/_auth'
     | '/api/auth/$'
     | '/_auth/app/'
-    | '/_auth/app/settings/preferences'
+    | '/_auth/app/advanced/'
+    | '/_auth/app/settings/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -111,11 +120,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAuthSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_auth/app/settings/preferences': {
-      id: '/_auth/app/settings/preferences'
-      path: '/app/settings/preferences'
-      fullPath: '/app/settings/preferences'
-      preLoaderRoute: typeof AuthAppSettingsPreferencesRouteImport
+    '/_auth/app/settings/': {
+      id: '/_auth/app/settings/'
+      path: '/app/settings'
+      fullPath: '/app/settings'
+      preLoaderRoute: typeof AuthAppSettingsIndexRouteImport
+      parentRoute: typeof AuthRouteRoute
+    }
+    '/_auth/app/advanced/': {
+      id: '/_auth/app/advanced/'
+      path: '/app/advanced'
+      fullPath: '/app/advanced'
+      preLoaderRoute: typeof AuthAppAdvancedIndexRouteImport
       parentRoute: typeof AuthRouteRoute
     }
   }
@@ -123,12 +139,14 @@ declare module '@tanstack/react-router' {
 
 interface AuthRouteRouteChildren {
   AuthAppIndexRoute: typeof AuthAppIndexRoute
-  AuthAppSettingsPreferencesRoute: typeof AuthAppSettingsPreferencesRoute
+  AuthAppAdvancedIndexRoute: typeof AuthAppAdvancedIndexRoute
+  AuthAppSettingsIndexRoute: typeof AuthAppSettingsIndexRoute
 }
 
 const AuthRouteRouteChildren: AuthRouteRouteChildren = {
   AuthAppIndexRoute: AuthAppIndexRoute,
-  AuthAppSettingsPreferencesRoute: AuthAppSettingsPreferencesRoute,
+  AuthAppAdvancedIndexRoute: AuthAppAdvancedIndexRoute,
+  AuthAppSettingsIndexRoute: AuthAppSettingsIndexRoute,
 }
 
 const AuthRouteRouteWithChildren = AuthRouteRoute._addFileChildren(

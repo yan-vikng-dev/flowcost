@@ -27,7 +27,7 @@ import {
 	unlinkWhatsapp,
 } from "@/core/functions/whatsapp"
 
-export const Route = createFileRoute("/_auth/app/settings/preferences")({
+export const Route = createFileRoute("/_auth/app/settings/")({
 	loader: async ({ context }) => {
 		await Promise.all([
 			context.queryClient.ensureQueryData({

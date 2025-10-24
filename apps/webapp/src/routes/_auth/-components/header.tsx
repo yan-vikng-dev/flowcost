@@ -25,7 +25,13 @@ export function Header() {
 			{/* Right side - Settings, Notifications and user menu */}
 			<div className="flex items-center gap-2">
 				<Button asChild variant="ghost">
-					<Link to="/app/settings/preferences">Settings</Link>
+					<Link to="/app">Dashboard</Link>
+				</Button>
+				<Button asChild variant="ghost">
+					<Link to="/app/advanced">Advanced</Link>
+				</Button>
+				<Button asChild variant="ghost">
+					<Link to="/app/settings">Settings</Link>
 				</Button>
 				<Button className="relative" size="icon" variant="ghost">
 					<BellIcon className="h-5 w-5" />

@@ -9,12 +9,7 @@ import { EntryTypeCombobox } from "@/components/combobox/EntryTypeCombobox"
 import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import {
-	Field,
-	FieldError,
-	FieldGroup,
-	FieldLabel,
-} from "@/components/ui/field"
+import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import {
 	Popover,
@@ -106,13 +101,6 @@ export function EntriesForm() {
 													onChange={(val) => field.handleChange(val)}
 													value={field.state.value}
 												/>
-												{isInvalid && (
-													<FieldError
-														errors={field.state.meta.errors?.map((e) =>
-															e == null ? undefined : { message: String(e) },
-														)}
-													/>
-												)}
 											</Field>
 										)
 									}}
@@ -183,13 +171,6 @@ export function EntriesForm() {
 														/>
 													</PopoverContent>
 												</Popover>
-												{isInvalid && (
-													<FieldError
-														errors={field.state.meta.errors?.map((e) =>
-															e == null ? undefined : { message: String(e) },
-														)}
-													/>
-												)}
 											</Field>
 										)
 									}}
@@ -217,13 +198,6 @@ export function EntriesForm() {
 													onChange={(val) => field.handleChange(val)}
 													value={field.state.value}
 												/>
-												{isInvalid && (
-													<FieldError
-														errors={field.state.meta.errors?.map((e) =>
-															e == null ? undefined : { message: String(e) },
-														)}
-													/>
-												)}
 											</Field>
 										)
 									}}
@@ -268,13 +242,6 @@ export function EntriesForm() {
 														field.state.value === "" ? "" : field.state.value
 													}
 												/>
-												{isInvalid && (
-													<FieldError
-														errors={field.state.meta.errors?.map((e) =>
-															e == null ? undefined : { message: String(e) },
-														)}
-													/>
-												)}
 											</Field>
 										)
 									}}
@@ -302,13 +269,6 @@ export function EntriesForm() {
 													onChange={(val) => field.handleChange(val)}
 													value={field.state.value}
 												/>
-												{isInvalid && (
-													<FieldError
-														errors={field.state.meta.errors?.map((e) =>
-															e == null ? undefined : { message: String(e) },
-														)}
-													/>
-												)}
 											</Field>
 										)
 									}}
@@ -334,13 +294,6 @@ export function EntriesForm() {
 													placeholder="(Optional) Additional details"
 													value={field.state.value ?? ""}
 												/>
-												{isInvalid && (
-													<FieldError
-														errors={field.state.meta.errors?.map((e) =>
-															e == null ? undefined : { message: String(e) },
-														)}
-													/>
-												)}
 											</Field>
 										)
 									}}
@@ -370,6 +323,8 @@ export function EntriesForm() {
 							</div>
 						)}
 					</form.Subscribe>
+
+					{/* Errors hidden to avoid layout shift; rely on styling only */}
 				</form>
 			</CardContent>
 		</Card>

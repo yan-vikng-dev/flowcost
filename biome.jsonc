@@ -10,7 +10,7 @@
 		"ignoreUnknown": false,
 		"includes": [
 			"**",
-			"!**/*.gen.ts",
+			"!**/routeTree.gen.ts",
 			"!**/worker-configuration.d.ts",
 			"!**/*.css" //remove this once biome 2.3 is released
 		]
