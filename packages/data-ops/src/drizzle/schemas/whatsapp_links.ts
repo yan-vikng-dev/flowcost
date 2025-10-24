@@ -1,5 +1,6 @@
-import { relations, sql } from "drizzle-orm"
-import { index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core"
+import { relations } from "drizzle-orm"
+import { index, sqliteTable, text } from "drizzle-orm/sqlite-core"
+import { timestamps } from "../helpers"
 import { auth_users } from "./auth_users"
 
 export const whatsapp_links = sqliteTable(
@@ -9,13 +10,7 @@ export const whatsapp_links = sqliteTable(
 			.primaryKey()
 			.references(() => auth_users.id, { onDelete: "cascade" }),
 		waId: text().notNull().unique(),
-		createdAt: integer({ mode: "timestamp_ms" })
-			.default(sql`(unixepoch() * 1000)`)
-			.notNull(),
-		updatedAt: integer({ mode: "timestamp_ms" })
-			.default(sql`(unixepoch() * 1000)`)
-			.$onUpdate(() => new Date())
-			.notNull(),
+		...timestamps,
 	},
 	(table) => [index("wa_id_index").on(table.waId)],
 )

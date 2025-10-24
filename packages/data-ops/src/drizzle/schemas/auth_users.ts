@@ -1,10 +1,11 @@
-import { relations, sql } from "drizzle-orm"
+import { relations } from "drizzle-orm"
 import {
 	integer,
 	sqliteTable,
 	text,
 	uniqueIndex,
 } from "drizzle-orm/sqlite-core"
+import { timestamps } from "../helpers"
 import { auth_accounts } from "./auth_accounts"
 import { auth_sessions } from "./auth_sessions"
 import { entries } from "./entries"
@@ -18,14 +19,8 @@ export const auth_users = sqliteTable(
 		name: text().notNull(),
 		email: text().notNull(),
 		image: text(),
-		createdAt: integer({ mode: "timestamp_ms" })
-			.default(sql`(unixepoch() * 1000)`)
-			.notNull(),
-		updatedAt: integer({ mode: "timestamp_ms" })
-			.default(sql`(unixepoch() * 1000)`)
-			.$onUpdate(() => new Date())
-			.notNull(),
 		emailVerified: integer({ mode: "boolean" }).default(false).notNull(),
+		...timestamps,
 	},
 	(table) => [uniqueIndex("auth_users_email_unique").on(table.email)],
 )

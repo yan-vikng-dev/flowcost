@@ -1,7 +1,6 @@
 import { useQuery } from "@tanstack/react-query"
 import * as React from "react"
 import { Bar, BarChart, Cell, LabelList, XAxis, YAxis } from "recharts"
-import { Badge } from "@/components/ui/badge"
 import {
 	Card,
 	CardContent,
@@ -58,7 +57,7 @@ export function ExpensesByCategoryBar() {
 	}, [])
 
 	const isEmpty = total <= 0
-	const CHART_MARGIN = { top: 24, right: 48, bottom: 12, left: 12 } as const
+	const CHART_MARGIN = { top: 24, right: 48, bottom: 12, left: 4 } as const
 
 	return (
 		<Card className="flex min-w-0 flex-col">
@@ -90,7 +89,14 @@ export function ExpensesByCategoryBar() {
 							margin={CHART_MARGIN}
 						>
 							<XAxis dataKey="amount" hide type="number" />
-							<YAxis dataKey="category" hide type="category" />
+							<YAxis
+								axisLine={false}
+								dataKey="category"
+								tick={{ fontSize: 12, fill: "var(--muted-foreground)" }}
+								tickLine={false}
+								type="category"
+								width={96}
+							/>
 							<ChartTooltip
 								content={<ChartTooltipContent hideLabel />}
 								cursor={false}
@@ -99,11 +105,6 @@ export function ExpensesByCategoryBar() {
 								{chartData.map((item) => (
 									<Cell fill={item.fill} key={`cell-${item.category}`} />
 								))}
-								<LabelList
-									content={<CategoryBadgeLabel />}
-									dataKey="category"
-									position="insideLeft"
-								/>
 								<LabelList
 									className="fill-foreground"
 									dataKey="amount"
@@ -117,51 +118,5 @@ export function ExpensesByCategoryBar() {
 				)}
 			</CardContent>
 		</Card>
-	)
-}
-
-function CategoryBadgeLabel({
-	x = 0,
-	y = 0,
-	width = 0,
-	height = 0,
-	value,
-}: {
-	x?: number
-	y?: number
-	width?: number
-	height?: number
-	value?: number | string
-}) {
-	if (value == null) return null
-
-	const labelH = 30
-	const pad = 4
-	const fx = Math.max(0, x + pad)
-	const fy = y + Math.max(0, (height - labelH) / 2)
-	const fWidth = Math.max(24, width - pad * 2)
-	const fHeight = labelH
-
-	return (
-		<foreignObject
-			height={fHeight}
-			style={{ pointerEvents: "none" }}
-			width={fWidth}
-			x={fx}
-			y={fy}
-		>
-			<div
-				style={{
-					width: fWidth,
-					height: fHeight,
-					display: "flex",
-					alignItems: "center",
-				}}
-			>
-				<Badge className="max-w-full truncate" variant="secondary">
-					{String(value)}
-				</Badge>
-			</div>
-		</foreignObject>
 	)
 }

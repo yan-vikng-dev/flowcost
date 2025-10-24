@@ -1,6 +1,7 @@
 import { categories, currencies } from "@repo/shared-config"
-import { relations, sql } from "drizzle-orm"
+import { relations } from "drizzle-orm"
 import { integer, real, sqliteTable, text } from "drizzle-orm/sqlite-core"
+import { timestamps } from "../helpers"
 import { auth_users } from "./auth_users"
 
 export const entryTypes = ["Expense", "Income"] as const
@@ -22,13 +23,7 @@ export const entries = sqliteTable("entries", {
 		.notNull()
 		.references(() => auth_users.id, { onDelete: "cascade" }),
 	executedAt: integer({ mode: "timestamp_ms" }).notNull(),
-	createdAt: integer({ mode: "timestamp_ms" })
-		.default(sql`(unixepoch() * 1000)`)
-		.notNull(),
-	updatedAt: integer({ mode: "timestamp_ms" })
-		.default(sql`(unixepoch() * 1000)`)
-		.$onUpdate(() => new Date())
-		.notNull(),
+	...timestamps,
 })
 
 export const entriesRelations = relations(entries, ({ one }) => ({
