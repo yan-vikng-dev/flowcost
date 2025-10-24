@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query"
 import * as React from "react"
 import { Bar, BarChart, Cell, LabelList, XAxis, YAxis } from "recharts"
+import { Badge } from "@/components/ui/badge"
 import {
 	Card,
 	CardContent,
@@ -51,12 +52,13 @@ export function ExpensesByCategoryBar() {
 	const chartConfig = React.useMemo(() => {
 		const cfg: ChartConfig = {
 			amount: { label: "Amount", color: "var(--chart-1)" },
+			label: { color: "var(--background)" },
 		}
 		return cfg
 	}, [])
 
 	const isEmpty = total <= 0
-	const CHART_MARGIN = { top: 12, right: 48, bottom: 12, left: 24 } as const
+	const CHART_MARGIN = { top: 24, right: 48, bottom: 12, left: 12 } as const
 
 	return (
 		<Card className="flex min-w-0 flex-col">
@@ -88,13 +90,7 @@ export function ExpensesByCategoryBar() {
 							margin={CHART_MARGIN}
 						>
 							<XAxis dataKey="amount" hide type="number" />
-							<YAxis
-								axisLine={false}
-								dataKey="category"
-								tickLine={false}
-								tickMargin={10}
-								type="category"
-							/>
+							<YAxis dataKey="category" hide type="category" />
 							<ChartTooltip
 								content={<ChartTooltipContent hideLabel />}
 								cursor={false}
@@ -104,9 +100,16 @@ export function ExpensesByCategoryBar() {
 									<Cell fill={item.fill} key={`cell-${item.category}`} />
 								))}
 								<LabelList
-									content={<ValueBadgeLabel />}
+									content={<CategoryBadgeLabel />}
+									dataKey="category"
+									position="insideLeft"
+								/>
+								<LabelList
+									className="fill-foreground"
 									dataKey="amount"
-									position="insideRight"
+									fontSize={12}
+									offset={4}
+									position="right"
 								/>
 							</Bar>
 						</BarChart>
@@ -117,7 +120,7 @@ export function ExpensesByCategoryBar() {
 	)
 }
 
-function ValueBadgeLabel({
+function CategoryBadgeLabel({
 	x = 0,
 	y = 0,
 	width = 0,
@@ -132,42 +135,33 @@ function ValueBadgeLabel({
 }) {
 	if (value == null) return null
 
-	const text =
-		typeof value === "number" ? value.toLocaleString() : String(value)
-	const padX = 6
-	const approxChar = 6 // rough monospace width in px for this size
-	const labelH = 16
-	const labelW = Math.max(24, text.length * approxChar + padX * 2)
-
-	// Place near the right end of the bar, clamped inside
-	const offset = 6
-	const rectX = Math.max(x + 2, x + width - labelW - offset)
-	const rectY = y + Math.max(0, (height - labelH) / 2)
-	const textX = rectX + labelW - padX
-	const textY = rectY + labelH / 2
+	const labelH = 30
+	const pad = 4
+	const fx = Math.max(0, x + pad)
+	const fy = y + Math.max(0, (height - labelH) / 2)
+	const fWidth = Math.max(24, width - pad * 2)
+	const fHeight = labelH
 
 	return (
-		<g>
-			<rect
-				fill="var(--background)"
-				height={labelH}
-				opacity={0.9}
-				rx={8}
-				ry={8}
-				width={labelW}
-				x={rectX}
-				y={rectY}
-			/>
-			<text
-				className="font-mono text-[11px]"
-				dominantBaseline="middle"
-				fill="var(--foreground)"
-				textAnchor="end"
-				x={textX}
-				y={textY}
+		<foreignObject
+			height={fHeight}
+			style={{ pointerEvents: "none" }}
+			width={fWidth}
+			x={fx}
+			y={fy}
+		>
+			<div
+				style={{
+					width: fWidth,
+					height: fHeight,
+					display: "flex",
+					alignItems: "center",
+				}}
 			>
-				{text}
-			</text>
-		</g>
+				<Badge className="max-w-full truncate" variant="secondary">
+					{String(value)}
+				</Badge>
+			</div>
+		</foreignObject>
 	)
 }
