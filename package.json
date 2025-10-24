@@ -1,38 +1,24 @@
 {
-  "name": "saas-kit",
-  "version": "1.0.0",
-  "description": "",
-  "scripts": {
-    "build": "turbo run build",
-    "test": "turbo run test",
-    "deploy": "turbo run deploy",
-    "dev": "pnpm run --filter webapp dev",
-    "studio": "pnpm run --filter data-ops drizzle:studio",
-    "lint": "turbo run lint && turbo run typecheck",
-    "lint:check": "turbo run lint:check && turbo run typecheck",
-    "typecheck": "turbo run typecheck",
-    "format": "turbo run format",
-    "format:check": "turbo run format:check"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "packageManager": "pnpm@10.14.0",
-  "devDependencies": {
-    "@eslint/js": "^9.38.0",
-    "@types/node": "^24.9.1",
-    "eslint": "^9.38.0",
-    "eslint-config-prettier": "^10.1.8",
-    "eslint-import-resolver-typescript": "^3.10.1",
-    "eslint-plugin-import-x": "^4.16.1",
-    "eslint-plugin-jsx-a11y": "^6.10.2",
-    "eslint-plugin-react": "^7.37.5",
-    "eslint-plugin-react-hooks": "^7.0.0",
-    "eslint-plugin-turbo": "^2.5.8",
-    "globals": "^16.4.0",
-    "prettier": "^3.6.2",
-    "turbo": "^2.5.8",
-    "typescript": "^5.9.3",
-    "typescript-eslint": "^8.46.2"
-  }
+	"name": "saas-kit",
+	"version": "1.0.0",
+	"description": "",
+	"scripts": {
+		"build": "turbo run build",
+		"test": "turbo run test",
+		"deploy": "turbo run deploy",
+		"dev": "pnpm run --filter webapp dev",
+		"studio": "pnpm run --filter data-ops drizzle:studio",
+		"check": "pnpm exec biome check --write --max-diagnostics 10 --unsafe"
+	},
+	"keywords": [],
+	"author": "",
+	"license": "ISC",
+	"packageManager": "pnpm@10.19.0",
+	"devDependencies": {
+		"@biomejs/biome": "2.2.7",
+		"@types/node": "^24.9.1",
+		"globals": "^16.4.0",
+		"turbo": "latest",
+		"typescript": "^5.9.3"
+	}
 }

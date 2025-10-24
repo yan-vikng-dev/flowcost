@@ -5,14 +5,14 @@
  * @returns {string} Token in the form 'XXXX-XXXX'.
  */
 export function token44(): string {
-  const A = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-  let s = "";
-  const getRand = (arr: Uint8Array) => globalThis.crypto.getRandomValues(arr);
-  while (s.length < 8) {
-    const b = getRand(new Uint8Array(1))[0];
-    if (b < 252) s += A[b % 36];
-  }
-  return s.slice(0, 4) + "-" + s.slice(4);
+	const A = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+	let s = "";
+	const getRand = (arr: Uint8Array) => globalThis.crypto.getRandomValues(arr);
+	while (s.length < 8) {
+		const b = getRand(new Uint8Array(1))[0];
+		if (b < 252) s += A[b % 36];
+	}
+	return `${s.slice(0, 4)}-${s.slice(4)}`;
 }
 
 /**
@@ -23,10 +23,10 @@ export function token44(): string {
  * @returns {boolean} True when strings are equal.
  */
 export function timingSafeEqualHex(a: string, b: string): boolean {
-  if (a.length !== b.length) return false;
-  let res = 0;
-  for (let i = 0; i < a.length; i++) res |= a.charCodeAt(i) ^ b.charCodeAt(i);
-  return res === 0;
+	if (a.length !== b.length) return false;
+	let res = 0;
+	for (let i = 0; i < a.length; i++) res |= a.charCodeAt(i) ^ b.charCodeAt(i);
+	return res === 0;
 }
 
 /**
@@ -36,9 +36,9 @@ export function timingSafeEqualHex(a: string, b: string): boolean {
  * @returns {Promise<string>} Hex-encoded SHA-256 digest.
  */
 export async function sha256Hex(input: string): Promise<string> {
-  const u8 = new TextEncoder().encode(input);
-  const digest = await globalThis.crypto.subtle.digest("SHA-256", u8.buffer);
-  return Array.from(new Uint8Array(digest))
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
+	const u8 = new TextEncoder().encode(input);
+	const digest = await globalThis.crypto.subtle.digest("SHA-256", u8.buffer);
+	return Array.from(new Uint8Array(digest))
+		.map((b) => b.toString(16).padStart(2, "0"))
+		.join("");
 }

@@ -1,45 +1,22 @@
 {
-  "$schema": "https://turbo.build/schema.json",
-  "globalEnv": [
-    "CLOUDFLARE_ACCOUNT_ID",
-    "CLOUDFLARE_DATABASE_ID",
-    "CLOUDFLARE_D1_TOKEN"
-  ],
-  "tasks": {
-    "build": {
-      "dependsOn": ["^build"],
-      "outputs": [
-        "dist/**",
-        "build/**"
-      ]
-    },
-    "test": {
-      "dependsOn": ["^build"],
-      "outputs": []
-    },
-    "lint": {
-      "dependsOn": ["^lint"],
-      "outputs": []
-    },
-    "lint:check": {
-      "dependsOn": ["^lint:check"],
-      "outputs": []
-    },
-    "typecheck": {
-      "dependsOn": ["^typecheck"],
-      "outputs": []
-    },
-    "format": {
-      "dependsOn": ["^format"],
-      "outputs": []
-    },
-    "format:check": {
-      "dependsOn": ["^format:check"],
-      "outputs": []
-    },
-    "deploy": {
-      "dependsOn": ["build"],
-      "cache": false
-    }
-  }
+	"$schema": "https://turbo.build/schema.json",
+	"globalEnv": [
+		"CLOUDFLARE_ACCOUNT_ID",
+		"CLOUDFLARE_DATABASE_ID",
+		"CLOUDFLARE_D1_TOKEN"
+	],
+	"tasks": {
+		"build": {
+			"dependsOn": ["^build"],
+			"outputs": ["dist/**", "build/**"]
+		},
+		"test": {
+			"dependsOn": ["^build"],
+			"outputs": []
+		},
+		"deploy": {
+			"dependsOn": ["build"],
+			"cache": false
+		}
+	}
 }

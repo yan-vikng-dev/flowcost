@@ -1,12 +1,12 @@
-import { LucideIcon } from "lucide-react";
-import type { SVGProps, ForwardRefExoticComponent, RefAttributes } from "react";
+import type { LucideIcon } from "lucide-react";
+import type { ForwardRefExoticComponent, RefAttributes, SVGProps } from "react";
 
 export type IconProps = SVGProps<SVGSVGElement> & {
-  size?: number;
+	size?: number;
 };
 
 export type CustomIconComponent = ForwardRefExoticComponent<
-  Omit<IconProps, "ref"> & RefAttributes<SVGSVGElement>
+	Omit<IconProps, "ref"> & RefAttributes<SVGSVGElement>
 >;
 
 export type MergedIconComponent = LucideIcon | CustomIconComponent;

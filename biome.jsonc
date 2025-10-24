@@ -1,0 +1,36 @@
+{
+	"$schema": "https://biomejs.dev/schemas/2.2.7/schema.json",
+	"vcs": {
+		"useIgnoreFile": true,
+		"enabled": true,
+		"clientKind": "git"
+	},
+	"files": {
+		"ignoreUnknown": false,
+		"includes": [
+			"**",
+			"!**/*.gen.ts",
+			"!**/worker-configuration.d.ts",
+			"!**/*.css" //remove this once biome 2.3 is released
+		]
+	},
+	"formatter": {
+		"enabled": true,
+		"indentStyle": "tab"
+	},
+	"assist": {
+		"enabled": true,
+		"actions": {
+			"source": {
+				"organizeImports": "on"
+			}
+		}
+	},
+	"linter": {
+		"rules": {
+			"nursery": {
+				"useSortedClasses": "error"
+			}
+		}
+	}
+}
