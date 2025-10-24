@@ -18,6 +18,7 @@
 	},
 	"scripts": {
 		"build": "tsc -p tsconfig.json --outDir ./dist && tsc-alias",
+		"typecheck": "tsc --noEmit",
 		"better-auth:generate": "mkdir -p src/drizzle && npx @better-auth/cli@latest generate --config ./config/auth.ts --output ./src/drizzle/auth-schema.ts",
 		"drizzle:generate": "drizzle-kit generate --config ./drizzle-kit.config.ts",
 		"drizzle:migrate": "drizzle-kit migrate --config ./drizzle-kit.config.ts",

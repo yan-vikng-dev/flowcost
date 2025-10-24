@@ -8,7 +8,7 @@
 		"deploy": "turbo run deploy",
 		"dev": "pnpm run --filter webapp dev",
 		"studio": "pnpm run --filter data-ops drizzle:studio",
-		"check": "pnpm exec biome check --write --max-diagnostics 10 --unsafe"
+		"check": "pnpm exec biome check --write --max-diagnostics 10 --unsafe && turbo typecheck"
 	},
 	"keywords": [],
 	"author": "",

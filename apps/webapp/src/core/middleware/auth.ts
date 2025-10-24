@@ -6,20 +6,13 @@ async function getAuthContext() {
 	const auth = getAuth()
 	const req = getRequest()
 
-	try {
-		const session = await auth.api.getSession(req)
-		if (!session) return null
-		return {
-			auth: auth,
-			userId: session.user.id,
-			email: session.user.email,
-		} as const
-	} catch (err) {
-		// In dev, Cloudflare D1 can drop or return non-JSON (e.g., code 1031)
-		// Treat any failure as unauthenticated to avoid 500s and allow re-auth.
-		console.error("[Auth] Failed to get session:", err)
-		return null
-	}
+	const session = await auth.api.getSession(req)
+	if (!session) throw new Error("Failed to get session")
+	return {
+		auth: auth,
+		userId: session.user.id,
+		email: session.user.email,
+	} as const
 }
 
 export const protectedFunctionMiddleware = createMiddleware({

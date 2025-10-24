@@ -91,7 +91,7 @@ export function IncomeByCategoryDonut() {
 					</div>
 				) : (
 					<ChartContainer
-						className="mx-auto aspect-square max-h-[300px] overflow-visible [&_.recharts-pie-label-text]:fill-foreground"
+						className="mx-auto aspect-square max-h-[300px] overflow-visible"
 						config={chartConfig}
 					>
 						<PieChart margin={CHART_MARGIN}>

@@ -11,17 +11,23 @@ export function EntryTypeCombobox({
 	placeholder = "Select type",
 	disabled,
 	className,
+	id,
+	invalid,
 }: {
 	value: EntryType
 	onChange: (val: EntryType) => void
 	placeholder?: string
 	disabled?: boolean
 	className?: string
+	id?: string
+	invalid?: boolean
 }) {
 	return (
 		<ResponsiveCombobox
 			className={className}
 			disabled={disabled}
+			id={id}
+			invalid={invalid}
 			items={entryTypes.map((t) => {
 				const Icon = getEntryTypeIcon(t)
 				return {

@@ -20,7 +20,8 @@
 		"dist"
 	],
 	"scripts": {
-		"build": "tsc -p tsconfig.json --outDir ./dist"
+		"build": "tsc -p tsconfig.json --outDir ./dist",
+		"typecheck": "tsc --noEmit"
 	},
 	"keywords": [],
 	"author": "",

@@ -9,8 +9,13 @@ import { EntryTypeCombobox } from "@/components/combobox/EntryTypeCombobox"
 import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+	Field,
+	FieldError,
+	FieldGroup,
+	FieldLabel,
+} from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import {
 	Popover,
 	PopoverContent,
@@ -24,6 +29,9 @@ export function EntriesForm() {
 	const executedAtId = useId()
 	const amountId = useId()
 	const descriptionId = useId()
+	const entryTypeId = useId()
+	const currencyId = useId()
+	const categoryId = useId()
 
 	const queryClient = useQueryClient()
 	const prefsQuery = useQuery({
@@ -80,227 +88,266 @@ export function EntriesForm() {
 						void form.handleSubmit()
 					}}
 				>
-					<div className="grid grid-cols-[max-content_1fr] items-end gap-4 sm:grid-cols-[14rem_1fr]">
-						<div className="grid gap-2">
-							<Label>Type</Label>
-							<form.Field name="entryType">
-								{(field) => (
-									<>
-										<EntryTypeCombobox
-											className="w-auto sm:w-full"
-											onChange={(val) => field.handleChange(val)}
-											value={field.state.value}
-										/>
-										{submittedOnce &&
-											field.state.meta.errors.map((error) => (
-												<div
-													className="text-red-500 text-sm"
-													key={String(error)}
-												>
-													{String(error)}
-												</div>
-											))}
-									</>
-								)}
-							</form.Field>
-						</div>
-						<div className="grid gap-2">
-							<Label htmlFor={executedAtId}>Date</Label>
-							<form.Field
-								name="executedAt"
-								validators={{
-									onChange: ({ value }) => {
-										if (
-											!(value instanceof Date) ||
-											Number.isNaN(value.getTime())
-										) {
-											return "Please select a valid date"
-										}
-										if (value < SERVICE_START_DATE) {
-											return `Date cannot be earlier than ${SERVICE_START_DATE.toLocaleDateString()}`
-										}
-									},
-								}}
-							>
-								{(field) => (
-									<>
-										<Popover>
-											<PopoverTrigger asChild>
-												<button
-													className={cn(
-														"border-input focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 data-[placeholder]:text-muted-foreground dark:bg-input/30 dark:aria-invalid:ring-destructive/40 dark:hover:bg-input/50 [&_svg:not([class*='text-'])]:text-muted-foreground",
-														"flex h-9 w-full items-center justify-between gap-2 whitespace-nowrap rounded-md border bg-transparent px-3 py-2 font-normal text-sm shadow-xs outline-none transition-[color,box-shadow] focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50",
-													)}
-													data-placeholder={
-														field.state.value ? undefined : true
-													}
-													id={executedAtId}
-													type="button"
-												>
-													{field.state.value
-														? new Date(field.state.value).toLocaleDateString()
-														: "Select date"}
-													<ChevronDownIcon className="size-4 opacity-50" />
-												</button>
-											</PopoverTrigger>
-											<PopoverContent
-												align="start"
-												className="w-auto overflow-hidden p-0"
-											>
-												<Calendar
-													mode="single"
-													onSelect={(date) => {
-														if (!date) return
-														field.handleChange(date)
-													}}
-													selected={
-														field.state.value instanceof Date
-															? field.state.value
-															: undefined
-													}
-													startMonth={SERVICE_START_DATE}
+					<FieldGroup>
+						<div className="grid grid-cols-[max-content_1fr] items-end gap-4 sm:grid-cols-[14rem_1fr]">
+							<div className="grid gap-2">
+								<form.Field name="entryType">
+									{(field) => {
+										const isInvalid =
+											(field.state.meta.isTouched || submittedOnce) &&
+											!field.state.meta.isValid
+										return (
+											<Field data-invalid={isInvalid}>
+												<FieldLabel htmlFor={entryTypeId}>Type</FieldLabel>
+												<EntryTypeCombobox
+													className="w-auto sm:w-full"
+													id={entryTypeId}
+													invalid={isInvalid}
+													onChange={(val) => field.handleChange(val)}
+													value={field.state.value}
 												/>
-											</PopoverContent>
-										</Popover>
-										{submittedOnce &&
-											field.state.meta.errors.map((error) => (
-												<div
-													className="text-red-500 text-sm"
-													key={String(error)}
-												>
-													{String(error)}
-												</div>
-											))}
-									</>
-								)}
-							</form.Field>
+												{isInvalid && (
+													<FieldError
+														errors={field.state.meta.errors?.map((e) =>
+															e == null ? undefined : { message: String(e) },
+														)}
+													/>
+												)}
+											</Field>
+										)
+									}}
+								</form.Field>
+							</div>
+							<div className="grid gap-2">
+								<form.Field
+									name="executedAt"
+									validators={{
+										onChange: ({ value }) => {
+											if (
+												!(value instanceof Date) ||
+												Number.isNaN(value.getTime())
+											) {
+												return "Please select a valid date"
+											}
+											if (value < SERVICE_START_DATE) {
+												return `Date cannot be earlier than ${SERVICE_START_DATE.toLocaleDateString()}`
+											}
+										},
+									}}
+								>
+									{(field) => {
+										const isInvalid =
+											(field.state.meta.isTouched || submittedOnce) &&
+											!field.state.meta.isValid
+										return (
+											<Field data-invalid={isInvalid}>
+												<FieldLabel htmlFor={executedAtId}>Date</FieldLabel>
+												<Popover>
+													<PopoverTrigger asChild>
+														<button
+															aria-invalid={isInvalid || undefined}
+															className={cn(
+																"border-input focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 data-[placeholder]:text-muted-foreground dark:bg-input/30 dark:aria-invalid:ring-destructive/40 dark:hover:bg-input/50 [&_svg:not([class*='text-'])]:text-muted-foreground",
+																"flex h-9 w-full items-center justify-between gap-2 whitespace-nowrap rounded-md border bg-transparent px-3 py-2 font-normal text-sm shadow-xs outline-none transition-[color,box-shadow] focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50",
+															)}
+															data-placeholder={
+																field.state.value ? undefined : true
+															}
+															id={executedAtId}
+															type="button"
+														>
+															{field.state.value
+																? new Date(
+																		field.state.value,
+																	).toLocaleDateString()
+																: "Select date"}
+															<ChevronDownIcon className="size-4 opacity-50" />
+														</button>
+													</PopoverTrigger>
+													<PopoverContent
+														align="start"
+														className="w-auto overflow-hidden p-0"
+													>
+														<Calendar
+															mode="single"
+															onSelect={(date) => {
+																if (!date) return
+																field.handleChange(date)
+															}}
+															selected={
+																field.state.value instanceof Date
+																	? field.state.value
+																	: undefined
+															}
+															startMonth={SERVICE_START_DATE}
+														/>
+													</PopoverContent>
+												</Popover>
+												{isInvalid && (
+													<FieldError
+														errors={field.state.meta.errors?.map((e) =>
+															e == null ? undefined : { message: String(e) },
+														)}
+													/>
+												)}
+											</Field>
+										)
+									}}
+								</form.Field>
+							</div>
 						</div>
-					</div>
+					</FieldGroup>
 
 					{/* Row 2: Currency, Amount */}
-					<div className="grid grid-cols-[max-content_1fr] items-end gap-4 sm:grid-cols-[14rem_1fr]">
-						<div className="grid gap-2">
-							<Label>Currency</Label>
-							<form.Field name="currency">
-								{(field) => (
-									<>
-										<CurrencyCombobox
-											className="w-auto sm:w-full"
-											onChange={(val) => field.handleChange(val)}
-											value={field.state.value}
-										/>
-										{submittedOnce &&
-											field.state.meta.errors.map((error) => (
-												<div
-													className="text-red-500 text-sm"
-													key={String(error)}
-												>
-													{String(error)}
-												</div>
-											))}
-									</>
-								)}
-							</form.Field>
+					<FieldGroup>
+						<div className="grid grid-cols-[max-content_1fr] items-end gap-4 sm:grid-cols-[14rem_1fr]">
+							<div className="grid gap-2">
+								<form.Field name="currency">
+									{(field) => {
+										const isInvalid =
+											(field.state.meta.isTouched || submittedOnce) &&
+											!field.state.meta.isValid
+										return (
+											<Field data-invalid={isInvalid}>
+												<FieldLabel htmlFor={currencyId}>Currency</FieldLabel>
+												<CurrencyCombobox
+													className="w-auto sm:w-full"
+													id={currencyId}
+													invalid={isInvalid}
+													onChange={(val) => field.handleChange(val)}
+													value={field.state.value}
+												/>
+												{isInvalid && (
+													<FieldError
+														errors={field.state.meta.errors?.map((e) =>
+															e == null ? undefined : { message: String(e) },
+														)}
+													/>
+												)}
+											</Field>
+										)
+									}}
+								</form.Field>
+							</div>
+							<div className="grid gap-2">
+								<form.Field
+									name="amount"
+									validators={{
+										onSubmit: ({ value }) =>
+											typeof value !== "number" ||
+											!Number.isFinite(value) ||
+											value <= 0
+												? "Amount must be greater than 0"
+												: undefined,
+									}}
+								>
+									{(field) => {
+										const isInvalid =
+											(submittedOnce || field.state.meta.isTouched) &&
+											!field.state.meta.isValid
+										return (
+											<Field data-invalid={isInvalid}>
+												<FieldLabel htmlFor={amountId}>Amount</FieldLabel>
+												<Input
+													aria-invalid={isInvalid || undefined}
+													autoComplete="off"
+													id={amountId}
+													inputMode="decimal"
+													onChange={(e) => {
+														const raw = e.currentTarget.value
+														if (raw === "") {
+															field.handleChange("")
+															return
+														}
+														const next = e.currentTarget.valueAsNumber
+														field.handleChange(Number.isNaN(next) ? "" : next)
+													}}
+													placeholder="0.00"
+													type="number"
+													value={
+														field.state.value === "" ? "" : field.state.value
+													}
+												/>
+												{isInvalid && (
+													<FieldError
+														errors={field.state.meta.errors?.map((e) =>
+															e == null ? undefined : { message: String(e) },
+														)}
+													/>
+												)}
+											</Field>
+										)
+									}}
+								</form.Field>
+							</div>
 						</div>
-						<div className="grid gap-2">
-							<Label htmlFor={amountId}>Amount</Label>
-							<form.Field
-								name="amount"
-								validators={{
-									onSubmit: ({ value }) =>
-										typeof value !== "number" ||
-										!Number.isFinite(value) ||
-										value <= 0
-											? "Amount must be greater than 0"
-											: undefined,
-								}}
-							>
-								{(field) => (
-									<>
-										<Input
-											autoComplete="off"
-											id={amountId}
-											inputMode="decimal"
-											onChange={(e) => {
-												const raw = e.currentTarget.value
-												if (raw === "") {
-													field.handleChange("")
-													return
-												}
-												const next = e.currentTarget.valueAsNumber
-												field.handleChange(Number.isNaN(next) ? "" : next)
-											}}
-											placeholder="0.00"
-											type="number"
-											value={field.state.value === "" ? "" : field.state.value}
-										/>
-										{submittedOnce &&
-											field.state.meta.errors.map((error) => (
-												<div
-													className="text-red-500 text-sm"
-													key={String(error)}
-												>
-													{String(error)}
-												</div>
-											))}
-									</>
-								)}
-							</form.Field>
-						</div>
-					</div>
+					</FieldGroup>
 
 					{/* Row 3: Category, Description */}
-					<div className="grid grid-cols-[max-content_1fr] items-end gap-4 sm:grid-cols-[14rem_1fr]">
-						<div className="grid gap-2">
-							<Label>Category</Label>
-							<form.Field name="category">
-								{(field) => (
-									<>
-										<CategoryCombobox
-											className="w-auto sm:w-full"
-											onChange={(val) => field.handleChange(val)}
-											value={field.state.value}
-										/>
-										{submittedOnce &&
-											field.state.meta.errors.map((error) => (
-												<div
-													className="text-red-500 text-sm"
-													key={String(error)}
-												>
-													{String(error)}
-												</div>
-											))}
-									</>
-								)}
-							</form.Field>
+					<FieldGroup>
+						<div className="grid grid-cols-[max-content_1fr] items-end gap-4 sm:grid-cols-[14rem_1fr]">
+							<div className="grid gap-2">
+								<form.Field name="category">
+									{(field) => {
+										const isInvalid =
+											(field.state.meta.isTouched || submittedOnce) &&
+											!field.state.meta.isValid
+										return (
+											<Field data-invalid={isInvalid}>
+												<FieldLabel htmlFor={categoryId}>Category</FieldLabel>
+												<CategoryCombobox
+													className="w-auto sm:w-full"
+													id={categoryId}
+													invalid={isInvalid}
+													onChange={(val) => field.handleChange(val)}
+													value={field.state.value}
+												/>
+												{isInvalid && (
+													<FieldError
+														errors={field.state.meta.errors?.map((e) =>
+															e == null ? undefined : { message: String(e) },
+														)}
+													/>
+												)}
+											</Field>
+										)
+									}}
+								</form.Field>
+							</div>
+							<div className="grid gap-2">
+								<form.Field name="description">
+									{(field) => {
+										const isInvalid =
+											(field.state.meta.isTouched || submittedOnce) &&
+											!field.state.meta.isValid
+										return (
+											<Field data-invalid={isInvalid}>
+												<FieldLabel htmlFor={descriptionId}>
+													Description
+												</FieldLabel>
+												<Input
+													aria-invalid={isInvalid || undefined}
+													id={descriptionId}
+													onChange={(e) =>
+														field.handleChange(e.currentTarget.value)
+													}
+													placeholder="(Optional) Additional details"
+													value={field.state.value ?? ""}
+												/>
+												{isInvalid && (
+													<FieldError
+														errors={field.state.meta.errors?.map((e) =>
+															e == null ? undefined : { message: String(e) },
+														)}
+													/>
+												)}
+											</Field>
+										)
+									}}
+								</form.Field>
+							</div>
 						</div>
-						<div className="grid gap-2">
-							<Label htmlFor={descriptionId}>Description</Label>
-							<form.Field name="description">
-								{(field) => (
-									<>
-										<Input
-											id={descriptionId}
-											onChange={(e) =>
-												field.handleChange(e.currentTarget.value)
-											}
-											placeholder="(Optional) Additional details"
-											value={field.state.value ?? ""}
-										/>
-										{submittedOnce &&
-											field.state.meta.errors.map((error) => (
-												<div
-													className="text-red-500 text-sm"
-													key={String(error)}
-												>
-													{String(error)}
-												</div>
-											))}
-									</>
-								)}
-							</form.Field>
-						</div>
-					</div>
+					</FieldGroup>
 
 					{/* Form-level errors could be rendered here if needed */}
 

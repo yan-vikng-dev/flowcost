@@ -76,7 +76,7 @@ export function ExpensesByCategoryDonut() {
 				<CardTitle>Expenses</CardTitle>
 				<CardDescription>{data?.monthLabel ?? "This month"}</CardDescription>
 			</CardHeader>
-			<CardContent>
+			<CardContent className="flex-1 pb-0">
 				{isEmpty ? (
 					<div className="mx-auto grid h-[300px] w-full place-items-center">
 						<div className="text-center text-sm">
@@ -90,7 +90,7 @@ export function ExpensesByCategoryDonut() {
 					</div>
 				) : (
 					<ChartContainer
-						className="mx-auto aspect-square max-h-[300px] overflow-visible [&_.recharts-pie-label-text]:fill-foreground"
+						className="mx-auto aspect-square max-h-[300px] overflow-visible"
 						config={chartConfig}
 					>
 						<PieChart margin={CHART_MARGIN}>

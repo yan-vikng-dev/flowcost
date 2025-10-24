@@ -8,17 +8,23 @@ export function CategoryCombobox({
 	placeholder = "Select category",
 	disabled,
 	className,
+	id,
+	invalid,
 }: {
 	value: Category
 	onChange: (val: Category) => void
 	placeholder?: string
 	disabled?: boolean
 	className?: string
+	id?: string
+	invalid?: boolean
 }) {
 	return (
 		<ResponsiveCombobox
 			className={className}
 			disabled={disabled}
+			id={id}
+			invalid={invalid}
 			items={categories.map((cat) => {
 				const Icon = getCategoryIcon(cat)
 				return {

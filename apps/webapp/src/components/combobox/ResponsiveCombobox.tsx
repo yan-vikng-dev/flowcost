@@ -33,6 +33,8 @@ export function ResponsiveCombobox<T extends string>({
 	disabled,
 	className,
 	contentWidthClass = "w-[220px]",
+	id,
+	invalid,
 }: {
 	value: T
 	onChange: (val: T) => void
@@ -41,6 +43,8 @@ export function ResponsiveCombobox<T extends string>({
 	disabled?: boolean
 	className?: string
 	contentWidthClass?: string
+	id?: string
+	invalid?: boolean
 }) {
 	const [open, setOpen] = React.useState(false)
 	const isDesktop = useIsDesktop()
@@ -90,6 +94,7 @@ export function ResponsiveCombobox<T extends string>({
 				<PopoverTrigger asChild>
 					<button
 						aria-expanded={open}
+						aria-invalid={invalid || undefined}
 						aria-label={
 							current
 								? (current.ariaLabel ?? String(current.value))
@@ -98,6 +103,7 @@ export function ResponsiveCombobox<T extends string>({
 						className={triggerClass}
 						data-placeholder={current ? undefined : true}
 						disabled={disabled}
+						id={id}
 						role="combobox"
 						type="button"
 					>
@@ -117,12 +123,14 @@ export function ResponsiveCombobox<T extends string>({
 			<DrawerTrigger asChild>
 				<button
 					aria-expanded={open}
+					aria-invalid={invalid || undefined}
 					aria-label={
 						current ? (current.ariaLabel ?? String(current.value)) : placeholder
 					}
 					className={triggerClass}
 					data-placeholder={current ? undefined : true}
 					disabled={disabled}
+					id={id}
 					role="combobox"
 					type="button"
 				>
