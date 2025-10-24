@@ -1,7 +1,8 @@
 import type { Config } from "drizzle-kit"
 
 const config: Config = {
-	schema: ["./src/drizzle/schemas/*.ts", "!./src/drizzle/schemas/index.ts"],
+	// Use a single entry to avoid duplicate evaluation across multiple files
+	schema: "./src/drizzle/schemas/index.ts",
 	out: "./src/drizzle/migrations",
 	dialect: "sqlite",
 	driver: "d1-http",
