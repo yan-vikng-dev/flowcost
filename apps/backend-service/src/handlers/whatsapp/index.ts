@@ -1,30 +1,30 @@
-import { getDb } from "@repo/data-ops/database/setup";
-import { whatsapp_link_tokens } from "@repo/data-ops/drizzle/schemas/whatsapp_link_tokens/table";
-import { whatsapp_links } from "@repo/data-ops/drizzle/schemas/whatsapp_links/table";
-import { sha256Hex, timingSafeEqualHex } from "@repo/shared-config/crypto";
-import { and, eq, gt, isNull } from "drizzle-orm";
-import type { MessageContext } from "@/durable-objects/Assistant/AiConversationServer";
-import { sendWhatsAppText } from "./helpers";
+import { getDb } from "@repo/data-ops/database/setup"
+import { whatsapp_link_tokens } from "@repo/data-ops/drizzle/schemas/whatsapp_link_tokens/table"
+import { whatsapp_links } from "@repo/data-ops/drizzle/schemas/whatsapp_links/table"
+import { sha256Hex, timingSafeEqualHex } from "@repo/shared-config/crypto"
+import { and, eq, gt, isNull } from "drizzle-orm"
+import type { MessageContext } from "@/durable-objects/Assistant/AiConversationServer"
+import { sendWhatsAppText } from "./helpers"
 
 export async function verifyWhatsAppSignature(
 	rawBody: ArrayBuffer,
 	signatureHeader: string | null,
 	appSecret: string,
 ): Promise<boolean> {
-	if (!signatureHeader) return false;
-	const expected = signatureHeader.replace(/^sha256=/, "");
+	if (!signatureHeader) return false
+	const expected = signatureHeader.replace(/^sha256=/, "")
 	const key = await crypto.subtle.importKey(
 		"raw",
 		new TextEncoder().encode(appSecret),
 		{ name: "HMAC", hash: "SHA-256" },
 		false,
 		["sign"],
-	);
-	const mac = await crypto.subtle.sign("HMAC", key, rawBody);
+	)
+	const mac = await crypto.subtle.sign("HMAC", key, rawBody)
 	const macHex = Array.from(new Uint8Array(mac))
 		.map((b) => b.toString(16).padStart(2, "0"))
-		.join("");
-	return timingSafeEqualHex(macHex, expected);
+		.join("")
+	return timingSafeEqualHex(macHex, expected)
 }
 
 const slashCommands: readonly string[] = [
@@ -33,41 +33,41 @@ const slashCommands: readonly string[] = [
 	"/link",
 	"/unlink",
 	"/help",
-];
+]
 
 export type HandleIncomingMessageArgs = {
-	waId: string;
-	text: string;
-	messageId: string;
-};
+	waId: string
+	text: string
+	messageId: string
+}
 
 export async function handleIncomingMessage(
 	env: Env,
 	args: HandleIncomingMessageArgs,
 ) {
-	const db = getDb();
-	const { waId, text, messageId } = args;
+	const db = getDb()
+	const { waId, text, messageId } = args
 	console.debug({
 		message: "handling whatsapp webhook message",
 		waId,
 		text,
 		messageId,
-	});
+	})
 
-	const tokenMatch = text.match(/^\/verify\s*([A-Za-z0-9]{4}-[A-Za-z0-9]{4})$/);
+	const tokenMatch = text.match(/^\/verify\s*([A-Za-z0-9]{4}-[A-Za-z0-9]{4})$/)
 	if (tokenMatch) {
-		const rawToken = tokenMatch[1];
+		const rawToken = tokenMatch[1]
 		if (!rawToken) {
 			await sendWhatsAppText({
 				env,
 				waId,
 				text: "Token invalid or expired. Please retry linking from the web app.",
-			});
-			return;
+			})
+			return
 		}
-		const tokenHash = await sha256Hex(rawToken);
+		const tokenHash = await sha256Hex(rawToken)
 
-		const now = new Date();
+		const now = new Date()
 		const rows = await db
 			.select()
 			.from(whatsapp_link_tokens)
@@ -77,28 +77,28 @@ export async function handleIncomingMessage(
 					gt(whatsapp_link_tokens.expiresAt, now),
 					isNull(whatsapp_link_tokens.usedAt),
 				),
-			);
-		const token = rows[0];
+			)
+		const token = rows[0]
 		if (!token) {
 			await sendWhatsAppText({
 				env,
 				waId,
 				text: "Token invalid or expired. Please retry linking from the web app.",
-			});
-			return;
+			})
+			return
 		}
 
 		// Relink logic: if this waId belongs to another user, move it
 		const existingByWa = await db
 			.select()
 			.from(whatsapp_links)
-			.where(eq(whatsapp_links.waId, waId));
+			.where(eq(whatsapp_links.waId, waId))
 		if (existingByWa[0] && existingByWa[0].userId !== token.userId) {
 			await sendWhatsAppText({
 				env,
 				waId,
 				text: "This number was linked to a different account. Relinking to your current account.",
-			});
+			})
 		}
 
 		await db
@@ -110,20 +110,20 @@ export async function handleIncomingMessage(
 			.onConflictDoUpdate({
 				target: whatsapp_links.waId,
 				set: { userId: token.userId, updatedAt: new Date() },
-			});
+			})
 
 		// Mark token as used
 		await db
 			.update(whatsapp_link_tokens)
 			.set({ usedAt: now, updatedAt: now })
-			.where(eq(whatsapp_link_tokens.id, token.id));
+			.where(eq(whatsapp_link_tokens.id, token.id))
 
 		await sendWhatsAppText({
 			env,
 			waId,
 			text: "Linked ✅ You can now chat here.",
-		});
-		return;
+		})
+		return
 	}
 
 	const link = await db.query.whatsapp_links.findFirst({
@@ -145,43 +145,43 @@ export async function handleIncomingMessage(
 				},
 			},
 		},
-	});
+	})
 
 	if (!link) {
 		await sendWhatsAppText({
 			env,
 			waId,
 			text: "Please visit https://flowcost.co/app/settings to link your WhatsApp number",
-		});
-		return;
+		})
+		return
 	}
-	const id = env.AI_CONVERSATION_SERVER.idFromName(link.user.id);
-	const stub = env.AI_CONVERSATION_SERVER.get(id);
+	const id = env.AI_CONVERSATION_SERVER.idFromName(link.user.id)
+	const stub = env.AI_CONVERSATION_SERVER.get(id)
 	if (slashCommands.includes(text)) {
-		console.debug("text included in slash commands", text);
+		console.debug("text included in slash commands", text)
 		switch (text) {
 			case "/new":
-				await stub.reset();
-				await sendWhatsAppText({ env, waId, text: "I forgor." });
-				return;
+				await stub.reset()
+				await sendWhatsAppText({ env, waId, text: "I forgor." })
+				return
 			case "/help":
 				await sendWhatsAppText({
 					env,
 					waId,
 					text: "You can either use slash commands (start with /) or just chat normally, I'll try my best to help you.",
-				});
-				return;
+				})
+				return
 			case "/link":
 				await sendWhatsAppText({
 					env,
 					waId,
 					text: "Please visit https://flowcost.co/app/settings to link your WhatsApp number",
-				});
-				return;
+				})
+				return
 			case "/unlink":
-				await db.delete(whatsapp_links).where(eq(whatsapp_links.waId, waId));
-				await sendWhatsAppText({ env, waId, text: "Unlinked ✅" });
-				return;
+				await db.delete(whatsapp_links).where(eq(whatsapp_links.waId, waId))
+				await sendWhatsAppText({ env, waId, text: "Unlinked ✅" })
+				return
 			default:
 		}
 	}
@@ -192,17 +192,17 @@ export async function handleIncomingMessage(
 		defaultEntryCurrency: link.user.preferences.defaultEntryCurrency,
 		displayCurrency: link.user.preferences.displayCurrency,
 		userTimezone: link.user.preferences.timezone,
-	};
+	}
 	try {
-		const reply = await stub.handleMessage(text, messageContext);
-		if (reply) await sendWhatsAppText({ env, waId, text: reply });
+		const reply = await stub.handleMessage(text, messageContext)
+		if (reply) await sendWhatsAppText({ env, waId, text: reply })
 	} catch (error) {
 		await sendWhatsAppText({
 			env,
 			waId,
 			text: "Something went wrong. Please try again.",
-		});
-		throw error;
+		})
+		throw error
 	}
-	return;
+	return
 }

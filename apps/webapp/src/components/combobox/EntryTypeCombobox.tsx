@@ -1,9 +1,9 @@
 import {
 	type EntryType,
 	entryTypes,
-} from "@repo/data-ops/drizzle/schemas/entries/table";
-import { getEntryTypeIcon } from "@/config/entryTypes";
-import { ResponsiveCombobox } from "./ResponsiveCombobox";
+} from "@repo/data-ops/drizzle/schemas/entries/table"
+import { getEntryTypeIcon } from "@/config/entryTypes"
+import { ResponsiveCombobox } from "./ResponsiveCombobox"
 
 export function EntryTypeCombobox({
 	value,
@@ -12,19 +12,18 @@ export function EntryTypeCombobox({
 	disabled,
 	className,
 }: {
-	value: EntryType;
-	onChange: (val: EntryType) => void;
-	placeholder?: string;
-	disabled?: boolean;
-	className?: string;
+	value: EntryType
+	onChange: (val: EntryType) => void
+	placeholder?: string
+	disabled?: boolean
+	className?: string
 }) {
 	return (
 		<ResponsiveCombobox
-			value={value}
-			onChange={onChange}
 			className={className}
+			disabled={disabled}
 			items={entryTypes.map((t) => {
-				const Icon = getEntryTypeIcon(t);
+				const Icon = getEntryTypeIcon(t)
 				return {
 					value: t,
 					ariaLabel: t,
@@ -50,10 +49,11 @@ export function EntryTypeCombobox({
 							<span className="hidden sm:inline">{t}</span>
 						</span>
 					),
-				};
+				}
 			})}
+			onChange={onChange}
 			placeholder={placeholder}
-			disabled={disabled}
+			value={value}
 		/>
-	);
+	)
 }

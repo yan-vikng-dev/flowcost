@@ -1,6 +1,6 @@
-import { type Category, categories } from "@repo/shared-config";
-import { getCategoryIcon } from "@/config/categories";
-import { ResponsiveCombobox } from "./ResponsiveCombobox";
+import { type Category, categories } from "@repo/shared-config"
+import { getCategoryIcon } from "@/config/categories"
+import { ResponsiveCombobox } from "./ResponsiveCombobox"
 
 export function CategoryCombobox({
 	value,
@@ -9,19 +9,18 @@ export function CategoryCombobox({
 	disabled,
 	className,
 }: {
-	value: Category;
-	onChange: (val: Category) => void;
-	placeholder?: string;
-	disabled?: boolean;
-	className?: string;
+	value: Category
+	onChange: (val: Category) => void
+	placeholder?: string
+	disabled?: boolean
+	className?: string
 }) {
 	return (
 		<ResponsiveCombobox
-			value={value}
-			onChange={onChange}
 			className={className}
+			disabled={disabled}
 			items={categories.map((cat) => {
-				const Icon = getCategoryIcon(cat);
+				const Icon = getCategoryIcon(cat)
 				return {
 					value: cat,
 					ariaLabel: cat,
@@ -47,10 +46,11 @@ export function CategoryCombobox({
 							<span className="hidden sm:inline">{cat}</span>
 						</span>
 					),
-				};
+				}
 			})}
+			onChange={onChange}
 			placeholder={placeholder}
-			disabled={disabled}
+			value={value}
 		/>
-	);
+	)
 }

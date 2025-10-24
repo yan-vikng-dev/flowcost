@@ -1,5 +1,5 @@
 interface ExampleWorkflowParmas {
-	dataToPassIn;
+	dataToPassIn
 }
 
 interface Env extends Cloudflare.Env {}

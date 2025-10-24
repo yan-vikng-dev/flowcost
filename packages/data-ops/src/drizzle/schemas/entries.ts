@@ -1,13 +1,13 @@
-import { categories, currencies } from "@repo/shared-config";
-import { relations, sql } from "drizzle-orm";
-import { integer, real, sqliteTable, text } from "drizzle-orm/sqlite-core";
-import { auth_users } from "./auth_users";
+import { categories, currencies } from "@repo/shared-config"
+import { relations, sql } from "drizzle-orm"
+import { integer, real, sqliteTable, text } from "drizzle-orm/sqlite-core"
+import { auth_users } from "./auth_users"
 
-export const entryTypes = ["Expense", "Income"] as const;
-export type EntryType = (typeof entryTypes)[number];
+export const entryTypes = ["Expense", "Income"] as const
+export type EntryType = (typeof entryTypes)[number]
 
-export type InsertEntry = typeof entries.$inferInsert;
-export type SelectEntry = typeof entries.$inferSelect;
+export type InsertEntry = typeof entries.$inferInsert
+export type SelectEntry = typeof entries.$inferSelect
 
 export const entries = sqliteTable("entries", {
 	id: text()
@@ -29,11 +29,11 @@ export const entries = sqliteTable("entries", {
 		.default(sql`(unixepoch() * 1000)`)
 		.$onUpdate(() => new Date())
 		.notNull(),
-});
+})
 
 export const entriesRelations = relations(entries, ({ one }) => ({
 	user: one(auth_users, {
 		fields: [entries.userId],
 		references: [auth_users.id],
 	}),
-}));
+}))

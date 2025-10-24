@@ -1,22 +1,22 @@
-import { Link } from "@tanstack/react-router";
-import { HomeIcon } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Link } from "@tanstack/react-router"
+import { HomeIcon } from "lucide-react"
+import { Button } from "@/components/ui/button"
 import {
 	Card,
 	CardContent,
 	CardDescription,
 	CardHeader,
 	CardTitle,
-} from "@/components/ui/card";
-import { authClient } from "@/lib/auth-client";
+} from "@/components/ui/card"
+import { authClient } from "@/lib/auth-client"
 
 export function GoogleLogin() {
 	const handleGoogleSignIn = async () => {
 		await authClient.signIn.social({
 			provider: "google",
 			callbackURL: "/app",
-		});
-	};
+		})
+	}
 
 	return (
 		<div className="flex min-h-screen items-center justify-center bg-background p-4">
@@ -28,14 +28,14 @@ export function GoogleLogin() {
 				<CardContent>
 					<div className="flex flex-col gap-2">
 						<Button
-							onClick={() => void handleGoogleSignIn()}
 							className="w-full text-base"
+							onClick={() => void handleGoogleSignIn()}
 							variant="outline"
 						>
 							<svg
 								className="mr-2 h-5 w-5"
-								viewBox="0 0 24 24"
 								fill="currentColor"
+								viewBox="0 0 24 24"
 							>
 								<title>Google</title>
 								<path
@@ -58,7 +58,7 @@ export function GoogleLogin() {
 							Continue with Google
 						</Button>
 						<Link to="/">
-							<Button variant="outline" className="w-full text-base">
+							<Button className="w-full text-base" variant="outline">
 								<HomeIcon className="h-4 w-4" />
 								Back to Home
 							</Button>
@@ -67,5 +67,5 @@ export function GoogleLogin() {
 				</CardContent>
 			</Card>
 		</div>
-	);
+	)
 }

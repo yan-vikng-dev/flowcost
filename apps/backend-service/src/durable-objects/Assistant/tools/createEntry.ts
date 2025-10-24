@@ -1,13 +1,13 @@
-import type { DrizzleDb } from "@repo/data-ops/database/setup";
+import type { DrizzleDb } from "@repo/data-ops/database/setup"
 import {
 	entries,
 	type InsertEntry,
-} from "@repo/data-ops/drizzle/schemas/entries/table";
-import { type Currency, categories, currencies } from "@repo/shared-config";
-import { tool } from "ai";
-import { DateTime } from "luxon";
-import { z } from "zod";
-import type { MessageContext } from "../AiConversationServer";
+} from "@repo/data-ops/drizzle/schemas/entries/table"
+import { type Currency, categories, currencies } from "@repo/shared-config"
+import { tool } from "ai"
+import { DateTime } from "luxon"
+import { z } from "zod"
+import type { MessageContext } from "../AiConversationServer"
 
 const createEntrySchema = z.object({
 	entryType: z
@@ -31,7 +31,7 @@ const createEntrySchema = z.object({
 		.string()
 		.optional()
 		.describe("YYYY-MM-DD; defaults to today if omitted"),
-});
+})
 
 export const makeCreateEntryTool = (context: MessageContext, db: DrizzleDb) =>
 	tool({
@@ -43,12 +43,12 @@ export const makeCreateEntryTool = (context: MessageContext, db: DrizzleDb) =>
 				? DateTime.fromISO(input.executionDate, {
 						zone: context.userTimezone,
 					}).toJSDate()
-				: new Date();
+				: new Date()
 			const currency = input.currency
 				? (input.currency as Currency)
-				: context.defaultEntryCurrency;
+				: context.defaultEntryCurrency
 			if (!currencies.includes(currency))
-				throw new Error(`Unsupported currency: ${currency}`);
+				throw new Error(`Unsupported currency: ${currency}`)
 			const newEntry: InsertEntry = {
 				userId: context.userId,
 				amount: input.amount,
@@ -57,15 +57,15 @@ export const makeCreateEntryTool = (context: MessageContext, db: DrizzleDb) =>
 				entryType: input.entryType,
 				description: input.description,
 				executedAt,
-			};
-			const [inserted] = await db.insert(entries).values(newEntry).returning();
-			if (!inserted) throw new Error("Failed to create entry");
+			}
+			const [inserted] = await db.insert(entries).values(newEntry).returning()
+			if (!inserted) throw new Error("Failed to create entry")
 			const safe = {
 				...inserted,
 				executedAt: inserted.executedAt.toISOString(),
 				createdAt: inserted.createdAt.toISOString(),
 				updatedAt: inserted.updatedAt.toISOString(),
-			};
-			return { result: safe };
+			}
+			return { result: safe }
 		},
-	});
+	})

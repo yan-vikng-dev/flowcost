@@ -1,7 +1,7 @@
-import { Link } from "@tanstack/react-router";
-import { ArrowLeft, FileQuestion, Home, Search } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Link } from "@tanstack/react-router"
+import { ArrowLeft, FileQuestion, Home, Search } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
 
 export function NotFound({ children }: { children?: React.ReactNode }) {
 	return (
@@ -32,15 +32,15 @@ export function NotFound({ children }: { children?: React.ReactNode }) {
 						{/* Actions */}
 						<div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
 							<Button
-								variant="default"
-								onClick={() => window.history.back()}
 								className="flex items-center gap-2"
+								onClick={() => window.history.back()}
+								variant="default"
 							>
 								<ArrowLeft className="h-4 w-4" />
 								Go Back
 							</Button>
-							<Button variant="outline" asChild>
-								<Link to="/" className="flex items-center gap-2">
+							<Button asChild variant="outline">
+								<Link className="flex items-center gap-2" to="/">
 									<Home className="h-4 w-4" />
 									Home
 								</Link>
@@ -60,5 +60,5 @@ export function NotFound({ children }: { children?: React.ReactNode }) {
 				</CardContent>
 			</Card>
 		</div>
-	);
+	)
 }

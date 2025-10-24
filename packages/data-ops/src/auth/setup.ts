@@ -1,9 +1,9 @@
-import { type BetterAuthOptions, betterAuth } from "better-auth";
+import { type BetterAuthOptions, betterAuth } from "better-auth"
 
 export const createBetterAuth = (config: {
-	database: BetterAuthOptions["database"];
-	secret?: BetterAuthOptions["secret"];
-	socialProviders?: BetterAuthOptions["socialProviders"];
+	database: BetterAuthOptions["database"]
+	secret?: BetterAuthOptions["secret"]
+	socialProviders?: BetterAuthOptions["socialProviders"]
 }): ReturnType<typeof betterAuth> => {
 	return betterAuth({
 		database: config.database,
@@ -24,5 +24,5 @@ export const createBetterAuth = (config: {
 		account: {
 			modelName: "auth_accounts",
 		},
-	});
-};
+	})
+}

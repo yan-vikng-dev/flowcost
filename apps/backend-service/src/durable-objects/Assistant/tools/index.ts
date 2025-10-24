@@ -1,3 +1,3 @@
-export * from "./createEntry";
-export * from "./getEntries";
-export * from "./updatePreferences";
+export * from "./createEntry"
+export * from "./getEntries"
+export * from "./updatePreferences"

@@ -1,24 +1,24 @@
 /// <reference types="vite/client" />
 
-import type { QueryClient } from "@tanstack/react-query";
-import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+import type { QueryClient } from "@tanstack/react-query"
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools"
 import {
 	createRootRouteWithContext,
 	HeadContent,
 	Outlet,
 	Scripts,
-} from "@tanstack/react-router";
-import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
-import type * as React from "react";
-import { DefaultCatchBoundary } from "@/components/default-catch-boundary";
-import { NotFound } from "@/components/not-found";
-import { ThemeProvider } from "@/components/theme";
-import { Toaster } from "@/components/ui/sonner";
-import appCss from "@/styles.css?url";
-import { seo } from "@/utils/seo";
+} from "@tanstack/react-router"
+import { TanStackRouterDevtools } from "@tanstack/react-router-devtools"
+import type * as React from "react"
+import { DefaultCatchBoundary } from "@/components/default-catch-boundary"
+import { NotFound } from "@/components/not-found"
+import { ThemeProvider } from "@/components/theme"
+import { Toaster } from "@/components/ui/sonner"
+import appCss from "@/styles.css?url"
+import { seo } from "@/utils/seo"
 
 export const Route = createRootRouteWithContext<{
-	queryClient: QueryClient;
+	queryClient: QueryClient
 }>()({
 	head: () => ({
 		meta: [
@@ -63,11 +63,11 @@ export const Route = createRootRouteWithContext<{
 			<RootDocument>
 				<DefaultCatchBoundary {...props} />
 			</RootDocument>
-		);
+		)
 	},
 	notFoundComponent: () => <NotFound />,
 	component: RootComponent,
-});
+})
 
 function RootComponent() {
 	return (
@@ -75,13 +75,13 @@ function RootComponent() {
 			<ThemeProvider
 				attribute="class"
 				defaultTheme="system"
-				enableSystem
 				disableTransitionOnChange={false}
+				enableSystem
 			>
 				<Outlet />
 			</ThemeProvider>
 		</RootDocument>
-	);
+	)
 }
 
 function RootDocument({ children }: { children: React.ReactNode }) {
@@ -98,5 +98,5 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 				<Scripts />
 			</body>
 		</html>
-	);
+	)
 }

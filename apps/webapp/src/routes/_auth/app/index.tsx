@@ -1,23 +1,23 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { listEntriesThisMonthPaginated } from "@/core/functions/entries";
-import { getUserPreferences } from "@/core/functions/preferences";
-import { EntriesForm } from "./-components/entriesForm";
-import { MonthlyEntriesTable } from "./-components/entriesTable/index.js";
-import { ExpensesByCategoryDonut } from "./-components/expensesByCategoryDonut";
-import { IncomeByCategoryDonut } from "./-components/incomeByCategoryDonut";
-import { getMonthlyEntriesForCharts } from "./-functions/monthlyEntries";
+import { createFileRoute } from "@tanstack/react-router"
+import { listEntriesThisMonthPaginated } from "@/core/functions/entries"
+import { getUserPreferences } from "@/core/functions/preferences"
+import { EntriesForm } from "./-components/entriesForm"
+import { MonthlyEntriesTable } from "./-components/entriesTable/index.js"
+import { ExpensesByCategoryDonut } from "./-components/expensesByCategoryDonut"
+import { IncomeByCategoryDonut } from "./-components/incomeByCategoryDonut"
+import { getMonthlyEntriesForCharts } from "./-functions/monthlyEntries"
 
 export const Route = createFileRoute("/_auth/app/")({
 	loader: async ({ context }) => {
 		const prefs = await context.queryClient.ensureQueryData({
 			queryKey: ["userPreferences"],
 			queryFn: () => getUserPreferences(),
-		});
+		})
 
-		const initialPageIndex = 0;
-		const initialPageSize = 10;
-		const initialSortBy = "executedAt" as const;
-		const initialSortDir = "desc" as const;
+		const initialPageIndex = 0
+		const initialPageSize = 10
+		const initialSortBy = "executedAt" as const
+		const initialSortDir = "desc" as const
 		await context.queryClient.ensureQueryData({
 			queryKey: [
 				"entries",
@@ -36,16 +36,16 @@ export const Route = createFileRoute("/_auth/app/")({
 						sortDir: initialSortDir,
 					},
 				}),
-		});
+		})
 
 		// Prefetch monthly entries for charts once
 		await context.queryClient.ensureQueryData({
 			queryKey: ["monthlyEntriesForCharts"],
 			queryFn: () => getMonthlyEntriesForCharts(),
-		});
+		})
 	},
 	component: RouteComponent,
-});
+})
 
 function RouteComponent() {
 	return (
@@ -57,5 +57,5 @@ function RouteComponent() {
 			</div>
 			<MonthlyEntriesTable />
 		</div>
-	);
+	)
 }

@@ -3,7 +3,8 @@
 	"vcs": {
 		"useIgnoreFile": true,
 		"enabled": true,
-		"clientKind": "git"
+		"clientKind": "git",
+		"defaultBranch": "main"
 	},
 	"files": {
 		"ignoreUnknown": false,
@@ -18,19 +19,26 @@
 		"enabled": true,
 		"indentStyle": "tab"
 	},
-	"assist": {
-		"enabled": true,
-		"actions": {
-			"source": {
-				"organizeImports": "on"
-			}
-		}
-	},
 	"linter": {
 		"rules": {
 			"nursery": {
 				"useSortedClasses": "error"
 			}
+		}
+	},
+	"assist": {
+		"enabled": true,
+		"actions": {
+			"source": {
+				"organizeImports": "on",
+				"useSortedProperties": "on",
+				"useSortedAttributes": "on"
+			}
+		}
+	},
+	"javascript": {
+		"formatter": {
+			"semicolons": "asNeeded"
 		}
 	}
 }

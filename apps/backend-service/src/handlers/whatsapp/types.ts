@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "zod"
 
 export const NotificationPayloadSchema = z.object({
 	object: z.literal("whatsapp_business_account"),
@@ -25,6 +25,6 @@ export const NotificationPayloadSchema = z.object({
 			),
 		}),
 	),
-});
+})
 
-export type NotificationPayload = z.infer<typeof NotificationPayloadSchema>;
+export type NotificationPayload = z.infer<typeof NotificationPayloadSchema>

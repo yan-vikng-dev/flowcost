@@ -1,12 +1,12 @@
-import type { currencies } from "@repo/shared-config";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { createFileRoute } from "@tanstack/react-router";
-import * as React from "react";
-import { useTimezoneSelect } from "react-timezone-select";
-import { CurrencyCombobox } from "@/components/combobox/CurrencyCombobox";
-import { TimezoneCombobox } from "@/components/combobox/TimezoneCombobox";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import type { currencies } from "@repo/shared-config"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { createFileRoute } from "@tanstack/react-router"
+import * as React from "react"
+import { useTimezoneSelect } from "react-timezone-select"
+import { CurrencyCombobox } from "@/components/combobox/CurrencyCombobox"
+import { TimezoneCombobox } from "@/components/combobox/TimezoneCombobox"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
 	Dialog,
 	DialogContent,
@@ -14,18 +14,18 @@ import {
 	DialogFooter,
 	DialogHeader,
 	DialogTitle,
-} from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
+} from "@/components/ui/dialog"
+import { Label } from "@/components/ui/label"
 import {
 	getUserPreferences,
 	type UpdateUserPreferencesInput,
 	updateUserPreferences,
-} from "@/core/functions/preferences";
+} from "@/core/functions/preferences"
 import {
 	getWhatsappLinkStatus,
 	startWhatsappLink,
 	unlinkWhatsapp,
-} from "@/core/functions/whatsapp";
+} from "@/core/functions/whatsapp"
 
 export const Route = createFileRoute("/_auth/app/settings/preferences")({
 	loader: async ({ context }) => {
@@ -38,18 +38,18 @@ export const Route = createFileRoute("/_auth/app/settings/preferences")({
 				queryKey: ["whatsappLinkStatus"],
 				queryFn: () => getWhatsappLinkStatus(),
 			}),
-		]);
+		])
 	},
 	component: RouteComponent,
-});
+})
 
 function RouteComponent() {
-	const queryClient = useQueryClient();
+	const queryClient = useQueryClient()
 	const prefsQuery = useQuery({
 		queryKey: ["userPreferences"],
 		queryFn: () => getUserPreferences(),
 		staleTime: 5 * 60 * 1000,
-	});
+	})
 
 	const mutation = useMutation({
 		mutationFn: (input: UpdateUserPreferencesInput) =>
@@ -61,44 +61,44 @@ function RouteComponent() {
 				queryClient.invalidateQueries({
 					queryKey: ["monthlyEntriesForCharts"],
 				}),
-			]);
+			])
 		},
-	});
+	})
 
 	const whatsappStatusQuery = useQuery({
 		queryKey: ["whatsappLinkStatus"],
 		queryFn: () => getWhatsappLinkStatus(),
 		staleTime: 60 * 1000,
-	});
+	})
 
 	const startLinkMutation = useMutation({
 		mutationFn: async () => {
-			const res = await startWhatsappLink();
+			const res = await startWhatsappLink()
 			if (res?.url) {
-				window.open(res.url, "_blank");
+				window.open(res.url, "_blank")
 			}
 		},
 		onSuccess: async () => {
-			await whatsappStatusQuery.refetch();
+			await whatsappStatusQuery.refetch()
 		},
-	});
+	})
 
 	const unlinkMutation = useMutation({
 		mutationFn: async () => {
-			await unlinkWhatsapp();
+			await unlinkWhatsapp()
 		},
 		onSuccess: async () => {
-			await whatsappStatusQuery.refetch();
-			setUnlinkOpen(false);
+			await whatsappStatusQuery.refetch()
+			setUnlinkOpen(false)
 		},
-	});
+	})
 
-	type Currency = (typeof currencies)[number];
+	type Currency = (typeof currencies)[number]
 	type PrefsState = {
-		defaultEntryCurrency: Currency;
-		displayCurrency: Currency;
-		timezone: string;
-	};
+		defaultEntryCurrency: Currency
+		displayCurrency: Currency
+		timezone: string
+	}
 
 	const current: PrefsState = prefsQuery.data
 		? {
@@ -106,14 +106,14 @@ function RouteComponent() {
 				displayCurrency: prefsQuery.data.displayCurrency,
 				timezone: prefsQuery.data.timezone,
 			}
-		: { defaultEntryCurrency: "USD", displayCurrency: "USD", timezone: "UTC" };
+		: { defaultEntryCurrency: "USD", displayCurrency: "USD", timezone: "UTC" }
 
-	const [local, setLocal] = React.useState<PrefsState>(current);
-	const [unlinkOpen, setUnlinkOpen] = React.useState(false);
+	const [local, setLocal] = React.useState<PrefsState>(current)
+	const [unlinkOpen, setUnlinkOpen] = React.useState(false)
 
 	const { options: timezoneOptions } = useTimezoneSelect({
 		labelStyle: "original",
-	});
+	})
 
 	const updatePref = React.useCallback(
 		(patch: Partial<PrefsState>) => {
@@ -122,18 +122,18 @@ function RouteComponent() {
 					patch.defaultEntryCurrency ?? local.defaultEntryCurrency,
 				displayCurrency: patch.displayCurrency ?? local.displayCurrency,
 				timezone: patch.timezone ?? local.timezone ?? "UTC",
-			};
-			const prev = local;
-			setLocal(next);
+			}
+			const prev = local
+			setLocal(next)
 			// Persist immediately
 			mutation.mutate(next, {
 				onError: () => {
-					setLocal(prev);
+					setLocal(prev)
 				},
-			});
+			})
 		},
 		[local, mutation],
-	);
+	)
 
 	React.useEffect(() => {
 		if (prefsQuery.data) {
@@ -141,9 +141,9 @@ function RouteComponent() {
 				defaultEntryCurrency: prefsQuery.data.defaultEntryCurrency,
 				displayCurrency: prefsQuery.data.displayCurrency,
 				timezone: prefsQuery.data.timezone,
-			});
+			})
 		}
-	}, [prefsQuery.data]);
+	}, [prefsQuery.data])
 
 	return (
 		<Card className="max-w-xl">
@@ -155,16 +155,16 @@ function RouteComponent() {
 					<div className="grid gap-2">
 						<Label>Default Entry Currency</Label>
 						<CurrencyCombobox
-							value={local.defaultEntryCurrency}
 							onChange={(val) => updatePref({ defaultEntryCurrency: val })}
+							value={local.defaultEntryCurrency}
 						/>
 					</div>
 
 					<div className="grid gap-2">
 						<Label>Display Currency</Label>
 						<CurrencyCombobox
-							value={local.displayCurrency}
 							onChange={(val) => updatePref({ displayCurrency: val })}
+							value={local.displayCurrency}
 						/>
 					</div>
 
@@ -173,17 +173,17 @@ function RouteComponent() {
 						{(() => {
 							const hasCurated = timezoneOptions.some(
 								(opt) => opt.value === (local.timezone ?? ""),
-							);
-							const placeholder = local.timezone ?? "UTC";
+							)
+							const placeholder = local.timezone ?? "UTC"
 							return (
 								<TimezoneCombobox
 									// If current value not in curated list, show placeholder and wait for selection
-									value={hasCurated ? local.timezone : "__placeholder__"}
 									onChange={(v) => updatePref({ timezone: v })}
 									options={timezoneOptions}
 									placeholder={placeholder}
+									value={hasCurated ? local.timezone : "__placeholder__"}
 								/>
-							);
+							)
 						})()}
 					</div>
 
@@ -198,7 +198,6 @@ function RouteComponent() {
 										: "Not linked"}
 							</div>
 							<Button
-								variant="secondary"
 								disabled={
 									whatsappStatusQuery.data?.linked
 										? unlinkMutation.isPending
@@ -206,11 +205,12 @@ function RouteComponent() {
 								}
 								onClick={() => {
 									if (whatsappStatusQuery.data?.linked) {
-										setUnlinkOpen(true);
+										setUnlinkOpen(true)
 									} else {
-										startLinkMutation.mutate();
+										startLinkMutation.mutate()
 									}
 								}}
+								variant="secondary"
 							>
 								{whatsappStatusQuery.data?.linked
 									? unlinkMutation.isPending
@@ -223,7 +223,7 @@ function RouteComponent() {
 						</div>
 					</div>
 
-					<Dialog open={unlinkOpen} onOpenChange={setUnlinkOpen}>
+					<Dialog onOpenChange={setUnlinkOpen} open={unlinkOpen}>
 						<DialogContent>
 							<DialogHeader>
 								<DialogTitle>Unlink WhatsApp?</DialogTitle>
@@ -233,13 +233,13 @@ function RouteComponent() {
 								</DialogDescription>
 							</DialogHeader>
 							<DialogFooter>
-								<Button variant="ghost" onClick={() => setUnlinkOpen(false)}>
+								<Button onClick={() => setUnlinkOpen(false)} variant="ghost">
 									Cancel
 								</Button>
 								<Button
-									variant="destructive"
 									disabled={unlinkMutation.isPending}
 									onClick={() => unlinkMutation.mutate()}
+									variant="destructive"
 								>
 									{unlinkMutation.isPending ? "Unlinking..." : "Unlink"}
 								</Button>
@@ -251,5 +251,5 @@ function RouteComponent() {
 				</div>
 			</CardContent>
 		</Card>
-	);
+	)
 }

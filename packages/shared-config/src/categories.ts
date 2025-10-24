@@ -24,6 +24,6 @@ export const categories = [
 	"Business",
 	"Gift",
 	"Other",
-] as const;
+] as const
 
-export type Category = (typeof categories)[number];
+export type Category = (typeof categories)[number]

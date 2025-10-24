@@ -164,11 +164,11 @@ export const currencies = [
 	"ZWL",
 	"CLF",
 	"CNH",
-] as const;
+] as const
 
-export type Currency = (typeof currencies)[number];
+export type Currency = (typeof currencies)[number]
 
-export type CurrencyData = { symbol: string; name: string };
+export type CurrencyData = { symbol: string; name: string }
 
 export const currencyData: Record<Currency, CurrencyData> = {
 	USD: { symbol: "$", name: "United States Dollar" },
@@ -336,12 +336,12 @@ export const currencyData: Record<Currency, CurrencyData> = {
 	ZWL: { symbol: "$", name: "Zimbabwean Dollar" },
 	CLF: { symbol: "UF", name: "Chilean Unit of Account (UF)" },
 	CNH: { symbol: "¥", name: "Chinese Yuan (Offshore)" },
-} as const;
+} as const
 
 export function getCurrencySymbol(code: Currency): string {
-	return currencyData[code].symbol;
+	return currencyData[code].symbol
 }
 
 export function getCurrencyName(code: Currency): string {
-	return currencyData[code].name;
+	return currencyData[code].name
 }

@@ -1,9 +1,9 @@
-import type { DrizzleDb } from "@repo/data-ops/database/setup";
-import { user_preferences } from "@repo/data-ops/drizzle/schemas/index";
-import { type Currency, currencies } from "@repo/shared-config";
-import { tool } from "ai";
-import { z } from "zod";
-import type { MessageContext } from "../AiConversationServer";
+import type { DrizzleDb } from "@repo/data-ops/database/setup"
+import { user_preferences } from "@repo/data-ops/drizzle/schemas/index"
+import { type Currency, currencies } from "@repo/shared-config"
+import { tool } from "ai"
+import { z } from "zod"
+import type { MessageContext } from "../AiConversationServer"
 
 const updatePreferencesSchema = z.object({
 	timezone: z
@@ -24,7 +24,7 @@ const updatePreferencesSchema = z.object({
 		.regex(/^[A-Z]{3}$/)
 		.optional()
 		.describe("The default currency for new entries"),
-});
+})
 
 export const makeUpdatePreferencesTool = (
 	context: MessageContext,
@@ -38,15 +38,15 @@ export const makeUpdatePreferencesTool = (
 		execute: async (input) => {
 			const displayCurrency =
 				(input.displayCurrency as Currency | undefined) ??
-				context.displayCurrency;
+				context.displayCurrency
 			const defaultEntryCurrency =
 				(input.defaultEntryCurrency as Currency | undefined) ??
-				context.defaultEntryCurrency;
-			const timezone = input.timezone ?? context.userTimezone;
+				context.defaultEntryCurrency
+			const timezone = input.timezone ?? context.userTimezone
 			if (!currencies.includes(displayCurrency))
-				throw new Error(`invalid currency provided ${displayCurrency}`);
+				throw new Error(`invalid currency provided ${displayCurrency}`)
 			if (!currencies.includes(defaultEntryCurrency))
-				throw new Error(`invalid currency provided ${defaultEntryCurrency}`);
+				throw new Error(`invalid currency provided ${defaultEntryCurrency}`)
 			await db
 				.insert(user_preferences)
 				.values({
@@ -62,6 +62,6 @@ export const makeUpdatePreferencesTool = (
 						defaultEntryCurrency,
 						timezone,
 					},
-				});
+				})
 		},
-	});
+	})

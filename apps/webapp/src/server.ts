@@ -1,13 +1,13 @@
 // src/server.ts - TanStack Start Server Entry for cloudflare worker
 
-import { env } from "cloudflare:workers";
-import { setAuth } from "@repo/data-ops/auth/server";
-import { initDatabase } from "@repo/data-ops/database/setup";
-import handler from "@tanstack/react-start/server-entry";
+import { env } from "cloudflare:workers"
+import { setAuth } from "@repo/data-ops/auth/server"
+import { initDatabase } from "@repo/data-ops/database/setup"
+import handler from "@tanstack/react-start/server-entry"
 
 export default {
 	async fetch(request: Request) {
-		const db = initDatabase(env.DB);
+		const db = initDatabase(env.DB)
 		setAuth({
 			secret: env.BETTER_AUTH_SECRET,
 			socialProviders: {
@@ -20,11 +20,11 @@ export default {
 				drizzleDb: db,
 				provider: "sqlite",
 			},
-		});
+		})
 		return handler.fetch(request, {
 			context: {
 				fromFetch: true,
 			},
-		});
+		})
 	},
-};
+}

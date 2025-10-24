@@ -1,17 +1,17 @@
-import { forwardRef } from "react";
+import { forwardRef } from "react"
 
-import type { IconProps } from "./types";
+import type { IconProps } from "./types"
 
 export const WhatsappIcon = forwardRef<SVGSVGElement, IconProps>(
 	({ className, size = 16, ...props }, ref) => {
 		return (
 			<svg
-				ref={ref}
-				width={size}
-				height={size}
-				viewBox="0 0 16 16"
-				xmlns="http://www.w3.org/2000/svg"
 				className={className}
+				height={size}
+				ref={ref}
+				viewBox="0 0 16 16"
+				width={size}
+				xmlns="http://www.w3.org/2000/svg"
 				{...props}
 			>
 				<title>Whatsapp</title>
@@ -24,8 +24,8 @@ export const WhatsappIcon = forwardRef<SVGSVGElement, IconProps>(
 					fill="currentColor"
 				/>
 			</svg>
-		);
+		)
 	},
-);
+)
 
-WhatsappIcon.displayName = "WhatsappIcon";
+WhatsappIcon.displayName = "WhatsappIcon"

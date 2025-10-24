@@ -1,6 +1,6 @@
-import { Link } from "@tanstack/react-router";
-import { ArrowRight, Github } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Link } from "@tanstack/react-router"
+import { ArrowRight, Github } from "lucide-react"
+import { Button } from "@/components/ui/button"
 
 export function HeroSection() {
 	return (
@@ -19,18 +19,18 @@ export function HeroSection() {
 
 				<div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
 					<Link to="/app">
-						<Button size="lg" className="group">
+						<Button className="group" size="lg">
 							Get Started
 							<ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
 						</Button>
 					</Link>
 
-					<Button variant="outline" size="lg" disabled>
+					<Button disabled size="lg" variant="outline">
 						<a
-							href="https://github.com/yan-vikng-dev/flowcost"
-							target="_blank"
-							rel="noopener noreferrer"
 							className="inline-flex items-center"
+							href="https://github.com/yan-vikng-dev/flowcost"
+							rel="noopener noreferrer"
+							target="_blank"
 						>
 							<Github className="mr-2" />
 							Coming soon
@@ -50,5 +50,5 @@ export function HeroSection() {
 				/>
 			</div>
 		</section>
-	);
+	)
 }

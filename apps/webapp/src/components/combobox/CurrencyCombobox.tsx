@@ -3,8 +3,8 @@ import {
 	currencies,
 	getCurrencyName,
 	getCurrencySymbol,
-} from "@repo/shared-config";
-import { ResponsiveCombobox } from "./ResponsiveCombobox";
+} from "@repo/shared-config"
+import { ResponsiveCombobox } from "./ResponsiveCombobox"
 
 export function CurrencyCombobox({
 	value,
@@ -13,17 +13,16 @@ export function CurrencyCombobox({
 	disabled,
 	className,
 }: {
-	value: Currency;
-	onChange: (val: Currency) => void;
-	placeholder?: string;
-	disabled?: boolean;
-	className?: string;
+	value: Currency
+	onChange: (val: Currency) => void
+	placeholder?: string
+	disabled?: boolean
+	className?: string
 }) {
 	return (
 		<ResponsiveCombobox
-			value={value}
-			onChange={onChange}
 			className={className}
+			disabled={disabled}
 			items={currencies.map((c) => ({
 				value: c,
 				ariaLabel: c,
@@ -51,8 +50,9 @@ export function CurrencyCombobox({
 				),
 				keywords: [getCurrencyName(c)],
 			}))}
+			onChange={onChange}
 			placeholder={placeholder}
-			disabled={disabled}
+			value={value}
 		/>
-	);
+	)
 }

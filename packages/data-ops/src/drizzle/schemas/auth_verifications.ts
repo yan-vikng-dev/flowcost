@@ -1,5 +1,5 @@
-import { sql } from "drizzle-orm";
-import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import { sql } from "drizzle-orm"
+import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core"
 
 export const auth_verifications = sqliteTable("auth_verifications", {
 	id: text().primaryKey().notNull(),
@@ -13,4 +13,4 @@ export const auth_verifications = sqliteTable("auth_verifications", {
 		.default(sql`(unixepoch() * 1000)`)
 		.$onUpdate(() => new Date())
 		.notNull(),
-});
+})

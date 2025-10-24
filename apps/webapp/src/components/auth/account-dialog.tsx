@@ -1,35 +1,35 @@
-import { LogOut, Palette } from "lucide-react";
-import { ThemeToggle } from "@/components/theme/theme-toggle";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
+import { LogOut, Palette } from "lucide-react"
+import { ThemeToggle } from "@/components/theme/theme-toggle"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Button } from "@/components/ui/button"
 import {
 	Dialog,
 	DialogContent,
 	DialogHeader,
 	DialogTitle,
 	DialogTrigger,
-} from "@/components/ui/dialog";
-import { authClient } from "@/lib/auth-client";
+} from "@/components/ui/dialog"
+import { authClient } from "@/lib/auth-client"
 
 interface AccountDialogProps {
-	children: React.ReactNode;
+	children: React.ReactNode
 }
 
 export function AccountDialog({ children }: AccountDialogProps) {
-	const { data: session } = authClient.useSession();
+	const { data: session } = authClient.useSession()
 
 	const signOut = () => {
-		void authClient.signOut();
-	};
-
-	if (!session) {
-		return null;
+		void authClient.signOut()
 	}
 
-	const user = session.user;
+	if (!session) {
+		return null
+	}
+
+	const user = session.user
 	const fallbackText = user.name
 		? user.name.charAt(0).toUpperCase()
-		: user.email?.charAt(0).toUpperCase() || "U";
+		: user.email?.charAt(0).toUpperCase() || "U"
 
 	return (
 		<Dialog>
@@ -41,8 +41,8 @@ export function AccountDialog({ children }: AccountDialogProps) {
 				<div className="flex flex-col items-center space-y-6 py-6">
 					<Avatar className="h-20 w-20">
 						<AvatarImage
-							src={user.image || undefined}
 							alt={user.name || "User"}
+							src={user.image || undefined}
 						/>
 						<AvatarFallback className="font-semibold text-2xl">
 							{fallbackText}
@@ -65,10 +65,10 @@ export function AccountDialog({ children }: AccountDialogProps) {
 							<ThemeToggle />
 						</div>
 						<Button
-							onClick={signOut}
-							variant="outline"
-							size="lg"
 							className="w-full gap-2"
+							onClick={signOut}
+							size="lg"
+							variant="outline"
 						>
 							<LogOut className="h-5 w-5" />
 							Sign Out
@@ -77,5 +77,5 @@ export function AccountDialog({ children }: AccountDialogProps) {
 				</div>
 			</DialogContent>
 		</Dialog>
-	);
+	)
 }

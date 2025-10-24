@@ -1,15 +1,15 @@
-import { relations, sql } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm"
 import {
 	integer,
 	sqliteTable,
 	text,
 	uniqueIndex,
-} from "drizzle-orm/sqlite-core";
-import { auth_accounts } from "./auth_accounts";
-import { auth_sessions } from "./auth_sessions";
-import { entries } from "./entries";
-import { user_preferences } from "./user_preferences";
-import { whatsapp_links } from "./whatsapp_links";
+} from "drizzle-orm/sqlite-core"
+import { auth_accounts } from "./auth_accounts"
+import { auth_sessions } from "./auth_sessions"
+import { entries } from "./entries"
+import { user_preferences } from "./user_preferences"
+import { whatsapp_links } from "./whatsapp_links"
 
 export const auth_users = sqliteTable(
 	"auth_users",
@@ -28,7 +28,7 @@ export const auth_users = sqliteTable(
 		emailVerified: integer({ mode: "boolean" }).default(false).notNull(),
 	},
 	(table) => [uniqueIndex("auth_users_email_unique").on(table.email)],
-);
+)
 
 export const authUsersRelations = relations(auth_users, ({ many, one }) => ({
 	authAccounts: many(auth_accounts),
@@ -42,4 +42,4 @@ export const authUsersRelations = relations(auth_users, ({ many, one }) => ({
 		fields: [auth_users.id],
 		references: [user_preferences.userId],
 	}),
-}));
+}))

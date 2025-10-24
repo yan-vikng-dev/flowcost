@@ -1,5 +1,5 @@
-import type { ModelMessage } from "ai";
-import { DateTime } from "luxon";
+import type { ModelMessage } from "ai"
+import { DateTime } from "luxon"
 
 export const getSystemMessage = (): ModelMessage => {
 	return {
@@ -14,5 +14,5 @@ export const getSystemMessage = (): ModelMessage => {
 			"If the user doesn't provide a category, do your absolute best to infer one from the context. If it's truly impossible, ask the user for clarification.\n" +
 			"Today is " +
 			DateTime.fromJSDate(new Date()).toISODate(),
-	};
-};
+	}
+}

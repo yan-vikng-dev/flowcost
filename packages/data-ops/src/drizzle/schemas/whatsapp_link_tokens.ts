@@ -1,6 +1,6 @@
-import { sql } from "drizzle-orm";
-import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
-import { auth_users } from "./auth_users";
+import { sql } from "drizzle-orm"
+import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core"
+import { auth_users } from "./auth_users"
 
 export const whatsapp_link_tokens = sqliteTable("whatsapp_link_tokens", {
 	id: text().primaryKey(),
@@ -17,7 +17,7 @@ export const whatsapp_link_tokens = sqliteTable("whatsapp_link_tokens", {
 		.default(sql`(unixepoch() * 1000)`)
 		.$onUpdate(() => new Date())
 		.notNull(),
-});
+})
 
-export type InsertWhatsappLinkToken = typeof whatsapp_link_tokens.$inferInsert;
-export type SelectWhatsappLinkToken = typeof whatsapp_link_tokens.$inferSelect;
+export type InsertWhatsappLinkToken = typeof whatsapp_link_tokens.$inferInsert
+export type SelectWhatsappLinkToken = typeof whatsapp_link_tokens.$inferSelect

@@ -1,21 +1,21 @@
-import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { createBetterAuth } from "@/auth/setup";
-import type { getDb } from "@/database/setup";
+import { drizzleAdapter } from "better-auth/adapters/drizzle"
+import { createBetterAuth } from "@/auth/setup"
+import type { getDb } from "@/database/setup"
 import {
 	auth_accounts,
 	auth_sessions,
 	auth_users,
 	auth_verifications,
-} from "@/drizzle/schemas";
+} from "@/drizzle/schemas"
 
-let betterAuth: ReturnType<typeof createBetterAuth>;
+let betterAuth: ReturnType<typeof createBetterAuth>
 
 export function setAuth(
 	config: Omit<Parameters<typeof createBetterAuth>[0], "database"> & {
 		adapter: {
-			drizzleDb: ReturnType<typeof getDb>;
-			provider: Parameters<typeof drizzleAdapter>[1]["provider"];
-		};
+			drizzleDb: ReturnType<typeof getDb>
+			provider: Parameters<typeof drizzleAdapter>[1]["provider"]
+		}
 	},
 ) {
 	betterAuth = createBetterAuth({
@@ -29,13 +29,13 @@ export function setAuth(
 			},
 		}),
 		...config,
-	});
-	return betterAuth;
+	})
+	return betterAuth
 }
 
 export function getAuth() {
 	if (!betterAuth) {
-		throw new Error("Auth not initialized");
+		throw new Error("Auth not initialized")
 	}
-	return betterAuth;
+	return betterAuth
 }

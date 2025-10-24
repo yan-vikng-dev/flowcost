@@ -1,4 +1,4 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query"
 import {
 	type ColumnDef,
 	type ColumnFiltersState,
@@ -12,7 +12,7 @@ import {
 	type SortingState,
 	useReactTable,
 	type VisibilityState,
-} from "@tanstack/react-table";
+} from "@tanstack/react-table"
 import {
 	ChevronDown,
 	ChevronLeft,
@@ -20,10 +20,10 @@ import {
 	Copy,
 	MoreHorizontal,
 	Trash,
-} from "lucide-react";
-import * as React from "react";
-import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
+} from "lucide-react"
+import * as React from "react"
+import { toast } from "sonner"
+import { Button } from "@/components/ui/button"
 import {
 	Dialog,
 	DialogContent,
@@ -31,21 +31,21 @@ import {
 	DialogFooter,
 	DialogHeader,
 	DialogTitle,
-} from "@/components/ui/dialog";
+} from "@/components/ui/dialog"
 import {
 	DropdownMenu,
 	DropdownMenuCheckboxItem,
 	DropdownMenuContent,
 	DropdownMenuItem,
 	DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from "@/components/ui/dropdown-menu"
 import {
 	Select,
 	SelectContent,
 	SelectItem,
 	SelectTrigger,
 	SelectValue,
-} from "@/components/ui/select";
+} from "@/components/ui/select"
 import {
 	Table,
 	TableBody,
@@ -53,25 +53,25 @@ import {
 	TableHead,
 	TableHeader,
 	TableRow,
-} from "@/components/ui/table";
-import { deleteEntries } from "@/core/functions/entries";
-import { cn } from "@/lib/utils";
+} from "@/components/ui/table"
+import { deleteEntries } from "@/core/functions/entries"
+import { cn } from "@/lib/utils"
 
-type RowWithId = { id?: string };
-type ColumnMeta = { align?: "left" | "right" | "center" };
+type RowWithId = { id?: string }
+type ColumnMeta = { align?: "left" | "right" | "center" }
 
 interface DataTableProps<TData extends RowWithId, TValue> {
-	columns: ColumnDef<TData, TValue>[];
-	data: TData[];
-	manualPagination?: boolean;
-	pageCount?: number;
-	pagination?: PaginationState;
-	onPaginationChange?: OnChangeFn<PaginationState>;
-	manualSorting?: boolean;
-	sorting?: SortingState;
-	onSortingChange?: OnChangeFn<SortingState>;
-	isLoading?: boolean; // initial load
-	isFetching?: boolean; // background refetch
+	columns: ColumnDef<TData, TValue>[]
+	data: TData[]
+	manualPagination?: boolean
+	pageCount?: number
+	pagination?: PaginationState
+	onPaginationChange?: OnChangeFn<PaginationState>
+	manualSorting?: boolean
+	sorting?: SortingState
+	onSortingChange?: OnChangeFn<SortingState>
+	isLoading?: boolean // initial load
+	isFetching?: boolean // background refetch
 }
 
 export function DataTable<TData extends RowWithId, TValue>({
@@ -88,16 +88,16 @@ export function DataTable<TData extends RowWithId, TValue>({
 	isFetching = false,
 }: DataTableProps<TData, TValue>) {
 	const [uncontrolledSorting, setUncontrolledSorting] =
-		React.useState<SortingState>([]);
-	const sorting = controlledSorting ?? uncontrolledSorting;
+		React.useState<SortingState>([])
+	const sorting = controlledSorting ?? uncontrolledSorting
 	const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
 		[],
-	);
-	const [rowSelection, setRowSelection] = React.useState({});
+	)
+	const [rowSelection, setRowSelection] = React.useState({})
 	const [columnVisibility, setColumnVisibility] =
-		React.useState<VisibilityState>({});
+		React.useState<VisibilityState>({})
 
-	const queryClient = useQueryClient();
+	const queryClient = useQueryClient()
 	const deleteMut = useMutation({
 		mutationFn: (ids: string[]) => deleteEntries({ data: { ids } }),
 		onSuccess: async () => {
@@ -106,35 +106,35 @@ export function DataTable<TData extends RowWithId, TValue>({
 				queryClient.invalidateQueries({
 					queryKey: ["monthlyEntriesForCharts"],
 				}),
-			]);
+			])
 		},
-	});
+	})
 
-	const [confirmOpen, setConfirmOpen] = React.useState(false);
-	const [confirmIds, setConfirmIds] = React.useState<string[]>([]);
+	const [confirmOpen, setConfirmOpen] = React.useState(false)
+	const [confirmIds, setConfirmIds] = React.useState<string[]>([])
 
 	// Selection column and actions column
 	const selectionColumn = React.useMemo<ColumnDef<TData>>(
 		(): ColumnDef<TData> => ({
 			id: "select",
 			header: ({ table }) => {
-				const isAllSelected = table.getIsAllPageRowsSelected();
-				const isSomeSelected = table.getIsSomePageRowsSelected();
+				const isAllSelected = table.getIsAllPageRowsSelected()
+				const isSomeSelected = table.getIsSomePageRowsSelected()
 				return (
 					<IndeterminateCheckbox
+						aria-label="Select all"
 						checked={isAllSelected}
 						indeterminate={!isAllSelected && isSomeSelected}
-						aria-label="Select all"
 						onChange={(e) =>
 							table.toggleAllPageRowsSelected(e.currentTarget.checked)
 						}
 					/>
-				);
+				)
 			},
 			cell: ({ row }) => (
 				<IndeterminateCheckbox
-					checked={row.getIsSelected()}
 					aria-label="Select row"
+					checked={row.getIsSelected()}
 					onChange={(e) => row.toggleSelected(e.currentTarget.checked)}
 				/>
 			),
@@ -143,18 +143,18 @@ export function DataTable<TData extends RowWithId, TValue>({
 			size: 32,
 		}),
 		[],
-	);
+	)
 
 	const actionsColumn = React.useMemo<ColumnDef<TData>>(
 		(): ColumnDef<TData> => ({
 			id: "actions",
 			enableHiding: false,
 			cell: ({ row }) => {
-				const id: string | undefined = row.original.id;
+				const id: string | undefined = row.original.id
 				return (
 					<DropdownMenu>
 						<DropdownMenuTrigger asChild>
-							<Button variant="ghost" size="icon-sm" className="h-8 w-8 p-0">
+							<Button className="h-8 w-8 p-0" size="icon-sm" variant="ghost">
 								<span className="sr-only">Open menu</span>
 								<MoreHorizontal />
 							</Button>
@@ -162,35 +162,35 @@ export function DataTable<TData extends RowWithId, TValue>({
 						<DropdownMenuContent align="end">
 							<DropdownMenuItem
 								onClick={() => {
-									if (!id) return;
+									if (!id) return
 									void navigator.clipboard.writeText(id).then(() => {
-										toast.success("Copied entry ID");
-									});
+										toast.success("Copied entry ID")
+									})
 								}}
 							>
 								<Copy className="mr-2 h-4 w-4" /> Copy ID
 							</DropdownMenuItem>
 							<DropdownMenuItem
-								variant="destructive"
 								onClick={() => {
-									if (!id) return;
-									setConfirmIds([id]);
-									setConfirmOpen(true);
+									if (!id) return
+									setConfirmIds([id])
+									setConfirmOpen(true)
 								}}
+								variant="destructive"
 							>
 								<Trash className="mr-2 h-4 w-4" /> Delete
 							</DropdownMenuItem>
 						</DropdownMenuContent>
 					</DropdownMenu>
-				);
+				)
 			},
 		}),
 		[],
-	);
+	)
 
 	const enhancedColumns = React.useMemo<ColumnDef<TData, TValue>[]>(() => {
-		return [selectionColumn, ...columns, actionsColumn];
-	}, [columns, selectionColumn, actionsColumn]);
+		return [selectionColumn, ...columns, actionsColumn]
+	}, [columns, selectionColumn, actionsColumn])
 
 	const table = useReactTable({
 		data,
@@ -214,25 +214,25 @@ export function DataTable<TData extends RowWithId, TValue>({
 			rowSelection,
 			...(pagination ? { pagination } : {}),
 		},
-	});
+	})
 
 	// Helper to compute pagination items with ellipses
 	const paginationItems = React.useMemo(() => {
-		const total = table.getPageCount();
-		const current = table.getState().pagination.pageIndex + 1; // 1-based for UI
-		const siblingCount = 1;
-		const boundaryCount = 1;
-		if (total <= 0) return [] as Array<number | "dots">;
+		const total = table.getPageCount()
+		const current = table.getState().pagination.pageIndex + 1 // 1-based for UI
+		const siblingCount = 1
+		const boundaryCount = 1
+		if (total <= 0) return [] as Array<number | "dots">
 
 		const range = (start: number, end: number) => {
-			const out: number[] = [];
-			for (let i = start; i <= end; i++) out.push(i);
-			return out;
-		};
+			const out: number[] = []
+			for (let i = start; i <= end; i++) out.push(i)
+			return out
+		}
 
-		const startPages = range(1, Math.min(boundaryCount, total));
-		const endStart = Math.max(total - boundaryCount + 1, boundaryCount + 1);
-		const endPages = range(endStart, total);
+		const startPages = range(1, Math.min(boundaryCount, total))
+		const endStart = Math.max(total - boundaryCount + 1, boundaryCount + 1)
+		const endPages = range(endStart, total)
 
 		const siblingsStart = Math.max(
 			Math.min(
@@ -240,32 +240,32 @@ export function DataTable<TData extends RowWithId, TValue>({
 				total - boundaryCount - siblingCount * 2 - 1,
 			),
 			boundaryCount + 2,
-		);
+		)
 		const siblingsEnd = Math.min(
 			Math.max(current + siblingCount, boundaryCount + siblingCount * 2 + 2),
 			Math.min(endStart - 2, total - 1),
-		);
+		)
 
-		const items: Array<number | "dots"> = [];
-		items.push(...startPages);
+		const items: Array<number | "dots"> = []
+		items.push(...startPages)
 		if (siblingsStart > boundaryCount + 2) {
-			items.push("dots");
+			items.push("dots")
 		} else if (boundaryCount + 1 < total - boundaryCount) {
-			items.push(boundaryCount + 1);
+			items.push(boundaryCount + 1)
 		}
 
-		items.push(...range(siblingsStart, siblingsEnd));
+		items.push(...range(siblingsStart, siblingsEnd))
 
 		if (siblingsEnd < total - boundaryCount - 1) {
-			items.push("dots");
+			items.push("dots")
 		} else if (total - boundaryCount > boundaryCount) {
-			items.push(total - boundaryCount);
+			items.push(total - boundaryCount)
 		}
 
-		items.push(...endPages);
+		items.push(...endPages)
 		// De-duplicate in case of overlaps
-		return items.filter((v, i, arr) => i === 0 || v !== arr[i - 1]);
-	}, [table]);
+		return items.filter((v, i, arr) => i === 0 || v !== arr[i - 1])
+	}, [table])
 
 	return (
 		<div>
@@ -281,33 +281,33 @@ export function DataTable<TData extends RowWithId, TValue>({
 				{table.getFilteredSelectedRowModel().rows.length > 0 && (
 					<>
 						<Button
-							variant="destructive"
-							size="sm"
 							onClick={() => {
 								const ids = table
 									.getFilteredSelectedRowModel()
 									.rows.map((r) => (r.original as RowWithId).id)
-									.filter(Boolean) as string[];
-								if (ids.length === 0) return;
-								setConfirmIds(ids);
-								setConfirmOpen(true);
+									.filter(Boolean) as string[]
+								if (ids.length === 0) return
+								setConfirmIds(ids)
+								setConfirmOpen(true)
 							}}
+							size="sm"
+							variant="destructive"
 						>
 							<Trash className="h-4 w-4" /> Delete selected
 						</Button>
 						<Button
-							variant="outline"
-							size="sm"
 							onClick={() => {
 								const ids = table
 									.getFilteredSelectedRowModel()
 									.rows.map((r) => (r.original as RowWithId).id)
-									.filter(Boolean) as string[];
-								if (ids.length === 0) return;
+									.filter(Boolean) as string[]
+								if (ids.length === 0) return
 								void navigator.clipboard.writeText(ids.join("\n")).then(() => {
-									toast.success(`Copied ${ids.length} id(s)`);
-								});
+									toast.success(`Copied ${ids.length} id(s)`)
+								})
 							}}
+							size="sm"
+							variant="outline"
 						>
 							<Copy className="h-4 w-4" /> Copy selected
 						</Button>
@@ -316,7 +316,7 @@ export function DataTable<TData extends RowWithId, TValue>({
 
 				<DropdownMenu>
 					<DropdownMenuTrigger asChild>
-						<Button variant="outline" className="ml-auto">
+						<Button className="ml-auto" variant="outline">
 							Columns <ChevronDown className="ml-2 h-4 w-4" />
 						</Button>
 					</DropdownMenuTrigger>
@@ -326,9 +326,9 @@ export function DataTable<TData extends RowWithId, TValue>({
 							.filter((column) => column.getCanHide())
 							.map((column) => (
 								<DropdownMenuCheckboxItem
-									key={column.id}
-									className="capitalize"
 									checked={column.getIsVisible()}
+									className="capitalize"
+									key={column.id}
 									onCheckedChange={(value) => column.toggleVisibility(!!value)}
 								>
 									{column.id}
@@ -370,15 +370,15 @@ export function DataTable<TData extends RowWithId, TValue>({
 									{headerGroup.headers.map((header) => {
 										const align = (
 											header.column.columnDef as { meta?: ColumnMeta }
-										).meta?.align;
+										).meta?.align
 										const thClass =
 											align === "right"
 												? "text-right"
 												: align === "center"
 													? "text-center"
-													: "text-left";
+													: "text-left"
 										return (
-											<TableHead key={header.id} className={thClass}>
+											<TableHead className={thClass} key={header.id}>
 												{header.isPlaceholder
 													? null
 													: flexRender(
@@ -386,7 +386,7 @@ export function DataTable<TData extends RowWithId, TValue>({
 															header.getContext(),
 														)}
 											</TableHead>
-										);
+										)
 									})}
 								</TableRow>
 							))}
@@ -395,12 +395,11 @@ export function DataTable<TData extends RowWithId, TValue>({
 							{table.getRowModel().rows?.length ? (
 								table.getRowModel().rows.map((row) => (
 									<TableRow
-										key={row.id}
 										data-state={row.getIsSelected() && "selected"}
+										key={row.id}
 									>
 										{row.getVisibleCells().map((cell) => (
 											<TableCell
-												key={cell.id}
 												className={cn(
 													(cell.column.columnDef as { meta?: ColumnMeta }).meta
 														?.align === "right"
@@ -410,6 +409,7 @@ export function DataTable<TData extends RowWithId, TValue>({
 															? "text-center"
 															: undefined,
 												)}
+												key={cell.id}
 											>
 												{flexRender(
 													cell.column.columnDef.cell,
@@ -422,8 +422,8 @@ export function DataTable<TData extends RowWithId, TValue>({
 							) : (
 								<TableRow>
 									<TableCell
-										colSpan={table.getVisibleLeafColumns().length}
 										className="h-24 text-center"
+										colSpan={table.getVisibleLeafColumns().length}
 									>
 										No results.
 									</TableCell>
@@ -438,11 +438,11 @@ export function DataTable<TData extends RowWithId, TValue>({
 				{/* Pagination controls */}
 				<div className="flex items-center gap-1">
 					<Button
-						variant="outline"
-						size="icon-sm"
-						onClick={() => table.previousPage()}
-						disabled={!table.getCanPreviousPage()}
 						aria-label="Previous page"
+						disabled={!table.getCanPreviousPage()}
+						onClick={() => table.previousPage()}
+						size="icon-sm"
+						variant="outline"
 					>
 						<ChevronLeft />
 					</Button>
@@ -450,37 +450,37 @@ export function DataTable<TData extends RowWithId, TValue>({
 						if (item === "dots") {
 							return (
 								<Button
-									key={`pagination-dots-${String(idx)}`}
-									variant="ghost"
-									size="sm"
-									disabled
-									className="px-2"
 									aria-hidden
+									className="px-2"
+									disabled
+									key={`pagination-dots-${String(idx)}`}
+									size="sm"
+									variant="ghost"
 								>
 									…
 								</Button>
-							);
+							)
 						}
-						const page = item;
-						const isActive = table.getState().pagination.pageIndex === page - 1;
+						const page = item
+						const isActive = table.getState().pagination.pageIndex === page - 1
 						return (
 							<Button
-								key={page}
-								variant={isActive ? "default" : "outline"}
-								size="sm"
-								onClick={() => table.setPageIndex(page - 1)}
 								aria-current={isActive ? "page" : undefined}
+								key={page}
+								onClick={() => table.setPageIndex(page - 1)}
+								size="sm"
+								variant={isActive ? "default" : "outline"}
 							>
 								{page}
 							</Button>
-						);
+						)
 					})}
 					<Button
-						variant="outline"
-						size="icon-sm"
-						onClick={() => table.nextPage()}
-						disabled={!table.getCanNextPage()}
 						aria-label="Next page"
+						disabled={!table.getCanNextPage()}
+						onClick={() => table.nextPage()}
+						size="icon-sm"
+						variant="outline"
 					>
 						<ChevronRight />
 					</Button>
@@ -490,11 +490,11 @@ export function DataTable<TData extends RowWithId, TValue>({
 				<div className="ml-2 flex items-center gap-2">
 					<span className="text-muted-foreground text-sm">Rows per page</span>
 					<Select
-						value={String(table.getState().pagination.pageSize)}
 						onValueChange={(v) => {
-							table.setPageSize(Number(v));
-							table.setPageIndex(0);
+							table.setPageSize(Number(v))
+							table.setPageIndex(0)
 						}}
+						value={String(table.getState().pagination.pageSize)}
 					>
 						<SelectTrigger className="h-8 w-[100px]">
 							<SelectValue />
@@ -510,7 +510,7 @@ export function DataTable<TData extends RowWithId, TValue>({
 				</div>
 			</div>
 
-			<Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+			<Dialog onOpenChange={setConfirmOpen} open={confirmOpen}>
 				<DialogContent>
 					<DialogHeader>
 						<DialogTitle>
@@ -521,29 +521,29 @@ export function DataTable<TData extends RowWithId, TValue>({
 						<DialogDescription>This action cannot be undone.</DialogDescription>
 					</DialogHeader>
 					<DialogFooter>
-						<Button variant="ghost" onClick={() => setConfirmOpen(false)}>
+						<Button onClick={() => setConfirmOpen(false)} variant="ghost">
 							Cancel
 						</Button>
 						<Button
-							variant="destructive"
 							onClick={() => {
 								void (async () => {
 									try {
-										if (confirmIds.length === 0) return;
-										await deleteMut.mutateAsync(confirmIds);
+										if (confirmIds.length === 0) return
+										await deleteMut.mutateAsync(confirmIds)
 										toast.success(
 											confirmIds.length > 1
 												? `Deleted ${confirmIds.length} entries`
 												: "Deleted 1 entry",
-										);
-										setConfirmOpen(false);
-										setConfirmIds([]);
-										table.resetRowSelection();
+										)
+										setConfirmOpen(false)
+										setConfirmIds([])
+										table.resetRowSelection()
 									} catch {
-										toast.error("Failed to delete entries");
+										toast.error("Failed to delete entries")
 									}
-								})();
+								})()
 							}}
+							variant="destructive"
 						>
 							Delete
 						</Button>
@@ -551,28 +551,28 @@ export function DataTable<TData extends RowWithId, TValue>({
 				</DialogContent>
 			</Dialog>
 		</div>
-	);
+	)
 }
 
 // Minimal indeterminate checkbox without Radix dependency
 function IndeterminateCheckbox(
 	props: Omit<React.InputHTMLAttributes<HTMLInputElement>, "type"> & {
-		indeterminate?: boolean;
+		indeterminate?: boolean
 	},
 ) {
-	const { indeterminate, className, ...rest } = props;
-	const ref = React.useRef<HTMLInputElement>(null);
+	const { indeterminate, className, ...rest } = props
+	const ref = React.useRef<HTMLInputElement>(null)
 	React.useEffect(() => {
 		if (ref.current) {
-			ref.current.indeterminate = Boolean(indeterminate);
+			ref.current.indeterminate = Boolean(indeterminate)
 		}
-	}, [indeterminate]);
+	}, [indeterminate])
 	return (
 		<input
+			className={`h-4 w-4 cursor-pointer ${className ?? ""}`}
 			ref={ref}
 			type="checkbox"
-			className={`h-4 w-4 cursor-pointer ${className ?? ""}`}
 			{...rest}
 		/>
-	);
+	)
 }

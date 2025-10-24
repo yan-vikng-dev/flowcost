@@ -4,17 +4,16 @@ import {
 	Loader2Icon,
 	OctagonXIcon,
 	TriangleAlertIcon,
-} from "lucide-react";
-import type * as React from "react";
-import { Toaster as Sonner, type ToasterProps } from "sonner";
-import { useTheme } from "@/components/theme";
+} from "lucide-react"
+import type * as React from "react"
+import { Toaster as Sonner, type ToasterProps } from "sonner"
+import { useTheme } from "@/components/theme"
 
 export function Toaster(props: ToasterProps) {
-	const { resolvedTheme = "light" } = useTheme();
+	const { resolvedTheme = "light" } = useTheme()
 
 	return (
 		<Sonner
-			theme={(resolvedTheme as ToasterProps["theme"]) ?? "light"}
 			className="toaster group"
 			icons={{
 				success: <CircleCheckIcon className="size-4" />,
@@ -31,7 +30,8 @@ export function Toaster(props: ToasterProps) {
 					"--border-radius": "var(--radius)",
 				} as React.CSSProperties
 			}
+			theme={(resolvedTheme as ToasterProps["theme"]) ?? "light"}
 			{...props}
 		/>
-	);
+	)
 }

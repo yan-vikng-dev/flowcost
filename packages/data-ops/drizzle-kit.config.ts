@@ -1,4 +1,4 @@
-import type { Config } from "drizzle-kit";
+import type { Config } from "drizzle-kit"
 
 const config: Config = {
 	schema: ["./src/drizzle/schemas/*.ts", "!./src/drizzle/schemas/index.ts"],
@@ -12,6 +12,6 @@ const config: Config = {
 	},
 	casing: "snake_case",
 	tablesFilter: ["!_cf_KV"],
-};
+}
 
-export default config satisfies Config;
+export default config satisfies Config

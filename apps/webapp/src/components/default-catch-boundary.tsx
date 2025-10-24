@@ -1,5 +1,5 @@
-import type { ErrorComponentProps } from "@tanstack/react-router";
-import { Link, rootRouteId, useMatch, useRouter } from "@tanstack/react-router";
+import type { ErrorComponentProps } from "@tanstack/react-router"
+import { Link, rootRouteId, useMatch, useRouter } from "@tanstack/react-router"
 import {
 	AlertTriangle,
 	ArrowLeft,
@@ -8,39 +8,39 @@ import {
 	Home,
 	Mail,
 	RefreshCw,
-} from "lucide-react";
-import { useState } from "react";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+} from "lucide-react"
+import { useState } from "react"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
 	Collapsible,
 	CollapsibleContent,
 	CollapsibleTrigger,
-} from "@/components/ui/collapsible";
+} from "@/components/ui/collapsible"
 
 export function DefaultCatchBoundary({ error }: ErrorComponentProps) {
-	const router = useRouter();
+	const router = useRouter()
 	const isRoot = useMatch({
 		strict: false,
 		select: (state) => state.id === rootRouteId,
-	});
-	const [showDetails, setShowDetails] = useState(false);
+	})
+	const [showDetails, setShowDetails] = useState(false)
 
-	console.error(error);
+	console.error(error)
 
 	// Format error details for display
-	const errorMessage = error?.message || "An unexpected error occurred";
-	const errorStack = error?.stack || "";
-	const hasStack = errorStack.length > 0;
+	const errorMessage = error?.message || "An unexpected error occurred"
+	const errorStack = error?.stack || ""
+	const hasStack = errorStack.length > 0
 
 	const handleReportError = () => {
-		const subject = encodeURIComponent("Error Report");
+		const subject = encodeURIComponent("Error Report")
 		const body = encodeURIComponent(
 			`An error occurred in the application:\n\nError: ${errorMessage}\n\nStack Trace:\n${errorStack}\n\nPlease describe what you were doing when this error occurred:`,
-		);
-		window.location.href = `mailto:yan@vikng.dev?subject=${subject}&body=${body}`;
-	};
+		)
+		window.location.href = `mailto:yan@vikng.dev?subject=${subject}&body=${body}`
+	}
 
 	return (
 		<div className="flex min-h-[60vh] items-center justify-center p-4">
@@ -71,27 +71,27 @@ export function DefaultCatchBoundary({ error }: ErrorComponentProps) {
 					{/* Action Buttons */}
 					<div className="flex flex-col gap-3 sm:flex-row">
 						<Button
-							onClick={() => {
-								void router.invalidate();
-							}}
 							className="flex items-center gap-2"
+							onClick={() => {
+								void router.invalidate()
+							}}
 						>
 							<RefreshCw className="h-4 w-4" />
 							Try Again
 						</Button>
 
 						{isRoot ? (
-							<Button variant="outline" asChild>
-								<Link to="/" className="flex items-center gap-2">
+							<Button asChild variant="outline">
+								<Link className="flex items-center gap-2" to="/">
 									<Home className="h-4 w-4" />
 									Go to Home
 								</Link>
 							</Button>
 						) : (
 							<Button
-								variant="outline"
-								onClick={() => window.history.back()}
 								className="flex items-center gap-2"
+								onClick={() => window.history.back()}
+								variant="outline"
 							>
 								<ArrowLeft className="h-4 w-4" />
 								Go Back
@@ -101,12 +101,12 @@ export function DefaultCatchBoundary({ error }: ErrorComponentProps) {
 
 					{/* Error Details (Collapsible) */}
 					{hasStack && (
-						<Collapsible open={showDetails} onOpenChange={setShowDetails}>
+						<Collapsible onOpenChange={setShowDetails} open={showDetails}>
 							<CollapsibleTrigger asChild>
 								<Button
-									variant="ghost"
-									size="sm"
 									className="flex items-center gap-2 text-muted-foreground hover:text-foreground"
+									size="sm"
+									variant="ghost"
 								>
 									<Bug className="h-4 w-4" />
 									Technical Details
@@ -135,10 +135,10 @@ export function DefaultCatchBoundary({ error }: ErrorComponentProps) {
 								If this error persists, please report it to our support team.
 							</div>
 							<Button
-								variant="outline"
-								size="sm"
-								onClick={handleReportError}
 								className="flex items-center gap-2"
+								onClick={handleReportError}
+								size="sm"
+								variant="outline"
 							>
 								<Mail className="h-4 w-4" />
 								Report Error
@@ -148,5 +148,5 @@ export function DefaultCatchBoundary({ error }: ErrorComponentProps) {
 				</CardContent>
 			</Card>
 		</div>
-	);
+	)
 }

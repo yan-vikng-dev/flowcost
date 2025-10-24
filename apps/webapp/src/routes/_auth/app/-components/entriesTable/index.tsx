@@ -1,34 +1,34 @@
-import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import type { PaginationState, SortingState } from "@tanstack/react-table";
-import * as React from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { keepPreviousData, useQuery } from "@tanstack/react-query"
+import type { PaginationState, SortingState } from "@tanstack/react-table"
+import * as React from "react"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
 	listEntriesThisMonthPaginated,
 	type MonthlyEntry,
-} from "@/core/functions/entries";
-import { getUserPreferences } from "@/core/functions/preferences";
-import { DataTable } from "./data-table";
-import { entriesTableColumns } from "./entries-table-columns";
+} from "@/core/functions/entries"
+import { getUserPreferences } from "@/core/functions/preferences"
+import { DataTable } from "./data-table"
+import { entriesTableColumns } from "./entries-table-columns"
 
 export function MonthlyEntriesTable() {
 	const [pagination, setPagination] = React.useState<PaginationState>({
 		pageIndex: 0,
 		pageSize: 10,
-	});
+	})
 	const [sorting, setSorting] = React.useState<SortingState>([
 		{ id: "executedAt", desc: true },
-	]);
+	])
 
 	const prefs = useQuery({
 		queryKey: ["userPreferences"],
 		queryFn: () => getUserPreferences(),
 		staleTime: 5 * 60 * 1000,
-	});
-	const displayCurrency = prefs.data?.displayCurrency ?? "USD";
+	})
+	const displayCurrency = prefs.data?.displayCurrency ?? "USD"
 
 	const { data, isLoading, isError, isFetching } = useQuery<{
-		items: MonthlyEntry[];
-		total: number;
+		items: MonthlyEntry[]
+		total: number
 	}>({
 		queryKey: [
 			"entries",
@@ -53,7 +53,7 @@ export function MonthlyEntriesTable() {
 				},
 			}),
 		placeholderData: keepPreviousData,
-	});
+	})
 	// isFetching comes from the same query above
 
 	return (
@@ -68,22 +68,22 @@ export function MonthlyEntriesTable() {
 					<DataTable
 						columns={entriesTableColumns(displayCurrency)}
 						data={isLoading || !data ? [] : data.items}
+						isFetching={isFetching}
+						isLoading={isLoading}
 						manualPagination
 						manualSorting
-						sorting={sorting}
+						onPaginationChange={setPagination}
 						onSortingChange={setSorting}
-						isLoading={isLoading}
-						isFetching={isFetching}
 						pageCount={
 							data
 								? Math.max(1, Math.ceil(data.total / pagination.pageSize))
 								: 1
 						}
 						pagination={pagination}
-						onPaginationChange={setPagination}
+						sorting={sorting}
 					/>
 				)}
 			</CardContent>
 		</Card>
-	);
+	)
 }

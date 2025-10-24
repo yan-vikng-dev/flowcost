@@ -1,4 +1,4 @@
-import type { Category } from "@repo/shared-config";
+import type { Category } from "@repo/shared-config"
 import {
 	BabyIcon,
 	BriefcaseIcon,
@@ -26,7 +26,7 @@ import {
 	SparklesIcon,
 	SquirrelIcon,
 	ZapIcon,
-} from "lucide-react";
+} from "lucide-react"
 
 export const categoryIcons: Record<Category, LucideIcon> = {
 	Food: ForkKnifeIcon,
@@ -54,8 +54,8 @@ export const categoryIcons: Record<Category, LucideIcon> = {
 	Business: BriefcaseIcon,
 	Gift: GiftIcon,
 	Other: SquirrelIcon,
-} as const;
+} as const
 
 export const getCategoryIcon = (category: string) => {
-	return categoryIcons[category as Category] ?? SquirrelIcon;
-};
+	return categoryIcons[category as Category] ?? SquirrelIcon
+}

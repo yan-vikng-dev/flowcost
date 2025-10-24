@@ -1,1 +1,1 @@
-export * from "./updateExchangeRates.js";
+export * from "./updateExchangeRates.js"
