@@ -100,6 +100,43 @@ ${colorConfig
 
 const ChartTooltip = RechartsPrimitive.Tooltip
 
+// Local minimal types for Recharts tooltip/legend to avoid coupling to internal exports
+type LocalTooltipValue = number | string | Array<number | string>
+type LocalTooltipName = number | string
+type LocalTooltipPayload = {
+	value?: LocalTooltipValue
+	name?: LocalTooltipName
+	color?: string
+	dataKey?: string | number
+	type?: string
+	payload: { fill?: string } & Record<string, unknown>
+}
+
+type ChartTooltipContentProps = {
+	active?: boolean
+	payload?: LocalTooltipPayload[]
+	label?: LocalTooltipName
+} & React.ComponentProps<"div"> & {
+		hideLabel?: boolean
+		hideIndicator?: boolean
+		indicator?: "line" | "dot" | "dashed"
+		nameKey?: string
+		labelKey?: string
+		labelFormatter?: (
+			value: unknown,
+			payload?: ReadonlyArray<LocalTooltipPayload>,
+		) => React.ReactNode
+		formatter?: (
+			value: LocalTooltipValue,
+			name: LocalTooltipName,
+			item: LocalTooltipPayload,
+			index: number,
+			payload: LocalTooltipPayload["payload"],
+		) => React.ReactNode
+		color?: string
+		labelClassName?: string
+	}
+
 function ChartTooltipContent({
 	active,
 	payload,
@@ -114,14 +151,7 @@ function ChartTooltipContent({
 	color,
 	nameKey,
 	labelKey,
-}: React.ComponentProps<typeof RechartsPrimitive.Tooltip> &
-	React.ComponentProps<"div"> & {
-		hideLabel?: boolean
-		hideIndicator?: boolean
-		indicator?: "line" | "dot" | "dashed"
-		nameKey?: string
-		labelKey?: string
-	}) {
+}: ChartTooltipContentProps) {
 	const { config } = useChart()
 
 	const tooltipLabel = React.useMemo(() => {
@@ -175,7 +205,7 @@ function ChartTooltipContent({
 		>
 			{!nestLabel ? tooltipLabel : null}
 			<div className="grid gap-1.5">
-				{payload
+				{(payload ?? [])
 					.filter((item) => item.type !== "none")
 					.map((item, index) => {
 						const key = `${nameKey || item.name || item.dataKey || "value"}`
@@ -248,17 +278,27 @@ function ChartTooltipContent({
 
 const ChartLegend = RechartsPrimitive.Legend
 
+type LocalLegendPayload = {
+	value?: string | number
+	color?: string
+	dataKey?: string | number
+	type?: string
+}
+
+type ChartLegendContentProps = React.ComponentProps<"div"> & {
+	payload?: LocalLegendPayload[]
+	verticalAlign?: "top" | "middle" | "bottom"
+	hideIcon?: boolean
+	nameKey?: string
+}
+
 function ChartLegendContent({
 	className,
 	hideIcon = false,
 	payload,
 	verticalAlign = "bottom",
 	nameKey,
-}: React.ComponentProps<"div"> &
-	Pick<RechartsPrimitive.LegendProps, "payload" | "verticalAlign"> & {
-		hideIcon?: boolean
-		nameKey?: string
-	}) {
+}: ChartLegendContentProps) {
 	const { config } = useChart()
 
 	if (!payload?.length) {
@@ -273,7 +313,7 @@ function ChartLegendContent({
 				className,
 			)}
 		>
-			{payload
+			{(payload ?? [])
 				.filter((item) => item.type !== "none")
 				.map((item) => {
 					const key = `${nameKey || item.dataKey || "value"}`
@@ -284,7 +324,7 @@ function ChartLegendContent({
 							className={cn(
 								"flex min-w-0 items-center gap-1.5 [&>svg]:h-3 [&>svg]:w-3 [&>svg]:text-muted-foreground",
 							)}
-							key={item.value}
+							key={String(item.value)}
 						>
 							{itemConfig?.icon && !hideIcon ? (
 								<itemConfig.icon />
@@ -292,11 +332,11 @@ function ChartLegendContent({
 								<div
 									className="h-2 w-2 shrink-0 rounded-[2px]"
 									style={{
-										backgroundColor: item.color,
+										backgroundColor: item.color as string | undefined,
 									}}
 								/>
 							)}
-							<span className="whitespace-normal break-words">
+							<span className="wrap-break-word whitespace-normal">
 								{itemConfig?.label}
 							</span>
 						</div>
