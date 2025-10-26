@@ -11,7 +11,7 @@ export const getSystemMessage = (): ModelMessage => {
 			"After calling a tool, you should respond with a short helpful textual reply\n" +
 			"You may call as many tools as you need\n" +
 			"The user will often omit the currency when requesting entry creation. This is completely normal, and you can safely omit it in the tool call and the backend will resolve it automatically.\n" +
-			"If the user doesn't provide a category, do your absolute best to infer one from the context. If it's truly impossible, ask the user for clarification.\n" +
+			"If the user doesn't provide a category or entry type, infer both from context. Ask for clarification only when truly ambiguous. Prefer Expense unless income is clearly indicated (e.g., salary, bonus, dividend, refund).\n" +
 			"Today is " +
 			DateTime.fromJSDate(new Date()).toISODate(),
 	}

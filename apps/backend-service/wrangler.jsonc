@@ -7,16 +7,12 @@
 	"name": "backend-service",
 	"main": "./src/index.ts",
 	"compatibility_date": "2025-04-01",
-	"compatibility_flags": [
-		"nodejs_compat"
-	],
+	"compatibility_flags": ["nodejs_compat"],
 	"observability": {
 		"enabled": true
 	},
 	"triggers": {
-		"crons": [
-			"0 0 * * *"
-		]
+		"crons": ["0 0 * * *"]
 	},
 	"vars": {
 		"POSTHOG_HOST": "https://eu.i.posthog.com"
@@ -53,9 +49,7 @@
 	"migrations": [
 		{
 			"tag": "v1",
-			"new_sqlite_classes": [
-				"AiConversationServer"
-			]
+			"new_sqlite_classes": ["AiConversationServer"]
 		}
 	]
 }
