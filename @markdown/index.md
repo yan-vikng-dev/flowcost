@@ -4,6 +4,7 @@ A quick guide to this repo’s documentation: what each file covers and when to 
 
 ## Quick chooser
 - **New to the repo?** Read `CONTEXT.md` first
+- **Planning user connections & invites?** Read `connections.md`
 - **Working on UI/components or Tailwind?** See `shadcn/*` and `STYLEGUIDE.md`
 - **Building charts (Recharts)?** See `shadcn/charts/chart.md` and the bar/pie examples
 - **Adding a data table (TanStack Table)?** See `shadcn/table.md`

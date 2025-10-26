@@ -1,8 +1,5 @@
 import type { DrizzleDb } from "@repo/data-ops/database/setup"
-import {
-	entries,
-	type InsertEntry,
-} from "@repo/data-ops/drizzle/schemas/entries/table"
+import { entries, type InsertEntry } from "@repo/data-ops/drizzle/schemas/index"
 import { type Currency, categories, currencies } from "@repo/shared-config"
 import { tool } from "ai"
 import { DateTime } from "luxon"

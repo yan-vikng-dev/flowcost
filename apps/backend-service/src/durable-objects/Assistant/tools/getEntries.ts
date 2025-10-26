@@ -1,8 +1,11 @@
 import type { DrizzleDb } from "@repo/data-ops/database/setup"
-import { entries } from "@repo/data-ops/drizzle/schemas/entries/table"
-import { exchange_rates } from "@repo/data-ops/drizzle/schemas/exchange_rates/table"
+import {
+	entries,
+	exchange_rates,
+	user_connections,
+} from "@repo/data-ops/drizzle/schemas/index"
 import { tool } from "ai"
-import { and, desc, eq, gte, lt } from "drizzle-orm"
+import { and, desc, eq, gte, inArray, lt, or } from "drizzle-orm"
 import { DateTime } from "luxon"
 import { z } from "zod"
 import type { MessageContext } from "../AiConversationServer"
@@ -26,9 +29,13 @@ export const makeGetEntriesTool = (context: MessageContext, db: DrizzleDb) =>
 				inputDate,
 				context.userTimezone,
 			)
+			const partnerId = await findPartnerUserId(db, context.userId)
+			const allowedUserIds = partnerId
+				? [context.userId, partnerId]
+				: [context.userId]
 			const foundEntries = await db.query.entries.findMany({
 				where: and(
-					eq(entries.userId, context.userId),
+					inArray(entries.userId, allowedUserIds),
 					gte(entries.executedAt, startDate),
 					lt(entries.executedAt, endDate),
 				),
@@ -70,4 +77,23 @@ function getZonedDayRangeUtc(
 		startDate: start.toJSDate(),
 		endDate: end.toJSDate(),
 	}
+}
+
+async function findPartnerUserId(
+	db: DrizzleDb,
+	userId: string,
+): Promise<string | null> {
+	const rows = await db
+		.select()
+		.from(user_connections)
+		.where(
+			or(
+				eq(user_connections.userIdLow, userId),
+				eq(user_connections.userIdHigh, userId),
+			),
+		)
+		.limit(1)
+	const conn = rows[0]
+	if (!conn) return null
+	return conn.userIdLow === userId ? conn.userIdHigh : conn.userIdLow
 }

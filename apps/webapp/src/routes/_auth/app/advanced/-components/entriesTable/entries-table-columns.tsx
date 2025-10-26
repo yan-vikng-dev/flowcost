@@ -1,4 +1,4 @@
-import type { EntryType } from "@repo/data-ops/drizzle/schemas/entries"
+import type { EntryType } from "@repo/data-ops/drizzle/schemas/index"
 import type { ColumnDef } from "@tanstack/react-table"
 import { ArrowDownIcon, ArrowUpDownIcon, ArrowUpIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"

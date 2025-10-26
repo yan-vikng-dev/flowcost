@@ -26,6 +26,7 @@ import {
 	startWhatsappLink,
 	unlinkWhatsapp,
 } from "@/core/functions/whatsapp"
+import { ConnectionsCard } from "./ConnectionsCard"
 
 export const Route = createFileRoute("/_auth/app/settings/")({
 	loader: async ({ context }) => {
@@ -37,6 +38,13 @@ export const Route = createFileRoute("/_auth/app/settings/")({
 			context.queryClient.ensureQueryData({
 				queryKey: ["whatsappLinkStatus"],
 				queryFn: () => getWhatsappLinkStatus(),
+			}),
+			context.queryClient.ensureQueryData({
+				queryKey: ["connectionState"],
+				queryFn: async () => {
+					const mod = await import("./-functions/connections")
+					return mod.getConnectionState()
+				},
 			}),
 		])
 	},
@@ -146,110 +154,113 @@ function RouteComponent() {
 	}, [prefsQuery.data])
 
 	return (
-		<Card className="max-w-xl">
-			<CardHeader>
-				<CardTitle>User Preferences</CardTitle>
-			</CardHeader>
-			<CardContent>
-				<div className="grid gap-4">
-					<div className="grid gap-2">
-						<Label>Default Entry Currency</Label>
-						<CurrencyCombobox
-							onChange={(val) => updatePref({ defaultEntryCurrency: val })}
-							value={local.defaultEntryCurrency}
-						/>
-					</div>
-
-					<div className="grid gap-2">
-						<Label>Display Currency</Label>
-						<CurrencyCombobox
-							onChange={(val) => updatePref({ displayCurrency: val })}
-							value={local.displayCurrency}
-						/>
-					</div>
-
-					<div className="grid gap-2">
-						<Label>Timezone</Label>
-						{(() => {
-							const hasCurated = timezoneOptions.some(
-								(opt) => opt.value === (local.timezone ?? ""),
-							)
-							const placeholder = local.timezone ?? "UTC"
-							return (
-								<TimezoneCombobox
-									// If current value not in curated list, show placeholder and wait for selection
-									onChange={(v) => updatePref({ timezone: v })}
-									options={timezoneOptions}
-									placeholder={placeholder}
-									value={hasCurated ? local.timezone : "__placeholder__"}
-								/>
-							)
-						})()}
-					</div>
-
-					<div className="grid gap-2">
-						<Label>WhatsApp</Label>
-						<div className="flex items-center justify-between">
-							<div className="text-muted-foreground text-sm">
-								{whatsappStatusQuery.isLoading
-									? "Checking status..."
-									: whatsappStatusQuery.data?.linked
-										? "Linked"
-										: "Not linked"}
-							</div>
-							<Button
-								disabled={
-									whatsappStatusQuery.data?.linked
-										? unlinkMutation.isPending
-										: startLinkMutation.isPending
-								}
-								onClick={() => {
-									if (whatsappStatusQuery.data?.linked) {
-										setUnlinkOpen(true)
-									} else {
-										startLinkMutation.mutate()
-									}
-								}}
-								variant="secondary"
-							>
-								{whatsappStatusQuery.data?.linked
-									? unlinkMutation.isPending
-										? "Unlinking..."
-										: "Unlink WhatsApp"
-									: startLinkMutation.isPending
-										? "Opening..."
-										: "Link WhatsApp"}
-							</Button>
+		<div className="grid max-w-xl gap-6">
+			<Card>
+				<CardHeader>
+					<CardTitle>User Preferences</CardTitle>
+				</CardHeader>
+				<CardContent>
+					<div className="grid gap-4">
+						<div className="grid gap-2">
+							<Label>Default Entry Currency</Label>
+							<CurrencyCombobox
+								onChange={(val) => updatePref({ defaultEntryCurrency: val })}
+								value={local.defaultEntryCurrency}
+							/>
 						</div>
-					</div>
 
-					<Dialog onOpenChange={setUnlinkOpen} open={unlinkOpen}>
-						<DialogContent>
-							<DialogHeader>
-								<DialogTitle>Unlink WhatsApp?</DialogTitle>
-								<DialogDescription>
-									This will remove your WhatsApp link. You can link it again
-									later.
-								</DialogDescription>
-							</DialogHeader>
-							<DialogFooter>
-								<Button onClick={() => setUnlinkOpen(false)} variant="ghost">
-									Cancel
-								</Button>
+						<div className="grid gap-2">
+							<Label>Display Currency</Label>
+							<CurrencyCombobox
+								onChange={(val) => updatePref({ displayCurrency: val })}
+								value={local.displayCurrency}
+							/>
+						</div>
+
+						<div className="grid gap-2">
+							<Label>Timezone</Label>
+							{(() => {
+								const hasCurated = timezoneOptions.some(
+									(opt) => opt.value === (local.timezone ?? ""),
+								)
+								const placeholder = local.timezone ?? "UTC"
+								return (
+									<TimezoneCombobox
+										// If current value not in curated list, show placeholder and wait for selection
+										onChange={(v) => updatePref({ timezone: v })}
+										options={timezoneOptions}
+										placeholder={placeholder}
+										value={hasCurated ? local.timezone : "__placeholder__"}
+									/>
+								)
+							})()}
+						</div>
+
+						<div className="grid gap-2">
+							<Label>WhatsApp</Label>
+							<div className="flex items-center justify-between">
+								<div className="text-muted-foreground text-sm">
+									{whatsappStatusQuery.isLoading
+										? "Checking status..."
+										: whatsappStatusQuery.data?.linked
+											? "Linked"
+											: "Not linked"}
+								</div>
 								<Button
-									disabled={unlinkMutation.isPending}
-									onClick={() => unlinkMutation.mutate()}
-									variant="destructive"
+									disabled={
+										whatsappStatusQuery.data?.linked
+											? unlinkMutation.isPending
+											: startLinkMutation.isPending
+									}
+									onClick={() => {
+										if (whatsappStatusQuery.data?.linked) {
+											setUnlinkOpen(true)
+										} else {
+											startLinkMutation.mutate()
+										}
+									}}
+									variant="secondary"
 								>
-									{unlinkMutation.isPending ? "Unlinking..." : "Unlink"}
+									{whatsappStatusQuery.data?.linked
+										? unlinkMutation.isPending
+											? "Unlinking..."
+											: "Unlink WhatsApp"
+										: startLinkMutation.isPending
+											? "Opening..."
+											: "Link WhatsApp"}
 								</Button>
-							</DialogFooter>
-						</DialogContent>
-					</Dialog>
+							</div>
+						</div>
 
-					{/* Per-field autosave; no global Save/Reset controls */}
-				</div>
-			</CardContent>
-		</Card>
+						<Dialog onOpenChange={setUnlinkOpen} open={unlinkOpen}>
+							<DialogContent>
+								<DialogHeader>
+									<DialogTitle>Unlink WhatsApp?</DialogTitle>
+									<DialogDescription>
+										This will remove your WhatsApp link. You can link it again
+										later.
+									</DialogDescription>
+								</DialogHeader>
+								<DialogFooter>
+									<Button onClick={() => setUnlinkOpen(false)} variant="ghost">
+										Cancel
+									</Button>
+									<Button
+										disabled={unlinkMutation.isPending}
+										onClick={() => unlinkMutation.mutate()}
+										variant="destructive"
+									>
+										{unlinkMutation.isPending ? "Unlinking..." : "Unlink"}
+									</Button>
+								</DialogFooter>
+							</DialogContent>
+						</Dialog>
+
+						{/* Per-field autosave; no global Save/Reset controls */}
+					</div>
+				</CardContent>
+			</Card>
+			<ConnectionsCard />
+		</div>
 	)
 }

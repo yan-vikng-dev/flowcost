@@ -2,17 +2,16 @@ import { getDb } from "@repo/data-ops/database/setup"
 import {
 	entries,
 	entryTypes,
-	type SelectEntry,
-} from "@repo/data-ops/drizzle/schemas/entries/table"
-import {
 	exchange_rates,
+	type SelectEntry,
 	type SelectExchangeRate,
-} from "@repo/data-ops/drizzle/schemas/exchange_rates/table"
-import { user_preferences } from "@repo/data-ops/drizzle/schemas/user_preferences/table"
+	user_preferences,
+} from "@repo/data-ops/drizzle/schemas/index"
 import { type Currency, categories, currencies } from "@repo/shared-config"
 import { createServerFn } from "@tanstack/react-start"
 import { and, asc, count, desc, eq, gte, inArray, lt } from "drizzle-orm"
 import { z } from "zod"
+import { getPartnerUserId } from "@/core/helpers/connections"
 import { protectedFunctionMiddleware } from "@/core/middleware/auth"
 
 export const createEntryInput = z.object({
@@ -59,10 +58,14 @@ export const deleteEntries = createServerFn({ method: "POST" })
 	.handler(async (ctx) => {
 		const db = getDb()
 		const ids = ctx.data.ids
+		const partnerId = await getPartnerUserId(db, ctx.context.userId)
+		const allowedUserIds = partnerId
+			? [ctx.context.userId, partnerId]
+			: [ctx.context.userId]
 		await db
 			.delete(entries)
 			.where(
-				and(eq(entries.userId, ctx.context.userId), inArray(entries.id, ids)),
+				and(inArray(entries.userId, allowedUserIds), inArray(entries.id, ids)),
 			)
 
 		return { deleted: ids.length }
@@ -92,13 +95,17 @@ export const listEntriesThisMonth = createServerFn()
 		const db = getDb()
 		const { startMs, endMs } = getMonthRange()
 
-		// Fetch entries for this user in current month (DB-side filter + sort)
+		// Fetch entries for this user (and partner if connected) in current month
+		const partnerId = await getPartnerUserId(db, ctx.context.userId)
+		const allowedUserIds = partnerId
+			? [ctx.context.userId, partnerId]
+			: [ctx.context.userId]
 		const rows = await db
 			.select()
 			.from(entries)
 			.where(
 				and(
-					eq(entries.userId, ctx.context.userId),
+					inArray(entries.userId, allowedUserIds),
 					gte(entries.executedAt, new Date(startMs)),
 					lt(entries.executedAt, new Date(endMs)),
 				),
@@ -185,8 +192,12 @@ export const listEntriesThisMonthPaginated = createServerFn()
 		const { page, pageSize, sortBy, sortDir } = ctx.data
 		const offset = page * pageSize
 
+		const partnerId = await getPartnerUserId(db, ctx.context.userId)
+		const allowedUserIds = partnerId
+			? [ctx.context.userId, partnerId]
+			: [ctx.context.userId]
 		const baseWhere = and(
-			eq(entries.userId, ctx.context.userId),
+			inArray(entries.userId, allowedUserIds),
 			gte(entries.executedAt, new Date(startMs)),
 			lt(entries.executedAt, new Date(endMs)),
 		)

@@ -2,7 +2,7 @@ import { getDb } from "@repo/data-ops/database/setup"
 import {
 	exchange_rates,
 	type InsertExchangeRate,
-} from "@repo/data-ops/drizzle/schemas/exchange_rates/table"
+} from "@repo/data-ops/drizzle/schemas/index"
 import { z } from "zod"
 
 const exchangeRateResponseSchema = z.object({

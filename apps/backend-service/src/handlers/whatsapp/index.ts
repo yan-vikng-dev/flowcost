@@ -1,6 +1,8 @@
 import { getDb } from "@repo/data-ops/database/setup"
-import { whatsapp_link_tokens } from "@repo/data-ops/drizzle/schemas/whatsapp_link_tokens/table"
-import { whatsapp_links } from "@repo/data-ops/drizzle/schemas/whatsapp_links/table"
+import {
+	whatsapp_link_tokens,
+	whatsapp_links,
+} from "@repo/data-ops/drizzle/schemas/index"
 import { sha256Hex, timingSafeEqualHex } from "@repo/shared-config/crypto"
 import { and, eq, gt, isNull } from "drizzle-orm"
 import type { MessageContext } from "@/durable-objects/Assistant/AiConversationServer"

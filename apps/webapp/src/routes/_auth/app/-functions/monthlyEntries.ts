@@ -1,17 +1,16 @@
 import { getDb } from "@repo/data-ops/database/setup"
 import {
 	entries,
-	type SelectEntry,
-} from "@repo/data-ops/drizzle/schemas/entries/table"
-import {
 	exchange_rates,
+	type SelectEntry,
 	type SelectExchangeRate,
-} from "@repo/data-ops/drizzle/schemas/exchange_rates/table"
-import { user_preferences } from "@repo/data-ops/drizzle/schemas/user_preferences/table"
+	user_preferences,
+} from "@repo/data-ops/drizzle/schemas/index"
 import type { Currency } from "@repo/shared-config"
 import { createServerFn } from "@tanstack/react-start"
 import { and, desc, eq, gte, inArray, lt } from "drizzle-orm"
 import { DateTime } from "luxon"
+import { getPartnerUserId } from "@/core/helpers/connections"
 import { protectedFunctionMiddleware } from "@/core/middleware/auth"
 
 export type MonthlyEntryForCharts = Pick<
@@ -44,9 +43,13 @@ export const getMonthlyEntriesForCharts = createServerFn()
 		const start = now.startOf("month")
 		const end = start.plus({ months: 1 })
 
+		const partnerId = await getPartnerUserId(db, ctx.context.userId)
+		const allowedUserIds = partnerId
+			? [ctx.context.userId, partnerId]
+			: [ctx.context.userId]
 		const found = await db.query.entries.findMany({
 			where: and(
-				eq(entries.userId, ctx.context.userId),
+				inArray(entries.userId, allowedUserIds),
 				gte(entries.executedAt, start.toJSDate()),
 				lt(entries.executedAt, end.toJSDate()),
 			),

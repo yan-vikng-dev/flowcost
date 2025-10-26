@@ -1,7 +1,7 @@
 import {
 	type EntryType,
 	entryTypes,
-} from "@repo/data-ops/drizzle/schemas/entries/table"
+} from "@repo/data-ops/drizzle/schemas/index"
 import { getEntryTypeIcon } from "@/config/entryTypes"
 import { ResponsiveCombobox } from "./ResponsiveCombobox"
 
