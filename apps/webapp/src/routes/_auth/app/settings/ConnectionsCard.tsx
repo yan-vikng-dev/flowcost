@@ -1,5 +1,4 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { formatDistanceToNow } from "date-fns"
 import { Check, MailPlus, Trash2, X } from "lucide-react"
 import * as React from "react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -108,15 +107,6 @@ export function ConnectionsCard() {
 		if (words.length === 1) return (words[0] ?? "?").slice(0, 2).toUpperCase()
 		return "?"
 	}
-
-	const toDate = (v: unknown) =>
-		v instanceof Date
-			? v
-			: new Date(
-					typeof v === "string" || typeof v === "number"
-						? (v as string | number)
-						: String(v),
-				)
 
 	function renderActions(direction: "incoming" | "outgoing", id: string) {
 		if (direction === "incoming") {
@@ -253,12 +243,7 @@ export function ConnectionsCard() {
 											</div>
 										</div>
 									</div>
-									<div className="flex items-center gap-3">
-										<div className="text-muted-foreground text-xs">
-											{formatDistanceToNow(toDate(inv.expiresAt), {
-												addSuffix: true,
-											})}
-										</div>
+									<div className="flex items-center gap-2">
 										{renderActions(inv.direction, inv.id)}
 									</div>
 								</div>

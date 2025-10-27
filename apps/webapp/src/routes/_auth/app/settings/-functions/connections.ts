@@ -107,7 +107,6 @@ export const getConnectionState = createServerFn()
 			id: string
 			direction: "incoming" | "outgoing"
 			user: DisplayUser
-			expiresAt: Date
 		}
 		const userIdsToFetch = new Set<string>()
 		outgoing.forEach((i) => {
@@ -140,7 +139,6 @@ export const getConnectionState = createServerFn()
 							email: i.inviteeEmail,
 						})
 					: { email: i.inviteeEmail },
-				expiresAt: i.expiresAt,
 			})),
 			...incoming.map((i) => ({
 				id: i.id,
@@ -149,7 +147,6 @@ export const getConnectionState = createServerFn()
 					id: i.inviterUserId,
 					email: "",
 				},
-				expiresAt: i.expiresAt,
 			})),
 		]
 
@@ -190,15 +187,10 @@ export const sendInvitation = createServerFn({ method: "POST" })
 			if (inviteeConn) throw new Error("Invitee is already connected")
 		}
 
-		const now = Date.now()
-		const expiresAt = new Date(now + 7 * 24 * 60 * 60 * 1000)
-
 		await db.insert(user_connection_invitations).values({
 			inviterUserId: ctx.context.userId,
 			inviteeEmail: email,
 			inviteeUserId: inviteeUser?.id,
-			token: crypto.randomUUID(),
-			expiresAt,
 		})
 
 		return { ok: true }
@@ -267,10 +259,10 @@ export const acceptInvitation = createServerFn({ method: "POST" })
 			userIdHigh: high,
 		})
 
-		// Mark accepted and set respondedAt (we keep row for audit; not deleting)
+		// Mark accepted
 		await db
 			.update(user_connection_invitations)
-			.set({ status: "accepted", respondedAt: new Date() })
+			.set({ status: "accepted" })
 			.where(eq(user_connection_invitations.id, id))
 
 		return { ok: true } as const
@@ -301,7 +293,7 @@ export const declineInvitation = createServerFn({ method: "POST" })
 
 		await db
 			.update(user_connection_invitations)
-			.set({ status: "declined", respondedAt: new Date() })
+			.set({ status: "declined" })
 			.where(eq(user_connection_invitations.id, id))
 
 		return { ok: true } as const

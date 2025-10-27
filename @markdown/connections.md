@@ -16,14 +16,14 @@ This doc covers the data model and flows for connecting exactly two users to sha
   - Notes: We enforce “one connection per user” in server code (no triggers with push-only workflow)
 
 - `packages/data-ops/src/drizzle/schemas/user_connection_invitations.ts:1`
-  - Columns: `id`, `inviterUserId`, `inviteeEmail`, optional `inviteeUserId`, `token` (unique), `status` (`pending|accepted|declined|expired`), `expiresAt`, `respondedAt`, timestamps
+  - Columns: `id`, `inviterUserId`, `inviteeEmail`, optional `inviteeUserId`, `status` (`pending|accepted|declined|expired`), `expiresAt`, timestamps
   - Works for non-registered invitees (identified by `inviteeEmail`) and can backfill `inviteeUserId` once they register
 
 **Server Functions (co-located under settings route)**
 - `apps/webapp/src/routes/_auth/app/settings/-functions/connections.ts:1`
   - `getConnectionState()`
     - Returns current partner info or `null`
-    - Returns a single `pending[]` list where each item has `{ id, direction: 'incoming'|'outgoing', user: { id?, name?, email }, expiresAt }` so the UI can consistently render a user row
+    - Returns a single `pending[]` list where each item has `{ id, direction: 'incoming'|'outgoing', user: { id?, name?, email } }` so the UI can consistently render a user row
   - `sendInvitation({ email })`
     - Guards: cannot invite self; inviter must not be already connected; if `inviteeEmail` belongs to a registered and already-connected user, reject
     - Inserts a `pending` invite with 7-day expiry
@@ -32,9 +32,9 @@ This doc covers the data model and flows for connecting exactly two users to sha
   - `acceptInvitation({ id })`
     - Invitee-only (by `inviteeUserId` or `inviteeEmail` equals session email); both inviter and invitee must not already be connected
     - Creates one `user_connections` row using normalized `(userIdLow, userIdHigh)`
-    - Marks invite `accepted` with `respondedAt`
+    - Marks invite `accepted`
   - `declineInvitation({ id })`
-    - Invitee-only; marks `declined` with `respondedAt`
+    - Invitee-only; marks `declined`
   - `disconnectConnection()`
     - Deletes the single `user_connections` row involving the session user
 
@@ -76,5 +76,4 @@ All functions use `protectedFunctionMiddleware` and Zod validation, and are desi
 - Prefer queries via the aggregator import: `@repo/data-ops/drizzle/schemas/index:1`
 
 **Open Items**
-- Optional UX: show expiry countdown for invites
 - Optional: add rate limits or spam mitigation for `sendInvitation`
