@@ -1,6 +1,7 @@
 import type { Category } from "@repo/shared-config"
 import {
 	BabyIcon,
+	BatteryPlusIcon,
 	BriefcaseIcon,
 	BriefcaseMedicalIcon,
 	CarIcon,
@@ -46,6 +47,7 @@ export const categoryIcons: Record<Category, LucideIcon> = {
 	Subscriptions: RepeatIcon,
 	Fitness: DumbbellIcon,
 	Education: GraduationCapIcon,
+	Therapy: BatteryPlusIcon,
 	Taxes: PercentIcon,
 	Pets: PawPrintIcon,
 	Children: BabyIcon,

@@ -16,6 +16,7 @@ export const categories = [
 	"Subscriptions",
 	"Fitness",
 	"Education",
+	"Therapy",
 	"Taxes",
 	"Pets",
 	"Children",

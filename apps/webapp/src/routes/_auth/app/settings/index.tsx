@@ -215,6 +215,7 @@ function RouteComponent() {
 								</FieldDescription>
 							</FieldContent>
 							<Button
+							className="self-center"
 								disabled={
 									whatsappStatusQuery.data?.linked
 										? unlinkMutation.isPending

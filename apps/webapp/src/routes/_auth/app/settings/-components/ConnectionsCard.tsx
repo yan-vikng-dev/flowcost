@@ -77,35 +77,15 @@ export function ConnectionsCard() {
 
 	const isConnected = Boolean(stateQuery.data?.connection)
 
-	// Simpler initials - avoid regex
-	function initialsFrom(name?: string, email?: string) {
-		const n = name?.trim()
-		if (n) {
-			const p = n.split(" ").filter(Boolean)
-			if (p.length >= 2)
-				return `${(p[0]?.[0] ?? "").toUpperCase()}${(p[1]?.[0] ?? "").toUpperCase()}`
-			if (p.length === 1) return (p[0] ?? "?").slice(0, 2).toUpperCase()
+	// Simple initials from name
+	function initialsFrom(name?: string) {
+		const trimmedName = name?.trim()
+		if (!trimmedName) return "?"
+		const parts = trimmedName.split(" ").filter(Boolean)
+		if (parts.length >= 2) {
+			return `${(parts[0]?.[0] ?? "").toUpperCase()}${(parts[1]?.[0] ?? "").toUpperCase()}`
 		}
-		const src = email || "?"
-		const at = src.indexOf("@")
-		const local = at > 0 ? src.slice(0, at) : src
-		const words: string[] = []
-		let curr = ""
-		for (const ch of local) {
-			if (ch === "." || ch === "_" || ch === "-") {
-				if (curr) {
-					words.push(curr)
-					curr = ""
-				}
-			} else {
-				curr += ch
-			}
-		}
-		if (curr) words.push(curr)
-		if (words.length >= 2)
-			return `${(words[0]?.[0] ?? "").toUpperCase()}${(words[1]?.[0] ?? "").toUpperCase()}`
-		if (words.length === 1) return (words[0] ?? "?").slice(0, 2).toUpperCase()
-		return "?"
+		return (parts[0] ?? "?").slice(0, 2).toUpperCase()
 	}
 
 	function renderActions(direction: "incoming" | "outgoing", id: string) {
@@ -175,12 +155,9 @@ export function ConnectionsCard() {
 									}
 									src={stateQuery.data.connection?.image}
 								/>
-								<AvatarFallback>
-									{initialsFrom(
-										stateQuery.data.connection?.name,
-										stateQuery.data.connection?.email,
-									)}
-								</AvatarFallback>
+									<AvatarFallback>
+										{initialsFrom(stateQuery.data.connection?.name)}
+									</AvatarFallback>
 							</Avatar>
 							<div className="text-sm">
 								<div className="font-medium">
@@ -219,9 +196,9 @@ export function ConnectionsCard() {
 													src={inv.user.image}
 												/>
 											) : null}
-											<AvatarFallback>
-												{initialsFrom(inv.user.name, inv.user.email)}
-											</AvatarFallback>
+									<AvatarFallback>
+										{initialsFrom(inv.user.name)}
+									</AvatarFallback>
 										</Avatar>
 										<div className="text-sm">
 											<div className="flex items-center gap-2">

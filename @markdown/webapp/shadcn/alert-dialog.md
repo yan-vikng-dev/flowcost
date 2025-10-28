@@ -119,3 +119,16 @@ import {
   </AlertDialogContent>
 </AlertDialog>
 ```
+
+## When to use
+
+- Use Alert Dialog for confirmations of high-impact or destructive actions.
+  - Examples: delete budget, unlink external account (e.g., WhatsApp), irreversible settings.
+- Use Dialog for general-purpose flows and forms.
+  - Examples: create/edit budget, add entry, view details.
+
+### Project conventions
+
+- Destructive/guarded confirmations MUST use `AlertDialog`.
+- Data entry, multi-step UX, or informational modals SHOULD use `Dialog`.
+- The least destructive action should be focused by default, with explicit Cancel/Confirm buttons.
