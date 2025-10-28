@@ -1,2 +1,4 @@
 - text defaults to text-foreground, so no need to set explicitly
 - prefer parent `space-y-x` and `gap` over individual children `mb-x` and `mt-x`
+- when using icon inside of a size=icon button, no need to add a size class to the icon.
+- import icons explicitly with the Icon suffix, e.g PencilIcon instead of Pencil (lucide has Icon suffix alias for all icons)

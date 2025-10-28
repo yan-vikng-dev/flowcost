@@ -1,6 +1,11 @@
-import type { Category, Currency } from "@repo/shared-config"
+import {
+	type Category,
+	type Currency,
+	getCurrencySymbol,
+} from "@repo/shared-config"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { Pencil, Trash2 } from "lucide-react"
+import { PencilIcon, Trash2Icon } from "lucide-react"
+import { DateTime } from "luxon"
 import * as React from "react"
 import { CategoryMultiCombobox } from "@/components/combobox/CategoryMultiCombobox"
 import { CurrencyCombobox } from "@/components/combobox/CurrencyCombobox"
@@ -291,11 +296,24 @@ export function BudgetsCard() {
 			return virtualBudget ? [...base, virtualBudget] : base
 		}, [budgetsQuery.data, virtualBudget])
 
+	// Month progress (hourly granularity)
+	const now = DateTime.local()
+	const start = now.startOf("month")
+	const end = start.plus({ months: 1 })
+	const totalHoursInMonth = Math.max(1, end.diff(start, "hours").hours)
+	const elapsedHoursInMonth = Math.min(
+		totalHoursInMonth,
+		Math.max(0, now.diff(start, "hours").hours),
+	)
+	const monthProgressPct = (elapsedHoursInMonth / totalHoursInMonth) * 100
+	const elapsedDaysInMonth = now.day
+	const totalDaysInMonth = Math.trunc(end.diff(start, "days").days)
+
 	return (
 		<Card>
 			<CardHeader className="flex flex-row items-center justify-between gap-2">
 				<CardTitle>Budgets</CardTitle>
-				<Button onClick={() => setCreateOpen(true)} variant="primary">
+				<Button onClick={() => setCreateOpen(true)} size="sm" variant="primary">
 					New Budget
 				</Button>
 			</CardHeader>
@@ -308,6 +326,25 @@ export function BudgetsCard() {
 					</div>
 				) : (
 					<div className="space-y-4">
+						{/* Month progress */}
+						<div className="space-y-2 rounded-md border p-3">
+							<div className="flex items-center justify-between gap-2">
+								<div className="flex items-center gap-2">
+									<div className="flex flex-wrap gap-1">
+										<Badge variant="secondary">Month progress</Badge>
+									</div>
+								</div>
+								<div className="flex items-center gap-2" />
+							</div>
+							<div className="flex items-center justify-between text-sm">
+								<span>{Math.round(monthProgressPct)}%</span>
+								<span className="text-right">
+									{elapsedDaysInMonth}/{totalDaysInMonth} days
+								</span>
+							</div>
+							<ProgressBar percent={monthProgressPct} />
+						</div>
+
 						{displayBudgets.map((b) => (
 							<div className="space-y-2 rounded-md border p-3" key={b.id}>
 								<div className="flex items-center justify-between gap-2">
@@ -350,7 +387,7 @@ export function BudgetsCard() {
 													size="icon-sm"
 													variant="secondary"
 												>
-													<Pencil className="size-4" />
+													<PencilIcon />
 												</Button>
 												<Button
 													aria-label="Delete budget"
@@ -361,22 +398,23 @@ export function BudgetsCard() {
 													size="icon-sm"
 													variant="secondary"
 												>
-													<Trash2 className="size-4" />
+													<Trash2Icon />
 												</Button>
 											</>
 										)}
 									</div>
 								</div>
-								<div className="text-sm">
-									<span className="font-medium">
-										{b.displayCurrency}{" "}
-										{b.amountDisplay.toLocaleString(undefined, {
+								<div className="flex items-center justify-between text-sm">
+									<span>{Math.round(b.utilizationPct)}%</span>
+									<span className="text-right">
+										{b.spentDisplay.toLocaleString(undefined, {
 											maximumFractionDigits: 2,
 										})}
-									</span>
-									<span className="text-muted-foreground"> · Spent </span>
-									<span>
-										{b.displayCurrency} {b.spentDisplay.toFixed(2)}
+										/
+										{b.amountDisplay.toLocaleString(undefined, {
+											maximumFractionDigits: 2,
+										})}{" "}
+										{getCurrencySymbol(b.displayCurrency)}
 									</span>
 								</div>
 								<ProgressBar percent={b.utilizationPct} />
