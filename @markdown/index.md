@@ -5,11 +5,13 @@ A quick guide to this repo’s documentation: what each file covers and when to 
 ## Quick chooser
 - **New to the repo?** Read `CONTEXT.md` first
 - **Planning user connections & invites?** Read `connections.md`
+- **Planning budgets?** Read `budgets.md`
 - **Working on UI/components or Tailwind?** See `shadcn/*` and `STYLEGUIDE.md`
 - **Building charts (Recharts)?** See `shadcn/charts/chart.md` and the bar/pie examples
 - **Adding a data table (TanStack Table)?** See `shadcn/table.md`
 - **Building forms (TanStack Form + Zod)?** See `shadcn/forms/tanstack-form.md` and `shadcn/forms/field.md`
 - **Need a combobox, date picker, or toasts?** See `shadcn/combo-box.md`, `shadcn/date-picker.md`, `shadcn/toast.md`
+- **Popover in Dialog?** See `shadcn/popover-in-dialog.md`
 - **Server functions/middleware (TanStack Start)?** See `tanstack/tanstack-server-functions.md`
 - **Using the dedicated UI builder agent?** See `shadcn/shadcn-ui-builder.md`
 - **Personal scratch notes?** Use `NOTES.md`

@@ -15,7 +15,7 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from "@/components/ui/dialog"
-import { Label } from "@/components/ui/label"
+import { Field, FieldContent, FieldDescription, FieldTitle } from "@/components/ui/field"
 import {
 	getUserPreferences,
 	type UpdateUserPreferencesInput,
@@ -154,31 +154,31 @@ function RouteComponent() {
 	}, [prefsQuery.data])
 
 	return (
-		<div className="grid max-w-xl gap-6">
+		<div className="grid max-w-xl gap-6 mx-auto">
 			<Card>
 				<CardHeader>
 					<CardTitle>User Preferences</CardTitle>
 				</CardHeader>
 				<CardContent>
-					<div className="grid gap-4">
-						<div className="grid gap-2">
-							<Label>Default Entry Currency</Label>
+					<div className="grid gap-6">
+						<Field orientation="horizontal">
+							<FieldTitle>Default Entry Currency</FieldTitle>
 							<CurrencyCombobox
 								onChange={(val) => updatePref({ defaultEntryCurrency: val })}
 								value={local.defaultEntryCurrency}
 							/>
-						</div>
+						</Field>
 
-						<div className="grid gap-2">
-							<Label>Display Currency</Label>
+						<Field orientation="horizontal">
+							<FieldTitle>Display Currency</FieldTitle>
 							<CurrencyCombobox
 								onChange={(val) => updatePref({ displayCurrency: val })}
 								value={local.displayCurrency}
 							/>
-						</div>
+						</Field>
 
-						<div className="grid gap-2">
-							<Label>Timezone</Label>
+						<Field orientation="horizontal">
+							<FieldTitle>Timezone</FieldTitle>
 							{(() => {
 								const hasCurated = timezoneOptions.some(
 									(opt) => opt.value === (local.timezone ?? ""),
@@ -194,43 +194,43 @@ function RouteComponent() {
 									/>
 								)
 							})()}
-						</div>
+						</Field>
 
-						<div className="grid gap-2">
-							<Label>WhatsApp</Label>
-							<div className="flex items-center justify-between">
-								<div className="text-muted-foreground text-sm">
+						<Field orientation="horizontal">
+							<FieldContent>
+								<FieldTitle>WhatsApp</FieldTitle>
+								<FieldDescription>
 									{whatsappStatusQuery.isLoading
 										? "Checking status..."
 										: whatsappStatusQuery.data?.linked
-											? "Linked"
+											? `Linked to ${whatsappStatusQuery.data.waId}`
 											: "Not linked"}
-								</div>
-								<Button
-									disabled={
-										whatsappStatusQuery.data?.linked
-											? unlinkMutation.isPending
-											: startLinkMutation.isPending
-									}
-									onClick={() => {
-										if (whatsappStatusQuery.data?.linked) {
-											setUnlinkOpen(true)
-										} else {
-											startLinkMutation.mutate()
-										}
-									}}
-									variant="secondary"
-								>
-									{whatsappStatusQuery.data?.linked
+								</FieldDescription>
+							</FieldContent>
+							<Button
+								disabled={
+									whatsappStatusQuery.data?.linked
 										? unlinkMutation.isPending
-											? "Unlinking..."
-											: "Unlink WhatsApp"
 										: startLinkMutation.isPending
-											? "Opening..."
-											: "Link WhatsApp"}
-								</Button>
-							</div>
-						</div>
+								}
+								onClick={() => {
+									if (whatsappStatusQuery.data?.linked) {
+										setUnlinkOpen(true)
+									} else {
+										startLinkMutation.mutate()
+									}
+								}}
+								variant="secondary"
+							>
+								{whatsappStatusQuery.data?.linked
+									? unlinkMutation.isPending
+										? "Unlinking..."
+										: "Unlink WhatsApp"
+									: startLinkMutation.isPending
+										? "Opening..."
+										: "Link WhatsApp"}
+							</Button>
+						</Field>
 
 						<Dialog onOpenChange={setUnlinkOpen} open={unlinkOpen}>
 							<DialogContent>
@@ -256,7 +256,8 @@ function RouteComponent() {
 							</DialogContent>
 						</Dialog>
 
-						{/* Per-field autosave; no global Save/Reset controls */}
+						{/* Per-field autosave; no global Save/Reset controls */
+						}
 					</div>
 				</CardContent>
 			</Card>

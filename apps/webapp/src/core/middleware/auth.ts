@@ -1,4 +1,5 @@
 import { getAuth } from "@repo/data-ops/auth/server"
+import { redirect } from "@tanstack/react-router"
 import { createMiddleware } from "@tanstack/react-start"
 import { getRequest } from "@tanstack/react-start/server"
 
@@ -7,7 +8,7 @@ async function getAuthContext() {
 	const req = getRequest()
 
 	const session = await auth.api.getSession(req)
-	if (!session) throw new Error("Failed to get session")
+	if (!session) throw redirect({ to: "/" })
 	return {
 		auth: auth,
 		userId: session.user.id,

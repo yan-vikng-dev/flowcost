@@ -15,8 +15,8 @@
 		"@cloudflare/vitest-pool-workers": "^0.9.14",
 		"@types/node": "^24.9.1",
 		"typescript": "^5.9.3",
-		"vitest": "~4.0.1",
-		"wrangler": "^4.44.0"
+		"vitest": "~4.0.3",
+		"wrangler": "^4.45.0"
 	},
 	"dependencies": {
 		"@ai-sdk/google": "^2.0.23",
@@ -24,9 +24,9 @@
 		"@repo/data-ops": "workspace:^",
 		"@repo/shared-config": "workspace:^",
 		"@types/luxon": "^3.7.1",
-		"ai": "^5.0.77",
-		"drizzle-orm": "^0.44.6",
-		"hono": "^4.10.2",
+		"ai": "^5.0.80",
+		"drizzle-orm": "^0.44.7",
+		"hono": "^4.10.3",
 		"luxon": "^3.7.2",
 		"posthog-node": "^5.10.3",
 		"zod": "^4.1.12"

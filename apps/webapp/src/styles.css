@@ -192,9 +192,9 @@
 
 @layer base {
 	* {
-		@apply border-border outline-ring/50;
-		scrollbar-width: none; /* Firefox */
 		-ms-overflow-style: none; /* IE and Edge */
+		scrollbar-width: none; /* Firefox */
+		@apply border-border outline-ring/50; /* IE and Edge */
 	}
 	*::-webkit-scrollbar {
 		display: none; /* Chrome, Safari, Opera */
@@ -205,7 +205,7 @@
 		overflow-x: hidden;
 	}
 	body {
-		@apply bg-background text-foreground;
 		letter-spacing: var(--tracking-normal);
+		@apply bg-background text-foreground;
 	}
 }

@@ -5,7 +5,6 @@ import { ResponsiveCombobox } from "./ResponsiveCombobox"
 export function CategoryCombobox({
 	value,
 	onChange,
-	placeholder = "Select category",
 	disabled,
 	className,
 	id,
@@ -13,7 +12,6 @@ export function CategoryCombobox({
 }: {
 	value: Category
 	onChange: (val: Category) => void
-	placeholder?: string
 	disabled?: boolean
 	className?: string
 	id?: string
@@ -55,7 +53,7 @@ export function CategoryCombobox({
 				}
 			})}
 			onChange={onChange}
-			placeholder={placeholder}
+			placeholder="Select category"
 			value={value}
 		/>
 	)

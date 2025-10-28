@@ -70,6 +70,8 @@ export function IncomeByCategoryDonut() {
 	const isEmpty = total <= 0
 	const CHART_MARGIN = { top: 16, right: 24, bottom: 16, left: 24 } as const
 
+	if (isEmpty) return null
+
 	return (
 		<Card className="flex flex-col">
 			<CardHeader className="items-center pb-0">
@@ -77,68 +79,54 @@ export function IncomeByCategoryDonut() {
 				<CardDescription>{data?.monthLabel ?? "This month"}</CardDescription>
 			</CardHeader>
 			<CardContent className="flex-1 pb-0">
-				{isEmpty ? (
-					<div className="mx-auto grid h-[300px] w-full place-items-center">
-						<div className="text-center text-sm">
-							<div className="mx-auto mb-3 grid h-24 w-24 place-items-center rounded-full border-2 border-muted border-dashed">
-								<div className="text-muted-foreground">No data</div>
-							</div>
-							<div className="text-muted-foreground">No income this month</div>
-							<div className="text-muted-foreground">
-								Add income to see the breakdown
-							</div>
-						</div>
-					</div>
-				) : (
-					<ChartContainer
-						className="mx-auto aspect-square max-h-[300px] overflow-visible"
-						config={chartConfig}
-					>
-						<PieChart margin={CHART_MARGIN}>
-							<ChartTooltip
-								content={<ChartTooltipContent hideLabel />}
-								cursor={false}
-							/>
-							<Pie
-								data={chartData}
-								dataKey="amount"
-								innerRadius={INNER_RADIUS}
-								nameKey="category"
-								strokeWidth={5}
-							>
-								<Label
-									content={({ viewBox }) => {
-										if (viewBox && "cx" in viewBox && "cy" in viewBox) {
-											const vb = viewBox as { cx: number; cy: number }
-											return (
-												<CenterLabel
-													cx={vb.cx ?? 0}
-													cy={vb.cy ?? 0}
-													hPad={LABEL_H_GAP}
-													innerRadius={INNER_RADIUS}
-													signPrefix="+"
-													subtitle="Income"
-													symbol={symbol}
-													total={total}
-												/>
-											)
-										}
-									}}
-								/>
-							</Pie>
-							<ChartLegend
-								align="center"
-								content={<ChartLegendContent nameKey="category" />}
-								// Match PieChart margins so legend centers to chart area
-								verticalAlign="bottom"
-								wrapperStyle={{
-									left: CHART_MARGIN.left,
-									right: CHART_MARGIN.right,
+				<ChartContainer
+					className="mx-auto aspect-square max-h-[300px] overflow-visible"
+					config={chartConfig}
+				>
+					<PieChart margin={CHART_MARGIN}>
+						<ChartTooltip
+							content={<ChartTooltipContent hideLabel />}
+							cursor={false}
+						/>
+						<Pie
+							data={chartData}
+							dataKey="amount"
+							innerRadius={INNER_RADIUS}
+							nameKey="category"
+							strokeWidth={5}
+						>
+							<Label
+								content={({ viewBox }) => {
+									if (viewBox && "cx" in viewBox && "cy" in viewBox) {
+										const vb = viewBox as { cx: number; cy: number }
+										return (
+											<CenterLabel
+												cx={vb.cx ?? 0}
+												cy={vb.cy ?? 0}
+												hPad={LABEL_H_GAP}
+												innerRadius={INNER_RADIUS}
+												signPrefix="+"
+												subtitle="Income"
+												symbol={symbol}
+												total={total}
+											/>
+										)
+									}
 								}}
 							/>
-						</PieChart>
-					</ChartContainer>
-				)}
+						</Pie>
+						<ChartLegend
+							align="center"
+							content={<ChartLegendContent nameKey="category" />}
+							// Match PieChart margins so legend centers to chart area
+							verticalAlign="bottom"
+							wrapperStyle={{
+								left: CHART_MARGIN.left,
+								right: CHART_MARGIN.right,
+							}}
+						/>
+					</PieChart>
+				</ChartContainer>
 			</CardContent>
 		</Card>
 	)

@@ -59,6 +59,8 @@ export function ExpensesByCategoryBar() {
 	const isEmpty = total <= 0
 	const CHART_MARGIN = { top: 24, right: 48, bottom: 12, left: 4 } as const
 
+	if (isEmpty) return null
+
 	return (
 		<Card className="flex min-w-0 flex-col">
 			<CardHeader className="items-center pb-0">
@@ -66,56 +68,43 @@ export function ExpensesByCategoryBar() {
 				<CardDescription>{data?.monthLabel ?? "This month"}</CardDescription>
 			</CardHeader>
 			<CardContent className="min-w-0 flex-1 pb-0">
-				{isEmpty ? (
-					<div className="mx-auto grid h-[300px] w-full place-items-center">
-						<div className="text-center text-sm">
-							<div className="text-muted-foreground">
-								No expenses this month
-							</div>
-							<div className="text-muted-foreground">
-								Add an expense to see the breakdown
-							</div>
-						</div>
-					</div>
-				) : (
-					<ChartContainer
-						className="min-h-[220px] w-full min-w-0 overflow-visible"
-						config={chartConfig}
+				<ChartContainer
+					className="min-h-[220px] w-full min-w-0 overflow-visible"
+					config={chartConfig}
+				>
+					<BarChart
+						accessibilityLayer
+						data={chartData}
+						layout="vertical"
+						margin={CHART_MARGIN}
 					>
-						<BarChart
-							accessibilityLayer
-							data={chartData}
-							layout="vertical"
-							margin={CHART_MARGIN}
-						>
-							<XAxis dataKey="amount" hide type="number" />
-							<YAxis
-								axisLine={false}
-								dataKey="category"
-								tick={{ fontSize: 12, fill: "var(--muted-foreground)" }}
-								tickLine={false}
-								type="category"
-								width={96}
+						<XAxis dataKey="amount" hide type="number" />
+						<YAxis
+							axisLine={false}
+							dataKey="category"
+							tick={{ fontSize: 12, fill: "var(--muted-foreground)" }}
+							tickLine={false}
+							type="category"
+							width={96}
+						/>
+						<ChartTooltip
+							content={<ChartTooltipContent hideLabel />}
+							cursor={false}
+						/>
+						<Bar dataKey="amount" fill="var(--color-amount)" radius={4}>
+							{chartData.map((item) => (
+								<Cell fill={item.fill} key={`cell-${item.category}`} />
+							))}
+							<LabelList
+								className="fill-foreground"
+								dataKey="amount"
+								fontSize={12}
+								offset={4}
+								position="right"
 							/>
-							<ChartTooltip
-								content={<ChartTooltipContent hideLabel />}
-								cursor={false}
-							/>
-							<Bar dataKey="amount" fill="var(--color-amount)" radius={4}>
-								{chartData.map((item) => (
-									<Cell fill={item.fill} key={`cell-${item.category}`} />
-								))}
-								<LabelList
-									className="fill-foreground"
-									dataKey="amount"
-									fontSize={12}
-									offset={4}
-									position="right"
-								/>
-							</Bar>
-						</BarChart>
-					</ChartContainer>
-				)}
+						</Bar>
+					</BarChart>
+				</ChartContainer>
 			</CardContent>
 		</Card>
 	)

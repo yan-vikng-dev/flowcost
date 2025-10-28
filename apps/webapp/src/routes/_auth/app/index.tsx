@@ -1,5 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router"
+import { listBudgetsWithProgress } from "@/core/functions/budgets"
 import { getUserPreferences } from "@/core/functions/preferences"
+import { BudgetsCard } from "./-components/BudgetsCard"
 import { ExpensesByCategoryBar } from "./-components/expensesByCategoryBar"
 import { IncomeByCategoryDonut } from "./-components/incomeByCategoryDonut"
 import { MonthlyStandardSummary } from "./-components/monthlyStandardSummary"
@@ -17,6 +19,21 @@ export const Route = createFileRoute("/_auth/app/")({
 			queryKey: ["monthlyEntriesForCharts"],
 			queryFn: () => getMonthlyEntriesForCharts(),
 		})
+
+		// Prefetch budgets list
+		await context.queryClient.ensureQueryData({
+			queryKey: ["budgets:list"],
+			queryFn: () => listBudgetsWithProgress(),
+		})
+
+		// Prefetch connection state (for partner labeling)
+		await context.queryClient.ensureQueryData({
+			queryKey: ["connectionState"],
+			queryFn: async () => {
+				const mod = await import("./settings/-functions/connections")
+				return mod.getConnectionState()
+			},
+		})
 	},
 	component: RouteComponent,
 })
@@ -24,6 +41,7 @@ export const Route = createFileRoute("/_auth/app/")({
 function RouteComponent() {
 	return (
 		<div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+			<BudgetsCard />
 			<MonthlyStandardSummary />
 			<ExpensesByCategoryBar />
 			<IncomeByCategoryDonut />

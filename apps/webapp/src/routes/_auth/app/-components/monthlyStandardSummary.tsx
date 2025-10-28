@@ -39,11 +39,11 @@ export function MonthlyStandardSummary() {
 
 	return (
 		<Card className="flex flex-col">
-			<CardHeader className="pb-0">
+			<CardHeader>
 				<CardTitle>Summary</CardTitle>
 				<CardDescription>{data?.monthLabel ?? "This month"}</CardDescription>
 			</CardHeader>
-			<CardContent className="flex-1 pb-4">
+			<CardContent className="flex-1">
 				{isEmpty ? (
 					<div className="mx-auto grid h-[160px] w-full place-items-center text-muted-foreground text-sm">
 						No entries this month
