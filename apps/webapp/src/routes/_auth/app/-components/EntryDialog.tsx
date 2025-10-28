@@ -179,6 +179,13 @@ export function EntryDialog({
 				</div>
 				<DialogFooter>
 					<Button
+						onClick={() => onOpenChange(false)}
+						type="button"
+						variant="outline"
+					>
+						Cancel
+					</Button>
+					<Button
 						disabled={!valid}
 						onClick={() =>
 							valid &&

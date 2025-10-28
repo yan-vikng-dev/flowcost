@@ -4,6 +4,16 @@ import { DateTime } from "luxon"
 import * as React from "react"
 import { Button } from "@/components/ui/button"
 import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
+import {
 	Card,
 	CardAction,
 	CardContent,
@@ -64,6 +74,7 @@ export function BudgetsCard() {
 
 	const [createOpen, setCreateOpen] = React.useState(false)
 	const [editOpen, setEditOpen] = React.useState<null | string>(null)
+	const [deleteId, setDeleteId] = React.useState<null | string>(null)
 
 	const defaultCurrency: Currency =
 		(prefsQuery.data?.displayCurrency as Currency) ?? "USD"
@@ -186,9 +197,7 @@ export function BudgetsCard() {
 							<BudgetItem
 								budget={budget}
 								key={budget.id}
-								onDelete={(id) => {
-									if (confirm("Delete this budget?")) deleteMut.mutate(id)
-								}}
+							onDelete={(id) => setDeleteId(id)}
 								onEdit={(id) => setEditOpen(id)}
 							/>
 						))}
@@ -236,6 +245,30 @@ export function BudgetsCard() {
 					submitLabel={updateMut.isPending ? "Saving..." : "Save"}
 					title="Edit Budget"
 				/>
+
+				<AlertDialog onOpenChange={(isOpen) => setDeleteId(isOpen ? deleteId : null)} open={!!deleteId}>
+					<AlertDialogContent>
+						<AlertDialogHeader>
+							<AlertDialogTitle>Delete this budget?</AlertDialogTitle>
+							<AlertDialogDescription>
+								This action cannot be undone.
+							</AlertDialogDescription>
+						</AlertDialogHeader>
+						<AlertDialogFooter>
+							<AlertDialogCancel onClick={() => setDeleteId(null)}>Cancel</AlertDialogCancel>
+							<AlertDialogAction
+								onClick={() => {
+									if (deleteId) {
+										deleteMut.mutate(deleteId)
+									}
+									setDeleteId(null)
+								}}
+							>
+								Delete
+							</AlertDialogAction>
+						</AlertDialogFooter>
+					</AlertDialogContent>
+				</AlertDialog>
 			</CardContent>
 		</Card>
 	)

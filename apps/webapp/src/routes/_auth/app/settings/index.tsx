@@ -8,13 +8,15 @@ import { TimezoneCombobox } from "@/components/combobox/TimezoneCombobox"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
-	Dialog,
-	DialogContent,
-	DialogDescription,
-	DialogFooter,
-	DialogHeader,
-	DialogTitle,
-} from "@/components/ui/dialog"
+	AlertDialog,
+	AlertDialogAction,
+	AlertDialogCancel,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import {
 	Field,
 	FieldContent,
@@ -162,7 +164,7 @@ function RouteComponent() {
 		<div className="mx-auto grid max-w-xl gap-6">
 			<Card>
 				<CardHeader>
-					<CardTitle>User Preferences</CardTitle>
+					<CardTitle>Preferences</CardTitle>
 				</CardHeader>
 				<CardContent>
 					<div className="grid gap-6">
@@ -225,41 +227,40 @@ function RouteComponent() {
 										startLinkMutation.mutate()
 									}
 								}}
-								variant="secondary"
+								variant="outline"
 							>
 								{whatsappStatusQuery.data?.linked
 									? unlinkMutation.isPending
 										? "Unlinking..."
-										: "Unlink WhatsApp"
+										: "Unlink"
 									: startLinkMutation.isPending
 										? "Opening..."
 										: "Link WhatsApp"}
 							</Button>
 						</Field>
 
-						<Dialog onOpenChange={setUnlinkOpen} open={unlinkOpen}>
-							<DialogContent>
-								<DialogHeader>
-									<DialogTitle>Unlink WhatsApp?</DialogTitle>
-									<DialogDescription>
-										This will remove your WhatsApp link. You can link it again
-										later.
-									</DialogDescription>
-								</DialogHeader>
-								<DialogFooter>
-									<Button onClick={() => setUnlinkOpen(false)} variant="ghost">
-										Cancel
-									</Button>
-									<Button
+						<AlertDialog onOpenChange={setUnlinkOpen} open={unlinkOpen}>
+							<AlertDialogContent>
+								<AlertDialogHeader>
+									<AlertDialogTitle>Unlink WhatsApp?</AlertDialogTitle>
+									<AlertDialogDescription>
+										This will remove your WhatsApp link. You can link it again later.
+									</AlertDialogDescription>
+								</AlertDialogHeader>
+								<AlertDialogFooter>
+									<AlertDialogCancel onClick={() => setUnlinkOpen(false)}>Cancel</AlertDialogCancel>
+									<AlertDialogAction
 										disabled={unlinkMutation.isPending}
-										onClick={() => unlinkMutation.mutate()}
-										variant="destructive"
+										onClick={() => {
+											unlinkMutation.mutate()
+											setUnlinkOpen(false)
+										}}
 									>
 										{unlinkMutation.isPending ? "Unlinking..." : "Unlink"}
-									</Button>
-								</DialogFooter>
-							</DialogContent>
-						</Dialog>
+									</AlertDialogAction>
+								</AlertDialogFooter>
+							</AlertDialogContent>
+						</AlertDialog>
 
 						{/* Per-field autosave; no global Save/Reset controls */}
 					</div>

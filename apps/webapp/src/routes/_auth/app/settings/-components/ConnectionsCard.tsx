@@ -4,7 +4,7 @@ import * as React from "react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
 	Dialog,
 	DialogContent,
@@ -148,15 +148,17 @@ export function ConnectionsCard() {
 
 	return (
 		<Card>
-			<CardHeader className="flex flex-row items-center justify-between gap-2">
+			<CardHeader>
 				<CardTitle>Connection</CardTitle>
-				<Button
-					onClick={() => setInviteOpen(true)}
-					size="sm"
-					variant="secondary"
-				>
-					<MailPlus className="mr-2 size-4" /> Invite
-				</Button>
+				<CardAction>
+					<Button
+						onClick={() => setInviteOpen(true)}
+						size="sm"
+						variant="primary"
+					>
+						<MailPlus className="mr-2 size-4" /> Invite
+					</Button>
+				</CardAction>
 			</CardHeader>
 			<CardContent>
 				{!stateQuery.data ? (
