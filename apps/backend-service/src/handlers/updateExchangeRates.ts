@@ -16,7 +16,7 @@ export const updateExchangeRates = async (env: Env) => {
 	const text = await result.text()
 	const json: unknown = JSON.parse(text)
 	const data = exchangeRateResponseSchema.parse(json)
-	const date = new Date().toISOString().split("T")[0]
+	const [date] = new Date().toISOString().split("T")
 	if (!date) throw new Error("Failed to get date")
 	const newRates: InsertExchangeRate = {
 		date,

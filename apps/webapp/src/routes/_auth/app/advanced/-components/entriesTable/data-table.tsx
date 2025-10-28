@@ -469,7 +469,7 @@ export function DataTable<TData extends RowWithId, TValue>({
 								key={page}
 								onClick={() => table.setPageIndex(page - 1)}
 								size="sm"
-								variant={isActive ? "default" : "outline"}
+								variant={isActive ? "primary" : "outline"}
 							>
 								{page}
 							</Button>

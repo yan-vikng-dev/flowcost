@@ -130,26 +130,26 @@ export function EntriesForm() {
 										return (
 											<Field data-invalid={isInvalid}>
 												<FieldLabel htmlFor={executedAtId}>Date</FieldLabel>
-                                            <Popover>
-                                                <PopoverTrigger asChild>
-                                                    <Button
-                                                        variant="input"
-                                                        aria-invalid={isInvalid || undefined}
-                                                        className={cn("w-full")}
-                                                        data-placeholder={
-                                                            field.state.value ? undefined : true
-                                                        }
-                                                        id={executedAtId}
-                                                        type="button"
-                                                    >
-                                                        {field.state.value
-                                                            ? new Date(
-                                                                    field.state.value,
-                                                                ).toLocaleDateString()
-                                                            : "Select date"}
-                                                        <ChevronDownIcon className="size-4 opacity-50" />
-                                                    </Button>
-                                                </PopoverTrigger>
+												<Popover>
+													<PopoverTrigger asChild>
+														<Button
+															aria-invalid={isInvalid || undefined}
+															className={cn("w-full")}
+															data-placeholder={
+																field.state.value ? undefined : true
+															}
+															id={executedAtId}
+															type="button"
+															variant="input"
+														>
+															{field.state.value
+																? new Date(
+																		field.state.value,
+																	).toLocaleDateString()
+																: "Select date"}
+															<ChevronDownIcon className="size-4 opacity-50" />
+														</Button>
+													</PopoverTrigger>
 													<PopoverContent
 														align="start"
 														className="w-auto overflow-hidden p-0"

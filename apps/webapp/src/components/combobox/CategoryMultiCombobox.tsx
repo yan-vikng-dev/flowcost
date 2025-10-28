@@ -2,6 +2,7 @@ import { type Category, categories } from "@repo/shared-config"
 import { CheckIcon, ChevronsUpDownIcon } from "lucide-react"
 import * as React from "react"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import {
 	Command,
 	CommandEmpty,
@@ -19,7 +20,6 @@ import {
 import { getCategoryIcon } from "@/config/categories"
 import { useIsDesktop } from "@/hooks/use-is-desktop"
 import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
 
 export function CategoryMultiCombobox({
 	value,
@@ -44,6 +44,7 @@ export function CategoryMultiCombobox({
 }) {
 	const [open, setOpen] = React.useState(false)
 	const isDesktop = useIsDesktop()
+	const listRef = React.useRef<HTMLDivElement | null>(null)
 	const selected = React.useMemo(() => new Set(value), [value])
 
 	const disabledSet = React.useMemo(
@@ -59,7 +60,7 @@ export function CategoryMultiCombobox({
 		onChange(Array.from(next))
 	}
 
-    const triggerClass = className
+	const triggerClass = className
 
 	const chips = (
 		<div className="flex items-center gap-1">
@@ -87,8 +88,16 @@ export function CategoryMultiCombobox({
 
 	const list = (
 		<Command className={cn(!isDesktop && "rounded-none")}>
-			<CommandInput className="h-9" placeholder="Search categories..." />
-			<CommandList>
+			<CommandInput
+				className="h-9"
+				onValueChange={() => {
+					if (listRef.current) {
+						listRef.current.scrollTop = 0
+					}
+				}}
+				placeholder="Search categories..."
+			/>
+			<CommandList ref={listRef}>
 				<CommandEmpty>No categories found.</CommandEmpty>
 				<CommandGroup>
 					{categories.map((cat) => {
@@ -126,47 +135,50 @@ export function CategoryMultiCombobox({
 		<span className="text-muted-foreground">{placeholder}</span>
 	)
 
-    if (isDesktop) {
-        return (
-            <Popover onOpenChange={setOpen} open={open}>
-                <PopoverTrigger asChild>
-                    <Button
-                        variant="input"
-                        aria-expanded={open}
-                        aria-invalid={invalid || undefined}
-                        className={triggerClass}
-                        data-placeholder={value.length ? undefined : true}
-                        id={id}
-                        type="button"
-                    >
-                        {triggerLabel}
-                        <ChevronsUpDownIcon className="size-4 opacity-50" />
-                        {ClearButton}
-                    </Button>
-                </PopoverTrigger>
-                <PopoverContent align="start" className={cn(contentWidthClass, "max-h-[360px] p-0")}> 
-                    {list}
-                </PopoverContent>
-            </Popover>
-        )
-    }
+	if (isDesktop) {
+		return (
+			<Popover onOpenChange={setOpen} open={open}>
+				<PopoverTrigger asChild>
+					<Button
+						aria-expanded={open}
+						aria-invalid={invalid || undefined}
+						className={triggerClass}
+						data-placeholder={value.length ? undefined : true}
+						id={id}
+						type="button"
+						variant="input"
+					>
+						{triggerLabel}
+						<ChevronsUpDownIcon className="size-4 opacity-50" />
+						{ClearButton}
+					</Button>
+				</PopoverTrigger>
+				<PopoverContent
+					align="start"
+					className={cn(contentWidthClass, "max-h-[360px] p-0")}
+				>
+					{list}
+				</PopoverContent>
+			</Popover>
+		)
+	}
 
 	return (
 		<Drawer onOpenChange={setOpen} open={open}>
-        <DrawerTrigger asChild>
-            <Button
-                variant="input"
-                aria-expanded={open}
-                aria-invalid={invalid || undefined}
-                className={triggerClass}
-                id={id}
-                type="button"
-            >
-                {triggerLabel}
-                <ChevronsUpDownIcon className="size-4 opacity-50" />
-                {ClearButton}
-            </Button>
-        </DrawerTrigger>
+			<DrawerTrigger asChild>
+				<Button
+					aria-expanded={open}
+					aria-invalid={invalid || undefined}
+					className={triggerClass}
+					id={id}
+					type="button"
+					variant="input"
+				>
+					{triggerLabel}
+					<ChevronsUpDownIcon className="size-4 opacity-50" />
+					{ClearButton}
+				</Button>
+			</DrawerTrigger>
 			<DrawerContent>
 				<div className="mt-2 border-t">{list}</div>
 			</DrawerContent>

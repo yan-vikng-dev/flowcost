@@ -1,6 +1,7 @@
 import { Command as CommandPrimitive } from "cmdk"
 import { SearchIcon } from "lucide-react"
-import type * as React from "react"
+import type { ComponentProps, ComponentRef } from "react"
+import { forwardRef } from "react"
 import {
 	Dialog,
 	DialogContent,
@@ -13,7 +14,7 @@ import { cn } from "@/lib/utils"
 function Command({
 	className,
 	...props
-}: React.ComponentProps<typeof CommandPrimitive>) {
+}: ComponentProps<typeof CommandPrimitive>) {
 	return (
 		<CommandPrimitive
 			className={cn(
@@ -33,7 +34,7 @@ function CommandDialog({
 	className,
 	showCloseButton = true,
 	...props
-}: React.ComponentProps<typeof Dialog> & {
+}: ComponentProps<typeof Dialog> & {
 	title?: string
 	description?: string
 	className?: string
@@ -60,7 +61,7 @@ function CommandDialog({
 function CommandInput({
 	className,
 	...props
-}: React.ComponentProps<typeof CommandPrimitive.Input>) {
+}: ComponentProps<typeof CommandPrimitive.Input>) {
 	return (
 		<div
 			className="flex h-9 items-center gap-2 border-b px-3"
@@ -79,25 +80,26 @@ function CommandInput({
 	)
 }
 
-function CommandList({
-	className,
-	...props
-}: React.ComponentProps<typeof CommandPrimitive.List>) {
+const CommandList = forwardRef<
+	ComponentRef<typeof CommandPrimitive.List>,
+	ComponentProps<typeof CommandPrimitive.List>
+>(function CommandList({ className, ...props }, ref) {
 	return (
 		<CommandPrimitive.List
 			className={cn(
-				"max-h-[300px] scroll-py-1 overflow-y-auto overflow-x-hidden",
+				"max-h-[300px] scroll-py-3 overflow-y-auto overflow-x-hidden overscroll-contain",
 				className,
 			)}
 			data-slot="command-list"
+			ref={ref}
 			{...props}
 		/>
 	)
-}
+})
 
 function CommandEmpty({
 	...props
-}: React.ComponentProps<typeof CommandPrimitive.Empty>) {
+}: ComponentProps<typeof CommandPrimitive.Empty>) {
 	return (
 		<CommandPrimitive.Empty
 			className="py-6 text-center text-sm"
@@ -110,7 +112,7 @@ function CommandEmpty({
 function CommandGroup({
 	className,
 	...props
-}: React.ComponentProps<typeof CommandPrimitive.Group>) {
+}: ComponentProps<typeof CommandPrimitive.Group>) {
 	return (
 		<CommandPrimitive.Group
 			className={cn(
@@ -126,7 +128,7 @@ function CommandGroup({
 function CommandSeparator({
 	className,
 	...props
-}: React.ComponentProps<typeof CommandPrimitive.Separator>) {
+}: ComponentProps<typeof CommandPrimitive.Separator>) {
 	return (
 		<CommandPrimitive.Separator
 			className={cn("-mx-1 h-px bg-border", className)}
@@ -139,11 +141,11 @@ function CommandSeparator({
 function CommandItem({
 	className,
 	...props
-}: React.ComponentProps<typeof CommandPrimitive.Item>) {
+}: ComponentProps<typeof CommandPrimitive.Item>) {
 	return (
 		<CommandPrimitive.Item
 			className={cn(
-				"relative flex cursor-default select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-hidden data-[disabled=true]:pointer-events-none data-[selected=true]:bg-accent data-[selected=true]:text-accent-foreground data-[disabled=true]:opacity-50 [&_svg:not([class*='size-'])]:size-4 [&_svg:not([class*='text-'])]:text-muted-foreground [&_svg]:pointer-events-none [&_svg]:shrink-0",
+				"relative flex cursor-default select-none scroll-m-2 items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-hidden data-[disabled=true]:pointer-events-none data-[selected=true]:bg-accent data-[selected=true]:text-accent-foreground data-[disabled=true]:opacity-50 [&_svg:not([class*='size-'])]:size-4 [&_svg:not([class*='text-'])]:text-muted-foreground [&_svg]:pointer-events-none [&_svg]:shrink-0",
 				className,
 			)}
 			data-slot="command-item"
@@ -152,10 +154,7 @@ function CommandItem({
 	)
 }
 
-function CommandShortcut({
-	className,
-	...props
-}: React.ComponentProps<"span">) {
+function CommandShortcut({ className, ...props }: ComponentProps<"span">) {
 	return (
 		<span
 			className={cn(

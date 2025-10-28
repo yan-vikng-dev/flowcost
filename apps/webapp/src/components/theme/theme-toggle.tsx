@@ -10,7 +10,7 @@ import {
 import { useTheme } from "./theme-provider"
 
 interface ThemeToggleProps {
-	variant?: "default" | "outline" | "ghost"
+	variant?: "primary" | "outline" | "ghost"
 	size?: "sm" | "default" | "lg"
 	showLabel?: boolean
 	align?: "start" | "center" | "end"

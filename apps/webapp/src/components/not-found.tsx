@@ -34,7 +34,7 @@ export function NotFound({ children }: { children?: React.ReactNode }) {
 							<Button
 								className="flex items-center gap-2"
 								onClick={() => window.history.back()}
-								variant="default"
+								variant="primary"
 							>
 								<ArrowLeft className="h-4 w-4" />
 								Go Back

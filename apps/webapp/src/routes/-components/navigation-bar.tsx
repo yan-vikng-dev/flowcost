@@ -100,7 +100,7 @@ export function NavigationBar() {
 					<Link to="/">
 						<div className="flex items-center gap-2">
 							<img alt="Flowcost" className="size-12" src="/logo/logo192.png" />
-							<span className="bg-gradient-to-r from-primary to-foreground bg-clip-text font-bold text-lg text-transparent transition-all duration-300 hover:from-foreground hover:to-primary lg:text-xl">
+							<span className="bg-linear-to-r from-primary to-foreground bg-clip-text font-bold text-lg text-transparent transition-all duration-300 hover:from-foreground hover:to-primary lg:text-xl">
 								Flowcost
 							</span>
 						</div>
@@ -133,7 +133,7 @@ export function NavigationBar() {
 										)}
 									</Link>
 								)}
-								<div className="-translate-x-1/2 absolute bottom-0 left-1/2 h-0.5 w-0 transform bg-gradient-to-r from-primary to-primary/80 transition-all duration-300 group-hover:w-3/4" />
+								<div className="-translate-x-1/2 absolute bottom-0 left-1/2 h-0.5 w-0 transform bg-linear-to-r from-primary to-primary/80 transition-all duration-300 group-hover:w-3/4" />
 							</div>
 						))}
 
@@ -169,7 +169,6 @@ export function NavigationBar() {
 							<Button
 								className="gap-2"
 								onClick={() => void handleGoogleSignIn()}
-								variant="default"
 							>
 								<LogInIcon className="h-4 w-4" />
 								Sign In
@@ -196,7 +195,7 @@ export function NavigationBar() {
 								side="right"
 							>
 								<SheetHeader className="space-y-1 pb-6 text-left">
-									<SheetTitle className="bg-gradient-to-r from-primary to-primary/80 bg-clip-text font-bold text-transparent text-xl">
+									<SheetTitle className="bg-linear-to-r from-primary to-primary/80 bg-clip-text font-bold text-transparent text-xl">
 										Navigation
 									</SheetTitle>
 									<SheetDescription className="text-muted-foreground">
@@ -260,7 +259,6 @@ export function NavigationBar() {
 										<Button
 											className="w-full gap-2"
 											onClick={() => void handleGoogleSignIn()}
-											variant="default"
 										>
 											<LogInIcon className="h-4 w-4" />
 											Sign In with Google

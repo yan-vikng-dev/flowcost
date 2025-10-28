@@ -49,6 +49,7 @@ export function ResponsiveCombobox<T extends string>({
 }) {
 	const [open, setOpen] = React.useState(false)
 	const isDesktop = useIsDesktop()
+	const listRef = React.useRef<HTMLDivElement | null>(null)
 
 	const current = items.find((i) => i.value === value)
 
@@ -56,8 +57,16 @@ export function ResponsiveCombobox<T extends string>({
 
 	const list = (
 		<Command className={cn(!isDesktop && "rounded-none")}>
-			<CommandInput className="h-9" placeholder="Search..." />
-			<CommandList>
+			<CommandInput
+				className="h-9"
+				onValueChange={() => {
+					if (listRef.current) {
+						listRef.current.scrollTop = 0
+					}
+				}}
+				placeholder="Search..."
+			/>
+			<CommandList ref={listRef}>
 				<CommandEmpty>No results found.</CommandEmpty>
 				<CommandGroup>
 					{items.map((item) => (

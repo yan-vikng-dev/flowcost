@@ -15,7 +15,12 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from "@/components/ui/dialog"
-import { Field, FieldContent, FieldDescription, FieldTitle } from "@/components/ui/field"
+import {
+	Field,
+	FieldContent,
+	FieldDescription,
+	FieldTitle,
+} from "@/components/ui/field"
 import {
 	getUserPreferences,
 	type UpdateUserPreferencesInput,
@@ -154,7 +159,7 @@ function RouteComponent() {
 	}, [prefsQuery.data])
 
 	return (
-		<div className="grid max-w-xl gap-6 mx-auto">
+		<div className="mx-auto grid max-w-xl gap-6">
 			<Card>
 				<CardHeader>
 					<CardTitle>User Preferences</CardTitle>
@@ -256,8 +261,7 @@ function RouteComponent() {
 							</DialogContent>
 						</Dialog>
 
-						{/* Per-field autosave; no global Save/Reset controls */
-						}
+						{/* Per-field autosave; no global Save/Reset controls */}
 					</div>
 				</CardContent>
 			</Card>
