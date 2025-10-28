@@ -132,3 +132,20 @@ import {
   </CardFooter>
 </Card>
 ```
+
+### Header action pattern
+
+Use `CardAction` inside `CardHeader` to align an action button to the top-right, while keeping `CardTitle` and `CardDescription` on the left. This is the preferred way to place header buttons (e.g., “New Entry”, “New Budget”).
+
+```tsx
+<Card>
+  <CardHeader>
+    <CardTitle>Summary</CardTitle>
+    <CardDescription>This month</CardDescription>
+    <CardAction>
+      <Button size="sm" variant="primary">New Entry</Button>
+    </CardAction>
+  </CardHeader>
+  <CardContent>...</CardContent>
+ </Card>
+```

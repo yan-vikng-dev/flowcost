@@ -1,7 +1,13 @@
 import { keepPreviousData, useQuery } from "@tanstack/react-query"
 import type { PaginationState, SortingState } from "@tanstack/react-table"
 import * as React from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+	Card,
+	CardAction,
+	CardContent,
+	CardHeader,
+	CardTitle,
+} from "@/components/ui/card"
 import {
 	listEntriesThisMonthPaginated,
 	type MonthlyEntry,
@@ -10,7 +16,11 @@ import { getUserPreferences } from "@/core/functions/preferences"
 import { DataTable } from "./data-table"
 import { entriesTableColumns } from "./entries-table-columns"
 
-export function MonthlyEntriesTable() {
+export function MonthlyEntriesTable({
+	headerAction,
+}: {
+	headerAction?: React.ReactNode
+}) {
 	const [pagination, setPagination] = React.useState<PaginationState>({
 		pageIndex: 0,
 		pageSize: 10,
@@ -60,6 +70,7 @@ export function MonthlyEntriesTable() {
 		<Card>
 			<CardHeader>
 				<CardTitle>This Month&apos;s Entries</CardTitle>
+				{headerAction ? <CardAction>{headerAction}</CardAction> : null}
 			</CardHeader>
 			<CardContent>
 				{isError ? (

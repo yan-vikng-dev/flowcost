@@ -1,71 +1,46 @@
-# Docs Index
+## Flowcost docs index (LLM quick reference)
+This file will usually be attached at the beginning of the conversation.
+you may choose to read any files mentioned here, depending on the task.
+you should always read the core reference.
 
-A quick guide to this repo’s documentation: what each file covers and when to read it.
+### Core reference
+- **Project context**: ./CONTEXT.md
+- **Conventions and rules**: ./RULES.md
+- **css/tailwind/shadcn Styleguide**: ./STYLEGUIDE.md
 
-## Quick chooser
-- **New to the repo?** Read `CONTEXT.md` first
-- **Planning user connections & invites?** Read `connections.md`
-- **Planning budgets?** Read `budgets.md`
-- **Working on UI/components or Tailwind?** See `shadcn/*` and `STYLEGUIDE.md`
-- **Building charts (Recharts)?** See `shadcn/charts/chart.md` and the bar/pie examples
-- **Adding a data table (TanStack Table)?** See `shadcn/table.md`
-- **Building forms (TanStack Form + Zod)?** See `shadcn/forms/tanstack-form.md` and `shadcn/forms/field.md`
-- **Need a combobox, date picker, or toasts?** See `shadcn/combo-box.md`, `shadcn/date-picker.md`, `shadcn/toast.md`
-- **Popover in Dialog?** See `shadcn/popover-in-dialog.md`
-- **Server functions/middleware (TanStack Start)?** See `tanstack/tanstack-server-functions.md`
-- **Using the dedicated UI builder agent?** See `shadcn/shadcn-ui-builder.md`
-- **Personal scratch notes?** Use `NOTES.md`
+### Frontend (apps/webapp)
+- **Features**
+  - **Budgets**: ./webapp/budgets.md
+  - **Connections**: ./webapp/connections.md
+- **UI kit (shadcn)**
+  - **Badge**: ./webapp/shadcn/badge.md
+  - **Card**: ./webapp/shadcn/card.md
+  - **Charts**: ./webapp/shadcn/charts/chart.md, ./webapp/shadcn/charts/bar-chart-3.md, ./webapp/shadcn/charts/bar-chart-7.md, ./webapp/shadcn/charts/pie-chart-3.md, ./webapp/shadcn/charts/pie-chart-9.md
+  - **Table**: ./webapp/shadcn/table.md
+  - **Date picker**: ./webapp/shadcn/date-picker.md
+  - **Combo box**: ./webapp/shadcn/combo-box.md
+  - **Progress**: ./webapp/shadcn/progress.md
+  - **Forms**: ./webapp/shadcn/forms/field.md, ./webapp/shadcn/forms/tanstack-form.md
+  - **Toast/Popover**: ./webapp/shadcn/toast.md, ./webapp/shadcn/popover-in-dialog.md
+- **TanStack server functions**: ./webapp/tanstack/tanstack-server-functions.md
 
-## Core docs in this folder
-### `CONTEXT.md`
-- **Purpose**: High-level overview of the monorepo, apps, packages, Cloudflare Workers setup, environment variables, database/migrations, and key workflows.
-- **When to read**: First-time onboarding, deployment questions, changing Wrangler bindings/secrets, or wiring DB/auth/payments.
+### Backend (apps/backend-service)
+- **HTTP handlers**: `apps/backend-service/src/handlers/`
+- **WhatsApp**: `apps/backend-service/src/handlers/whatsapp/`
+- **Hono app**: `apps/backend-service/src/hono/app.ts`
+- **Workflows**: `apps/backend-service/src/workflows/`
 
-### `STYLEGUIDE.md`
-- **Purpose**: Short, practical UI/layout tips tailored to this codebase (Tailwind v4 setup and spacing conventions).
-- **When to read**: While implementing or reviewing UI to keep styling consistent.
+### Shared packages
+- **Database & schemas**: `packages/data-ops/src/drizzle/schemas/`
+- **Auth & DB setup**: `packages/data-ops/src/auth/`, `packages/data-ops/src/database/`
+- **Shared constants & crypto**: `packages/shared-config/src/`
 
-### `NOTES.md`
-- **Purpose**: Free-form scratch space for ideas, todos, and temporary notes.
-- **When to read**: Your own working notes; optional to commit.
+### Build & deploy
+- **Monorepo**: `turbo.json`, `pnpm-workspace.yaml`
+- **Webapp deploy**: `apps/webapp/wrangler.jsonc`
+- **Backend deploy**: `apps/backend-service/wrangler.jsonc`
 
-## Shadcn/UI component guides (`@markdown/shadcn/`)
-These are copy‑paste friendly references aligned to our setup (Tailwind v4, CSS variables, React 19).
+### Usage
+- **Prompting tip**: Quote only the most relevant bullets/files above for your task.
 
-- `badge.md`, `card.md`: Basic building blocks and patterns.
-- `charts/`:
-  - `chart.md`: Core concepts and theming for Recharts in this project.
-  - `bar-chart-*.md`, `pie-chart-*.md`: Ready examples for common chart types.
-- `forms/`:
-  - `field.md`: Accessible form field composition (labels, descriptions, errors, groups).
-  - `tanstack-form.md`: Complete patterns with TanStack Form + Zod.
-- `combo-box.md`: Combobox patterns (popover/command/drawer responsive).
-- `date-picker.md`: Date selection variants (single, input, time, natural language).
-- `toast.md`: Sonner usage and project-specific Toaster setup.
-- `shadcn-ui-builder.md`: How to approach component work with our design system and composition patterns.
 
-**When to read**: Any time you are implementing or modifying UI; pick the doc matching the component you’re building.
-
-## TanStack Start server functions (`@markdown/tanstack/`)
-### `tanstack-server-functions.md`
-- **Purpose**: Patterns for server functions, input validation (Zod), middleware composition, error handling, and full-stack type safety.
-- **When to read**: Creating or updating server functions, adding auth/validation middleware, or wiring to TanStack Query on the client.
-
-## Related in-repo docs (outside this folder)
-- `apps/webapp/CLAUDE.md`: App architecture, commands, and stack details for the web app. Useful alongside `CONTEXT.md` when working on routes, Query integration, and SSR.
-
-## Picking the right doc by task
-- **Add an authenticated server endpoint**: `tanstack/tanstack-server-functions.md` (+ see `apps/webapp/CLAUDE.md` for app wiring)
-- **Create a responsive chart**: `shadcn/charts/chart.md` then a specific example in `shadcn/charts/*`
-- **Build a data table**: `shadcn/table.md`
-- **Implement a form with validation**: `shadcn/forms/tanstack-form.md` and `shadcn/forms/field.md`
-- **Add a combobox/date picker/toast**: respective docs in `shadcn/`
-- **Check environment/secrets/DB**: `CONTEXT.md` (Cloudflare, D1, Wrangler vars/secrets)
-- **UI consistency check**: `STYLEGUIDE.md`
-
-## Contributing docs here
-- Keep new guides under a clear subfolder (`shadcn/`, `tanstack/`, or a new scoped folder).
-- Prefer small, task-focused docs with copy‑paste examples tailored to this repo’s setup.
-- Cross-link related docs (e.g., charts ↔ theme tokens, forms ↔ fields) to aid discovery.
-
-If you’re unsure where to start, skim `CONTEXT.md` and then jump to the section above that matches your task.

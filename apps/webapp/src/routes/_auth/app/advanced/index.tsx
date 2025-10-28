@@ -1,7 +1,14 @@
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { createFileRoute } from "@tanstack/react-router"
-import { listEntriesThisMonthPaginated } from "@/core/functions/entries"
+import * as React from "react"
+import { Button } from "@/components/ui/button"
+import {
+	type CreateEntryInput,
+	createEntry,
+	listEntriesThisMonthPaginated,
+} from "@/core/functions/entries"
 import { getUserPreferences } from "@/core/functions/preferences"
-import { EntriesForm } from "./-components/entriesForm"
+import { EntryDialog, getDefaultEntryInitial } from "../-components/EntryDialog"
 import { MonthlyEntriesTable } from "./-components/entriesTable/index"
 
 export const Route = createFileRoute("/_auth/app/advanced/")({
@@ -39,10 +46,56 @@ export const Route = createFileRoute("/_auth/app/advanced/")({
 })
 
 function RouteComponent() {
+	const queryClient = useQueryClient()
+	const prefsQuery = useQuery({
+		queryKey: ["userPreferences"],
+		queryFn: () => getUserPreferences(),
+		staleTime: 5 * 60 * 1000,
+	})
+	const createMut = useMutation({
+		mutationFn: (input: CreateEntryInput) => createEntry({ data: input }),
+		onSuccess: async () => {
+			await Promise.all([
+				queryClient.invalidateQueries({ queryKey: ["entries"] }),
+				queryClient.invalidateQueries({
+					queryKey: ["monthlyEntriesForCharts"],
+				}),
+			])
+		},
+	})
+
+	const [open, setOpen] = React.useState(false)
+
 	return (
 		<div className="space-y-4">
-			<EntriesForm />
-			<MonthlyEntriesTable />
+			<MonthlyEntriesTable
+				headerAction={
+					<Button onClick={() => setOpen(true)} size="sm" variant="primary">
+						New Entry
+					</Button>
+				}
+			/>
+			<EntryDialog
+				initial={getDefaultEntryInitial({
+					defaultCurrency: prefsQuery.data?.defaultEntryCurrency ?? "USD",
+				})}
+				onOpenChange={setOpen}
+				onSubmit={(state) => {
+					const amount = typeof state.amount === "number" ? state.amount : 0
+					createMut.mutate({
+						amount,
+						currency: state.currency,
+						category: state.category,
+						entryType: state.entryType,
+						description: state.description,
+						executedAt: state.executedAt,
+					})
+					setOpen(false)
+				}}
+				open={open}
+				submitLabel={createMut.isPending ? "Creating..." : "Create"}
+				title="New Entry"
+			/>
 		</div>
 	)
 }

@@ -2,9 +2,9 @@ import { createFileRoute } from "@tanstack/react-router"
 import { listBudgetsWithProgress } from "@/core/functions/budgets"
 import { getUserPreferences } from "@/core/functions/preferences"
 import { BudgetsCard } from "./-components/BudgetsCard"
-import { ExpensesByCategoryBar } from "./-components/expensesByCategoryBar"
-import { IncomeByCategoryDonut } from "./-components/incomeByCategoryDonut"
-import { MonthlyStandardSummary } from "./-components/monthlyStandardSummary"
+import { ExpensesByCategoryBar } from "./-components/ExpensesByCategoryBar"
+import { IncomeByCategoryDonut } from "./-components/IncomeByCategoryDonut"
+import { MonthlyStandardSummary } from "./-components/MonthlyStandardSummary"
 import { getMonthlyEntriesForCharts } from "./-functions/monthlyEntries"
 
 export const Route = createFileRoute("/_auth/app/")({

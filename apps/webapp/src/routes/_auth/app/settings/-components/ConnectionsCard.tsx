@@ -23,7 +23,7 @@ import {
 	getConnectionState,
 	type SendInvitationInput,
 	sendInvitation,
-} from "./-functions/connections"
+} from "../-functions/connections"
 
 export function ConnectionsCard() {
 	const queryClient = useQueryClient()
@@ -229,7 +229,7 @@ export function ConnectionsCard() {
 												<Badge
 													variant={
 														inv.direction === "incoming"
-															? "default"
+															? "primary"
 															: "secondary"
 													}
 												>

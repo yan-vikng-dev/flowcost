@@ -31,7 +31,7 @@ import {
 	startWhatsappLink,
 	unlinkWhatsapp,
 } from "@/core/functions/whatsapp"
-import { ConnectionsCard } from "./ConnectionsCard"
+import { ConnectionsCard } from "./-components/ConnectionsCard"
 
 export const Route = createFileRoute("/_auth/app/settings/")({
 	loader: async ({ context }) => {

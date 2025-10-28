@@ -1,20 +1,46 @@
 import { currencyData } from "@repo/shared-config"
-import { useQuery } from "@tanstack/react-query"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import * as React from "react"
+import { Button } from "@/components/ui/button"
 import {
 	Card,
+	CardAction,
 	CardContent,
 	CardDescription,
 	CardHeader,
 	CardTitle,
 } from "@/components/ui/card"
+import { type CreateEntryInput, createEntry } from "@/core/functions/entries"
+import { getUserPreferences } from "@/core/functions/preferences"
 import { getMonthlyEntriesForCharts } from "../-functions/monthlyEntries"
+import { EntryDialog, getDefaultEntryInitial } from "./EntryDialog"
 
 export function MonthlyStandardSummary() {
 	const { data } = useQuery({
 		queryKey: ["monthlyEntriesForCharts"],
 		queryFn: () => getMonthlyEntriesForCharts(),
 	})
+
+	const prefsQuery = useQuery({
+		queryKey: ["userPreferences"],
+		queryFn: () => getUserPreferences(),
+		staleTime: 5 * 60 * 1000,
+	})
+
+	const queryClient = useQueryClient()
+	const createMut = useMutation({
+		mutationFn: (input: CreateEntryInput) => createEntry({ data: input }),
+		onSuccess: async () => {
+			await Promise.all([
+				queryClient.invalidateQueries({ queryKey: ["entries"] }),
+				queryClient.invalidateQueries({
+					queryKey: ["monthlyEntriesForCharts"],
+				}),
+			])
+		},
+	})
+
+	const [open, setOpen] = React.useState(false)
 
 	const displayCurrency = data?.displayCurrency ?? "USD"
 	const symbol = currencyData[displayCurrency]?.symbol ?? ""
@@ -42,6 +68,11 @@ export function MonthlyStandardSummary() {
 			<CardHeader>
 				<CardTitle>Summary</CardTitle>
 				<CardDescription>{data?.monthLabel ?? "This month"}</CardDescription>
+				<CardAction>
+					<Button onClick={() => setOpen(true)} size="sm" variant="primary">
+						New Entry
+					</Button>
+				</CardAction>
 			</CardHeader>
 			<CardContent className="flex-1">
 				{isEmpty ? (
@@ -62,6 +93,27 @@ export function MonthlyStandardSummary() {
 					</div>
 				)}
 			</CardContent>
+			<EntryDialog
+				initial={getDefaultEntryInitial({
+					defaultCurrency: prefsQuery.data?.defaultEntryCurrency ?? "USD",
+				})}
+				onOpenChange={setOpen}
+				onSubmit={(state) => {
+					const amount = typeof state.amount === "number" ? state.amount : 0
+					createMut.mutate({
+						amount,
+						currency: state.currency,
+						category: state.category,
+						entryType: state.entryType,
+						description: state.description,
+						executedAt: state.executedAt,
+					})
+					setOpen(false)
+				}}
+				open={open}
+				submitLabel={createMut.isPending ? "Creating..." : "Create"}
+				title="New Entry"
+			/>
 		</Card>
 	)
 }
