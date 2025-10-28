@@ -11,8 +11,8 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
 import { Field, FieldLabel } from "@/components/ui/field"
+import { Input } from "@/components/ui/input"
 import { parseAmountInput } from "./utils"
 
 export type FormState = {
@@ -93,8 +93,8 @@ export function BudgetDialog({
 					<Field>
 						<FieldLabel htmlFor={categoriesId}>Categories</FieldLabel>
 						<CategoryMultiCombobox
-							id={categoriesId}
 							disabledValues={disabledValues}
+							id={categoriesId}
 							onChange={(categories) =>
 								setState((prevState) => ({ ...prevState, categories }))
 							}
