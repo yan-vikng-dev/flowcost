@@ -60,7 +60,7 @@ export function BudgetDialog({
 				</DialogHeader>
 				<div className="space-y-4">
 					<div className="flex gap-4">
-						<Field className="flex-none">
+						<Field className="w-auto flex-none shrink-0">
 							<FieldLabel htmlFor={currencyId}>Currency</FieldLabel>
 							<CurrencyCombobox
 								id={currencyId}
