@@ -26,6 +26,11 @@ export class NotificationScheduler extends DurableObject {
 		await this.scheduleNextAlarm()
 	}
 
+	async revoke() {
+		await this.ctx.storage.deleteAlarm()
+		console.debug(`Revoked scheduler for user ${this.ctx.id.name}`)
+	}
+
 	async alarm() {
 		const db = getDb()
 		const userId = this.ctx.id.name
@@ -578,7 +583,8 @@ export class NotificationScheduler extends DurableObject {
 	): Promise<void> {
 		try {
 			const conversationId = this.env.AI_CONVERSATION_SERVER.idFromName(userId)
-			const conversationStub = this.env.AI_CONVERSATION_SERVER.get(conversationId)
+			const conversationStub =
+				this.env.AI_CONVERSATION_SERVER.get(conversationId)
 			await conversationStub.appendReport(messageId, report)
 		} catch (error) {
 			console.error(`Error appending report to conversation:`, error)

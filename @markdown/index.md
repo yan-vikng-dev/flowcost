@@ -12,6 +12,7 @@ you should always read the core reference.
 - **Features**
   - **Budgets**: ./webapp/budgets.md
   - **Connections**: ./webapp/connections.md
+  - **Reports**: ./webapp/reports.md
 - **UI kit (shadcn)**
   - **Badge**: ./webapp/shadcn/badge.md
   - **Card**: ./webapp/shadcn/card.md

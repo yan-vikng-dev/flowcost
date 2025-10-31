@@ -91,3 +91,28 @@ app.post("/reports/reschedule", async (c) => {
 	c.executionCtx.waitUntil(schedulerStub.initialize())
 	return c.json({ ok: true })
 })
+
+const revokeReportsSchema = z.object({
+	userId: z.string().min(1),
+})
+
+app.post("/reports/revoke", async (c) => {
+	let body: unknown
+	try {
+		body = await c.req.json()
+	} catch {
+		return c.text("Invalid JSON", 400)
+	}
+
+	const parsed = revokeReportsSchema.safeParse(body)
+	if (!parsed.success) {
+		return c.text("Invalid request body", 400)
+	}
+
+	const schedulerId = c.env.NOTIFICATION_SCHEDULER.idFromName(
+		parsed.data.userId,
+	)
+	const schedulerStub = c.env.NOTIFICATION_SCHEDULER.get(schedulerId)
+	c.executionCtx.waitUntil(schedulerStub.revoke())
+	return c.json({ ok: true })
+})

@@ -34,6 +34,12 @@ import {
 import { Switch } from "@/components/ui/switch"
 import { TimePicker } from "@/components/ui/time-picker"
 import {
+	Tooltip,
+	TooltipContent,
+	TooltipProvider,
+	TooltipTrigger,
+} from "@/components/ui/tooltip"
+import {
 	getUserPreferences,
 	type UpdateUserPreferencesInput,
 	updateUserPreferences,
@@ -43,6 +49,7 @@ import {
 	startWhatsappLink,
 	unlinkWhatsapp,
 } from "@/core/functions/whatsapp"
+import { formatPhoneNumber } from "@/utils/phone"
 import { ConnectionsCard } from "./-components/ConnectionsCard"
 
 export const Route = createFileRoute("/_auth/app/settings/")({
@@ -70,6 +77,19 @@ export const Route = createFileRoute("/_auth/app/settings/")({
 
 function RouteComponent() {
 	const queryClient = useQueryClient()
+
+	type Currency = (typeof currencies)[number]
+	type PrefsState = {
+		defaultEntryCurrency: Currency
+		displayCurrency: Currency
+		timezone: string
+		reportsDailyEnabled: boolean
+		reportsWeeklyEnabled: boolean
+		reportsMonthlyEnabled: boolean
+		reportsTime: string
+		reportsWeeklyDay: number
+	}
+
 	const prefsQuery = useQuery({
 		queryKey: ["userPreferences"],
 		queryFn: () => getUserPreferences(),
@@ -118,18 +138,6 @@ function RouteComponent() {
 		},
 	})
 
-	type Currency = (typeof currencies)[number]
-	type PrefsState = {
-		defaultEntryCurrency: Currency
-		displayCurrency: Currency
-		timezone: string
-		reportsDailyEnabled: boolean
-		reportsWeeklyEnabled: boolean
-		reportsMonthlyEnabled: boolean
-		reportsTime: string
-		reportsWeeklyDay: number
-	}
-
 	const current: PrefsState = prefsQuery.data
 		? {
 				defaultEntryCurrency: prefsQuery.data.defaultEntryCurrency,
@@ -154,8 +162,6 @@ function RouteComponent() {
 
 	const [local, setLocal] = React.useState<PrefsState>(current)
 	const [unlinkOpen, setUnlinkOpen] = React.useState(false)
-	const [linkWhatsappAlertOpen, setLinkWhatsappAlertOpen] =
-		React.useState(false)
 
 	const { options: timezoneOptions } = useTimezoneSelect({
 		labelStyle: "original",
@@ -189,23 +195,6 @@ function RouteComponent() {
 		[local, mutation],
 	)
 
-	const handleReportToggle = React.useCallback(
-		(
-			field:
-				| "reportsDailyEnabled"
-				| "reportsWeeklyEnabled"
-				| "reportsMonthlyEnabled",
-			checked: boolean,
-		) => {
-			const isLinked = whatsappStatusQuery.data?.linked ?? false
-			if (checked && !isLinked) {
-				setLinkWhatsappAlertOpen(true)
-				return
-			}
-			updatePref({ [field]: checked })
-		},
-		[whatsappStatusQuery.data?.linked, updatePref],
-	)
 
 	React.useEffect(() => {
 		if (prefsQuery.data) {
@@ -291,7 +280,7 @@ function RouteComponent() {
 									{whatsappStatusQuery.isLoading
 										? "Checking status..."
 										: whatsappStatusQuery.data?.linked
-											? `Linked to ${whatsappStatusQuery.data.waId}`
+											? `Linked to ${formatPhoneNumber(whatsappStatusQuery.data.waId)}`
 											: "Not linked"}
 								</FieldDescription>
 							</FieldContent>
@@ -347,118 +336,129 @@ function RouteComponent() {
 							</AlertDialogContent>
 						</AlertDialog>
 
-						<AlertDialog
-							onOpenChange={setLinkWhatsappAlertOpen}
-							open={linkWhatsappAlertOpen}
-						>
-							<AlertDialogContent>
-								<AlertDialogHeader>
-									<AlertDialogTitle>Link WhatsApp First</AlertDialogTitle>
-									<AlertDialogDescription>
-										You need to link your WhatsApp number before enabling
-										reports.
-									</AlertDialogDescription>
-								</AlertDialogHeader>
-								<AlertDialogFooter>
-									<AlertDialogCancel
-										onClick={() => setLinkWhatsappAlertOpen(false)}
-									>
-										Cancel
-									</AlertDialogCancel>
-									<AlertDialogAction
-										disabled={startLinkMutation.isPending}
-										onClick={() => {
-											setLinkWhatsappAlertOpen(false)
-											startLinkMutation.mutate()
-										}}
-									>
-										{startLinkMutation.isPending
-											? "Opening..."
-											: "Link WhatsApp"}
-									</AlertDialogAction>
-								</AlertDialogFooter>
-							</AlertDialogContent>
-						</AlertDialog>
+						{whatsappStatusQuery.data?.linked && (
+							<>
+								<FieldSeparator>Reports</FieldSeparator>
 
-						<FieldSeparator>Reports</FieldSeparator>
+								<TooltipProvider>
+									<Field orientation="horizontal">
+										<FieldContent>
+											<FieldTitle>Monthly Reports</FieldTitle>
+											<FieldDescription>
+												Sent on the last day of each month
+											</FieldDescription>
+										</FieldContent>
+										<Switch
+											checked={local.reportsMonthlyEnabled}
+											onCheckedChange={(checked) =>
+												updatePref({ reportsMonthlyEnabled: checked })
+											}
+										/>
+									</Field>
 
-						<Field orientation="horizontal">
-							<FieldContent>
-								<FieldTitle>Monthly Reports</FieldTitle>
-								<FieldDescription>
-									Sent on the last day of each month
-								</FieldDescription>
-							</FieldContent>
-							<Switch
-								checked={local.reportsMonthlyEnabled}
-								onCheckedChange={(checked) =>
-									handleReportToggle("reportsMonthlyEnabled", checked)
-								}
-							/>
-						</Field>
+									<Field orientation="horizontal">
+										<FieldContent>
+											<FieldTitle>Weekly Reports</FieldTitle>
+											<FieldDescription>
+												Sent on selected day each week
+											</FieldDescription>
+										</FieldContent>
+										<Switch
+											checked={local.reportsWeeklyEnabled}
+											onCheckedChange={(checked) =>
+												updatePref({ reportsWeeklyEnabled: checked })
+											}
+										/>
+									</Field>
 
-						<Field orientation="horizontal">
-							<FieldContent>
-								<FieldTitle>Weekly Reports</FieldTitle>
-								<FieldDescription>
-									Sent on selected day each week
-								</FieldDescription>
-							</FieldContent>
-							<Switch
-								checked={local.reportsWeeklyEnabled}
-								onCheckedChange={(checked) =>
-									handleReportToggle("reportsWeeklyEnabled", checked)
-								}
-							/>
-						</Field>
+									<Field orientation="horizontal">
+										<FieldContent>
+											<FieldTitle>Daily Reports</FieldTitle>
+											<FieldDescription>Sent every day</FieldDescription>
+										</FieldContent>
+										<Switch
+											checked={local.reportsDailyEnabled}
+											onCheckedChange={(checked) =>
+												updatePref({ reportsDailyEnabled: checked })
+											}
+										/>
+									</Field>
 
-						<Field orientation="horizontal">
-							<FieldContent>
-								<FieldTitle>Daily Reports</FieldTitle>
-								<FieldDescription>Sent every day</FieldDescription>
-							</FieldContent>
-							<Switch
-								checked={local.reportsDailyEnabled}
-								onCheckedChange={(checked) =>
-									handleReportToggle("reportsDailyEnabled", checked)
-								}
-							/>
-						</Field>
+									<Field orientation="horizontal">
+										<FieldContent>
+											<FieldTitle>Weekly Day</FieldTitle>
+											<FieldDescription>
+												Day of the week to send weekly reports
+											</FieldDescription>
+										</FieldContent>
+										<Tooltip open={!local.reportsWeeklyEnabled ? undefined : false}>
+											<TooltipTrigger asChild>
+												<div>
+													<Select
+														disabled={!local.reportsWeeklyEnabled}
+														onValueChange={(val) =>
+															updatePref({
+																reportsWeeklyDay: Number.parseInt(val, 10),
+															})
+														}
+														value={String(local.reportsWeeklyDay)}
+													>
+														<SelectTrigger className="w-[180px]">
+															<SelectValue placeholder="Select day" />
+														</SelectTrigger>
+														<SelectContent>
+															{weekdays.map((day) => (
+																<SelectItem
+																	key={day.value}
+																	value={String(day.value)}
+																>
+																	{day.label}
+																</SelectItem>
+															))}
+														</SelectContent>
+													</Select>
+												</div>
+											</TooltipTrigger>
+											<TooltipContent>
+												<p>Enable weekly reports to select a day</p>
+											</TooltipContent>
+										</Tooltip>
+									</Field>
 
-						<Field orientation="horizontal">
-							<FieldContent>
-								<FieldTitle>Weekly Day</FieldTitle>
-								<FieldDescription>
-									Day of the week to send weekly reports
-								</FieldDescription>
-							</FieldContent>
-							<Select
-								disabled={!local.reportsWeeklyEnabled}
-								onValueChange={(val) =>
-									updatePref({ reportsWeeklyDay: Number.parseInt(val, 10) })
-								}
-								value={String(local.reportsWeeklyDay)}
-							>
-								<SelectTrigger className="w-[180px]">
-									<SelectValue placeholder="Select day" />
-								</SelectTrigger>
-								<SelectContent>
-									{weekdays.map((day) => (
-										<SelectItem key={day.value} value={String(day.value)}>
-											{day.label}
-										</SelectItem>
-									))}
-								</SelectContent>
-							</Select>
-						</Field>
-
-						<Field orientation="horizontal">
-							<FieldTitle>Report Time</FieldTitle>
-							<TimePicker
-								onChange={(value) => updatePref({ reportsTime: value })}
-								value={local.reportsTime}
-							/>
-						</Field>
+									<Field orientation="horizontal">
+										<FieldTitle>Report Time</FieldTitle>
+										<Tooltip
+											open={
+												!local.reportsDailyEnabled &&
+												!local.reportsWeeklyEnabled &&
+												!local.reportsMonthlyEnabled
+													? undefined
+													: false
+											}
+										>
+											<TooltipTrigger asChild>
+												<div>
+													<TimePicker
+														disabled={
+															!local.reportsDailyEnabled &&
+															!local.reportsWeeklyEnabled &&
+															!local.reportsMonthlyEnabled
+														}
+														onChange={(value) =>
+															updatePref({ reportsTime: value })
+														}
+														value={local.reportsTime}
+													/>
+												</div>
+											</TooltipTrigger>
+											<TooltipContent>
+												<p>Enable at least one report to set the time</p>
+											</TooltipContent>
+										</Tooltip>
+									</Field>
+								</TooltipProvider>
+							</>
+						)}
 					</div>
 				</CardContent>
 			</Card>

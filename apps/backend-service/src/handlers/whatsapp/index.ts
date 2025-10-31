@@ -121,28 +121,6 @@ export async function handleIncomingMessage(
 			.set({ usedAt: now, updatedAt: now })
 			.where(eq(whatsapp_link_tokens.id, token.id))
 
-		// Auto-enable reports when WhatsApp is linked
-		await db
-			.insert(user_preferences)
-			.values({
-				userId: token.userId,
-				reportsDailyEnabled: true,
-				reportsWeeklyEnabled: true,
-				reportsMonthlyEnabled: true,
-				reportsTime: "20:00",
-				reportsWeeklyDay: 0,
-			})
-			.onConflictDoUpdate({
-				target: user_preferences.userId,
-				set: {
-					reportsDailyEnabled: true,
-					reportsWeeklyEnabled: true,
-					reportsMonthlyEnabled: true,
-					reportsTime: "20:00",
-					reportsWeeklyDay: 0,
-				},
-			})
-
 		// Initialize NotificationScheduler DO
 		const schedulerId = env.NOTIFICATION_SCHEDULER.idFromName(token.userId)
 		const schedulerStub = env.NOTIFICATION_SCHEDULER.get(schedulerId)
@@ -151,7 +129,7 @@ export async function handleIncomingMessage(
 		await sendWhatsAppText({
 			env,
 			waId,
-			text: "Linked ✅ You can now chat here. Reports are now enabled!",
+			text: "Linked ✅ You can now chat here.",
 		})
 		return
 	}
@@ -210,6 +188,11 @@ export async function handleIncomingMessage(
 				return
 			case "/unlink":
 				await db.delete(whatsapp_links).where(eq(whatsapp_links.waId, waId))
+				// Revoke scheduler when unlinking
+				const unlinkUserId = link.user.id
+				const unlinkSchedulerId = env.NOTIFICATION_SCHEDULER.idFromName(unlinkUserId)
+				const unlinkSchedulerStub = env.NOTIFICATION_SCHEDULER.get(unlinkSchedulerId)
+				await unlinkSchedulerStub.revoke()
 				await sendWhatsAppText({ env, waId, text: "Unlinked ✅" })
 				return
 			default:

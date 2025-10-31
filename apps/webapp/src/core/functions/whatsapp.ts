@@ -58,5 +58,8 @@ export const unlinkWhatsapp = createServerFn({ method: "POST" })
 		await db
 			.delete(whatsapp_links)
 			.where(eq(whatsapp_links.userId, ctx.context.userId))
+		// Revoke scheduler when unlinking
+		const mod = await import("./reports")
+		await mod.revokeReports()
 		return { ok: true } as const
 	})

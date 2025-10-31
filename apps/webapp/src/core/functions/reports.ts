@@ -11,3 +11,14 @@ export const rescheduleReports = createServerFn({ method: "POST" })
 			body: JSON.stringify({ userId: ctx.context.userId }),
 		})
 	})
+
+export const revokeReports = createServerFn({ method: "POST" })
+	.middleware([protectedFunctionMiddleware])
+	.handler(async (ctx) => {
+		const { env } = await import("cloudflare:workers")
+		await fetch(`${env.BACKEND_URL}/reports/revoke`, {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({ userId: ctx.context.userId }),
+		})
+	})
