@@ -10,7 +10,8 @@
 	},
 	"vars": {
 		"GOOGLE_CLIENT_ID": "929719393907-apf36l038e899nof9ncpj21vlk92s9ed.apps.googleusercontent.com",
-		"WHATSAPP_E164": "+84906432245"
+		"WHATSAPP_E164": "+84906432245",
+		"BACKEND_URL": "https://backend.flowcost.co"
 	},
 	"routes": [
 		{

@@ -43,13 +43,17 @@
 			{
 				"name": "AI_CONVERSATION_SERVER",
 				"class_name": "AiConversationServer"
+			},
+			{
+				"name": "NOTIFICATION_SCHEDULER",
+				"class_name": "NotificationScheduler"
 			}
 		]
 	},
 	"migrations": [
 		{
 			"tag": "v1",
-			"new_sqlite_classes": ["AiConversationServer"]
+			"new_sqlite_classes": ["AiConversationServer", "NotificationScheduler"]
 		}
 	]
 }

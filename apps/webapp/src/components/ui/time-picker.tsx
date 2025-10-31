@@ -120,7 +120,7 @@ export function TimePicker({
 			<PopoverTrigger asChild>
 				<Button
 					className={cn(
-						"w-[120px] justify-between font-normal border border-input bg-transparent shadow-xs dark:bg-input/30 dark:border-input dark:hover:bg-input/50",
+						"w-[120px] justify-between border border-input bg-transparent font-normal shadow-xs dark:border-input dark:bg-input/30 dark:hover:bg-input/50",
 						!value && "text-muted-foreground",
 						className,
 					)}

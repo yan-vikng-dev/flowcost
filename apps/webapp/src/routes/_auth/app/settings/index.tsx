@@ -154,7 +154,8 @@ function RouteComponent() {
 
 	const [local, setLocal] = React.useState<PrefsState>(current)
 	const [unlinkOpen, setUnlinkOpen] = React.useState(false)
-	const [linkWhatsappAlertOpen, setLinkWhatsappAlertOpen] = React.useState(false)
+	const [linkWhatsappAlertOpen, setLinkWhatsappAlertOpen] =
+		React.useState(false)
 
 	const { options: timezoneOptions } = useTimezoneSelect({
 		labelStyle: "original",
@@ -190,7 +191,10 @@ function RouteComponent() {
 
 	const handleReportToggle = React.useCallback(
 		(
-			field: "reportsDailyEnabled" | "reportsWeeklyEnabled" | "reportsMonthlyEnabled",
+			field:
+				| "reportsDailyEnabled"
+				| "reportsWeeklyEnabled"
+				| "reportsMonthlyEnabled",
 			checked: boolean,
 		) => {
 			const isLinked = whatsappStatusQuery.data?.linked ?? false
@@ -351,11 +355,14 @@ function RouteComponent() {
 								<AlertDialogHeader>
 									<AlertDialogTitle>Link WhatsApp First</AlertDialogTitle>
 									<AlertDialogDescription>
-										You need to link your WhatsApp number before enabling reports.
+										You need to link your WhatsApp number before enabling
+										reports.
 									</AlertDialogDescription>
 								</AlertDialogHeader>
 								<AlertDialogFooter>
-									<AlertDialogCancel onClick={() => setLinkWhatsappAlertOpen(false)}>
+									<AlertDialogCancel
+										onClick={() => setLinkWhatsappAlertOpen(false)}
+									>
 										Cancel
 									</AlertDialogCancel>
 									<AlertDialogAction
@@ -365,7 +372,9 @@ function RouteComponent() {
 											startLinkMutation.mutate()
 										}}
 									>
-										{startLinkMutation.isPending ? "Opening..." : "Link WhatsApp"}
+										{startLinkMutation.isPending
+											? "Opening..."
+											: "Link WhatsApp"}
 									</AlertDialogAction>
 								</AlertDialogFooter>
 							</AlertDialogContent>

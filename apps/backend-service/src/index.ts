@@ -4,6 +4,7 @@ import { updateExchangeRates } from "@/handlers/updateExchangeRates.js"
 import { app } from "@/hono/app"
 
 export { AiConversationServer } from "@/durable-objects/Assistant/AiConversationServer"
+export { NotificationScheduler } from "@/durable-objects/NotificationScheduler"
 
 export default class DataService extends WorkerEntrypoint<Env> {
 	fetch(request: Request) {

@@ -1,4 +1,5 @@
 import { Hono } from "hono"
+import { z } from "zod"
 import {
 	handleIncomingMessage,
 	verifyWhatsAppSignature,
@@ -64,4 +65,29 @@ app.post("/whatsapp/webhook", async (c) => {
 		handleIncomingMessage(c.env, { waId, text, messageId }),
 	)
 	return c.text("OK")
+})
+
+const rescheduleReportsSchema = z.object({
+	userId: z.string().min(1),
+})
+
+app.post("/reports/reschedule", async (c) => {
+	let body: unknown
+	try {
+		body = await c.req.json()
+	} catch {
+		return c.text("Invalid JSON", 400)
+	}
+
+	const parsed = rescheduleReportsSchema.safeParse(body)
+	if (!parsed.success) {
+		return c.text("Invalid request body", 400)
+	}
+
+	const schedulerId = c.env.NOTIFICATION_SCHEDULER.idFromName(
+		parsed.data.userId,
+	)
+	const schedulerStub = c.env.NOTIFICATION_SCHEDULER.get(schedulerId)
+	c.executionCtx.waitUntil(schedulerStub.initialize())
+	return c.json({ ok: true })
 })

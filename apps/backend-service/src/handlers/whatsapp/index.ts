@@ -143,10 +143,10 @@ export async function handleIncomingMessage(
 				},
 			})
 
-		// TODO: Initialize NotificationScheduler DO once it's created
-		// const schedulerId = env.NOTIFICATION_SCHEDULER.idFromName(token.userId)
-		// const schedulerStub = env.NOTIFICATION_SCHEDULER.get(schedulerId)
-		// await schedulerStub.initialize()
+		// Initialize NotificationScheduler DO
+		const schedulerId = env.NOTIFICATION_SCHEDULER.idFromName(token.userId)
+		const schedulerStub = env.NOTIFICATION_SCHEDULER.get(schedulerId)
+		await schedulerStub.initialize()
 
 		await sendWhatsAppText({
 			env,

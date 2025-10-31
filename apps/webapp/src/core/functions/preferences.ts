@@ -74,6 +74,17 @@ export const updateUserPreferences = createServerFn({ method: "POST" })
 				target: user_preferences.userId,
 				set: updateData,
 			})
+
+		const hasAnyReportEnabled =
+			payload.reportsDailyEnabled ||
+			payload.reportsWeeklyEnabled ||
+			payload.reportsMonthlyEnabled
+
+		if (hasAnyReportEnabled) {
+			const mod = await import("./reports")
+			await mod.rescheduleReports()
+		}
+
 		return { ok: true } as const
 	})
 

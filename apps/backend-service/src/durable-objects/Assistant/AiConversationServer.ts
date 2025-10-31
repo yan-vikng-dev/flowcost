@@ -113,4 +113,20 @@ export class AiConversationServer extends DurableObject {
 		await this.ctx.storage.put("conversationHistory", this.conversationHistory)
 		await this.ctx.storage.put("traceId", this.traceId)
 	}
+
+	async appendReport(messageId: string, report: string): Promise<void> {
+		if (this.seenMessageIds.has(messageId)) {
+			return
+		}
+		this.seenMessageIds.add(messageId)
+		this.conversationHistory.push({
+			role: "assistant",
+			content: report,
+		})
+		await this.ctx.storage.put("conversationHistory", this.conversationHistory)
+		await this.ctx.storage.put(
+			"seenMessageIds",
+			Array.from(this.seenMessageIds),
+		)
+	}
 }
