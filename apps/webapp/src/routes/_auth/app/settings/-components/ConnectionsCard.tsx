@@ -4,7 +4,13 @@ import * as React from "react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+	Card,
+	CardAction,
+	CardContent,
+	CardHeader,
+	CardTitle,
+} from "@/components/ui/card"
 import {
 	Dialog,
 	DialogContent,
@@ -155,9 +161,9 @@ export function ConnectionsCard() {
 									}
 									src={stateQuery.data.connection?.image}
 								/>
-									<AvatarFallback>
-										{initialsFrom(stateQuery.data.connection?.name)}
-									</AvatarFallback>
+								<AvatarFallback>
+									{initialsFrom(stateQuery.data.connection?.name)}
+								</AvatarFallback>
 							</Avatar>
 							<div className="text-sm">
 								<div className="font-medium">
@@ -196,9 +202,9 @@ export function ConnectionsCard() {
 													src={inv.user.image}
 												/>
 											) : null}
-									<AvatarFallback>
-										{initialsFrom(inv.user.name)}
-									</AvatarFallback>
+											<AvatarFallback>
+												{initialsFrom(inv.user.name)}
+											</AvatarFallback>
 										</Avatar>
 										<div className="text-sm">
 											<div className="flex items-center gap-2">

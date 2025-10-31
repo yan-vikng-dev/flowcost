@@ -1,4 +1,4 @@
-import { getDb } from "@repo/data-ops/database/setup"
+import { type DrizzleDb, getDb } from "@repo/data-ops/database/setup"
 import { user_preferences } from "@repo/data-ops/drizzle/schemas/index"
 import { currencies, isValidTimeZone } from "@repo/shared-config"
 import { createServerFn } from "@tanstack/react-start"
@@ -35,6 +35,11 @@ export const updateUserPreferencesInput = z.object({
 		.string()
 		.min(1)
 		.refine((tz) => isValidTimeZone(tz), { message: "Invalid timezone" }),
+	reportsDailyEnabled: z.boolean(),
+	reportsWeeklyEnabled: z.boolean(),
+	reportsMonthlyEnabled: z.boolean(),
+	reportsTime: z.string().regex(/^([0-1][0-9]|2[0-3]):[0-5][0-9]$/),
+	reportsWeeklyDay: z.number().int().min(0).max(6),
 })
 
 export type UpdateUserPreferencesInput = z.infer<
@@ -48,21 +53,52 @@ export const updateUserPreferences = createServerFn({ method: "POST" })
 		const db = getDb()
 		const payload = ctx.data
 		// Upsert logic
+		const updateData = {
+			defaultEntryCurrency: payload.defaultEntryCurrency,
+			displayCurrency: payload.displayCurrency,
+			timezone: payload.timezone,
+			reportsDailyEnabled: payload.reportsDailyEnabled,
+			reportsWeeklyEnabled: payload.reportsWeeklyEnabled,
+			reportsMonthlyEnabled: payload.reportsMonthlyEnabled,
+			reportsTime: payload.reportsTime,
+			reportsWeeklyDay: payload.reportsWeeklyDay,
+		}
+
 		await db
 			.insert(user_preferences)
 			.values({
 				userId: ctx.context.userId,
-				defaultEntryCurrency: payload.defaultEntryCurrency,
-				displayCurrency: payload.displayCurrency,
-				timezone: payload.timezone,
+				...updateData,
 			})
 			.onConflictDoUpdate({
 				target: user_preferences.userId,
-				set: {
-					defaultEntryCurrency: payload.defaultEntryCurrency,
-					displayCurrency: payload.displayCurrency,
-					timezone: payload.timezone,
-				},
+				set: updateData,
 			})
 		return { ok: true } as const
 	})
+
+export const enableReportsForUser = async (
+	db: DrizzleDb,
+	userId: string,
+): Promise<void> => {
+	await db
+		.insert(user_preferences)
+		.values({
+			userId,
+			reportsDailyEnabled: true,
+			reportsWeeklyEnabled: true,
+			reportsMonthlyEnabled: true,
+			reportsTime: "20:00",
+			reportsWeeklyDay: 0,
+		})
+		.onConflictDoUpdate({
+			target: user_preferences.userId,
+			set: {
+				reportsDailyEnabled: true,
+				reportsWeeklyEnabled: true,
+				reportsMonthlyEnabled: true,
+				reportsTime: "20:00",
+				reportsWeeklyDay: 0,
+			},
+		})
+}

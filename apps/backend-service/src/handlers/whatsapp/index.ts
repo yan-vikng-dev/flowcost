@@ -1,5 +1,6 @@
 import { getDb } from "@repo/data-ops/database/setup"
 import {
+	user_preferences,
 	whatsapp_link_tokens,
 	whatsapp_links,
 } from "@repo/data-ops/drizzle/schemas/index"
@@ -120,10 +121,37 @@ export async function handleIncomingMessage(
 			.set({ usedAt: now, updatedAt: now })
 			.where(eq(whatsapp_link_tokens.id, token.id))
 
+		// Auto-enable reports when WhatsApp is linked
+		await db
+			.insert(user_preferences)
+			.values({
+				userId: token.userId,
+				reportsDailyEnabled: true,
+				reportsWeeklyEnabled: true,
+				reportsMonthlyEnabled: true,
+				reportsTime: "20:00",
+				reportsWeeklyDay: 0,
+			})
+			.onConflictDoUpdate({
+				target: user_preferences.userId,
+				set: {
+					reportsDailyEnabled: true,
+					reportsWeeklyEnabled: true,
+					reportsMonthlyEnabled: true,
+					reportsTime: "20:00",
+					reportsWeeklyDay: 0,
+				},
+			})
+
+		// TODO: Initialize NotificationScheduler DO once it's created
+		// const schedulerId = env.NOTIFICATION_SCHEDULER.idFromName(token.userId)
+		// const schedulerStub = env.NOTIFICATION_SCHEDULER.get(schedulerId)
+		// await schedulerStub.initialize()
+
 		await sendWhatsAppText({
 			env,
 			waId,
-			text: "Linked ✅ You can now chat here.",
+			text: "Linked ✅ You can now chat here. Reports are now enabled!",
 		})
 		return
 	}

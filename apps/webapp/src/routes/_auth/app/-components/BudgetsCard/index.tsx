@@ -2,17 +2,17 @@ import type { Category, Currency } from "@repo/shared-config"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { DateTime } from "luxon"
 import * as React from "react"
-import { Button } from "@/components/ui/button"
 import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle,
+	AlertDialog,
+	AlertDialogAction,
+	AlertDialogCancel,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import { Button } from "@/components/ui/button"
 import {
 	Card,
 	CardAction,
@@ -197,7 +197,7 @@ export function BudgetsCard() {
 							<BudgetItem
 								budget={budget}
 								key={budget.id}
-							onDelete={(id) => setDeleteId(id)}
+								onDelete={(id) => setDeleteId(id)}
 								onEdit={(id) => setEditOpen(id)}
 							/>
 						))}
@@ -246,7 +246,10 @@ export function BudgetsCard() {
 					title="Edit Budget"
 				/>
 
-				<AlertDialog onOpenChange={(isOpen) => setDeleteId(isOpen ? deleteId : null)} open={!!deleteId}>
+				<AlertDialog
+					onOpenChange={(isOpen) => setDeleteId(isOpen ? deleteId : null)}
+					open={!!deleteId}
+				>
 					<AlertDialogContent>
 						<AlertDialogHeader>
 							<AlertDialogTitle>Delete this budget?</AlertDialogTitle>
@@ -255,7 +258,9 @@ export function BudgetsCard() {
 							</AlertDialogDescription>
 						</AlertDialogHeader>
 						<AlertDialogFooter>
-							<AlertDialogCancel onClick={() => setDeleteId(null)}>Cancel</AlertDialogCancel>
+							<AlertDialogCancel onClick={() => setDeleteId(null)}>
+								Cancel
+							</AlertDialogCancel>
 							<AlertDialogAction
 								onClick={() => {
 									if (deleteId) {
