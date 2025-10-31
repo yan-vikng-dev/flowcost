@@ -1,11 +1,6 @@
 import type { DrizzleDb } from "@repo/data-ops/database/setup"
-import {
-	entries,
-	exchange_rates,
-	user_connections,
-} from "@repo/data-ops/drizzle/schemas/index"
+import { fetchConvertedEntriesForRange } from "@repo/data-ops/drizzle/queries"
 import { tool } from "ai"
-import { and, desc, eq, gte, inArray, lt, or } from "drizzle-orm"
 import { DateTime } from "luxon"
 import { z } from "zod"
 import type { MessageContext } from "../AiConversationServer"
@@ -29,40 +24,27 @@ export const makeGetEntriesTool = (context: MessageContext, db: DrizzleDb) =>
 				inputDate,
 				context.userTimezone,
 			)
-			const partnerId = await findPartnerUserId(db, context.userId)
-			const allowedUserIds = partnerId
-				? [context.userId, partnerId]
-				: [context.userId]
-			const foundEntries = await db.query.entries.findMany({
-				where: and(
-					inArray(entries.userId, allowedUserIds),
-					gte(entries.executedAt, startDate),
-					lt(entries.executedAt, endDate),
-				),
-				columns: {
-					userId: false,
-					createdAt: false,
-					updatedAt: false,
-				},
-				orderBy: desc(entries.executedAt),
+
+			const result = await fetchConvertedEntriesForRange(db, context.userId, {
+				start: startDate,
+				end: endDate,
+				timezone: context.userTimezone,
+				displayCurrency: context.displayCurrency,
+				sortBy: "executedAt",
+				sortDir: "desc",
 			})
-			let exchangeRates = await db.query.exchange_rates.findFirst({
-				where: eq(exchange_rates.date, inputDate),
-			})
-			if (!exchangeRates) {
-				exchangeRates = await db.query.exchange_rates.findFirst({
-					orderBy: desc(exchange_rates.createdAt),
-				})
-			}
-			if (!exchangeRates) throw new Error("Failed to find exchange rates")
-			const safeEntries = foundEntries.map((e) => ({
-				...e,
+
+			const safeEntries = result.entries.map((e) => ({
+				id: e.id,
+				amount: e.amount,
+				currency: e.currency,
+				category: e.category,
+				entryType: e.entryType,
+				description: e.description,
 				executedAt: e.executedAt.toISOString(),
-				convertedAmount:
-					e.amount *
-					(exchangeRates.rates[context.displayCurrency] /
-						exchangeRates.rates[e.currency]),
+				convertedAmount: e.convertedAmount,
 			}))
+
 			return { entries: safeEntries, targetCurrency: context.displayCurrency }
 		},
 	})
@@ -77,23 +59,4 @@ function getZonedDayRangeUtc(
 		startDate: start.toJSDate(),
 		endDate: end.toJSDate(),
 	}
-}
-
-async function findPartnerUserId(
-	db: DrizzleDb,
-	userId: string,
-): Promise<string | null> {
-	const rows = await db
-		.select()
-		.from(user_connections)
-		.where(
-			or(
-				eq(user_connections.userIdLow, userId),
-				eq(user_connections.userIdHigh, userId),
-			),
-		)
-		.limit(1)
-	const conn = rows[0]
-	if (!conn) return null
-	return conn.userIdLow === userId ? conn.userIdHigh : conn.userIdLow
 }

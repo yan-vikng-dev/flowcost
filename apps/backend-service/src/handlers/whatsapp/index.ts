@@ -1,6 +1,5 @@
 import { getDb } from "@repo/data-ops/database/setup"
 import {
-	user_preferences,
 	whatsapp_link_tokens,
 	whatsapp_links,
 } from "@repo/data-ops/drizzle/schemas/index"
@@ -186,15 +185,18 @@ export async function handleIncomingMessage(
 					text: "Please visit https://flowcost.co/app/settings to link your WhatsApp number",
 				})
 				return
-			case "/unlink":
+			case "/unlink": {
 				await db.delete(whatsapp_links).where(eq(whatsapp_links.waId, waId))
 				// Revoke scheduler when unlinking
 				const unlinkUserId = link.user.id
-				const unlinkSchedulerId = env.NOTIFICATION_SCHEDULER.idFromName(unlinkUserId)
-				const unlinkSchedulerStub = env.NOTIFICATION_SCHEDULER.get(unlinkSchedulerId)
+				const unlinkSchedulerId =
+					env.NOTIFICATION_SCHEDULER.idFromName(unlinkUserId)
+				const unlinkSchedulerStub =
+					env.NOTIFICATION_SCHEDULER.get(unlinkSchedulerId)
 				await unlinkSchedulerStub.revoke()
 				await sendWhatsAppText({ env, waId, text: "Unlinked ✅" })
 				return
+			}
 			default:
 		}
 	}

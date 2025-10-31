@@ -1,15 +1,16 @@
 import { DurableObject } from "cloudflare:workers"
 import { getDb, initDatabase } from "@repo/data-ops/database/setup"
 import {
-	budgets,
-	entries,
-	exchange_rates,
-	user_connections,
+	fetchBudgetsForUser,
+	fetchConvertedEntriesForRange,
+	fetchExchangeRatesForDates,
+} from "@repo/data-ops/drizzle/queries"
+import {
 	user_preferences,
 	whatsapp_links,
 } from "@repo/data-ops/drizzle/schemas/index"
 import type { Category, Currency } from "@repo/shared-config"
-import { and, desc, eq, gte, inArray, lt, or } from "drizzle-orm"
+import { eq } from "drizzle-orm"
 import { DateTime } from "luxon"
 import { sendWhatsAppText } from "@/handlers/whatsapp/helpers"
 
@@ -141,81 +142,37 @@ export class NotificationScheduler extends DurableObject {
 			title = `Monthly Report - ${now.toFormat("LLLL yyyy")}`
 		}
 
-		const partnerId = await this.findPartnerUserId(db, userId)
-		const allowedUserIds = partnerId ? [userId, partnerId] : [userId]
-
-		const foundEntries = await db.query.entries.findMany({
-			where: and(
-				inArray(entries.userId, allowedUserIds),
-				eq(entries.entryType, "Expense"),
-				gte(entries.executedAt, start.toJSDate()),
-				lt(entries.executedAt, end.toJSDate()),
-			),
-			orderBy: desc(entries.executedAt),
+		const entriesResult = await fetchConvertedEntriesForRange(db, userId, {
+			start: start.toJSDate(),
+			end: end.toJSDate(),
+			timezone: timeZone,
+			displayCurrency,
+			entryType: "Expense",
 		})
 
-		if (foundEntries.length === 0) {
+		if (entriesResult.entries.length === 0) {
 			return `${title}\n\nNo expenses recorded for this period.`
 		}
 
-		const neededDates = Array.from(
-			new Set(
-				foundEntries
-					.map((e) =>
-						DateTime.fromJSDate(e.executedAt, { zone: timeZone }).toISODate(),
-					)
-					.filter((d): d is string => typeof d === "string"),
-			),
-		)
+		const { latest } = await fetchExchangeRatesForDates(db, [])
 
-		const ratesForDates = neededDates.length
-			? await db.query.exchange_rates.findMany({
-					where: inArray(exchange_rates.date, neededDates),
-				})
-			: []
-
-		const latest = await db.query.exchange_rates.findFirst({
-			orderBy: desc(exchange_rates.date),
-		})
-		if (!latest) {
-			return `${title}\n\nError: No exchange rates available.`
-		}
-
-		const rateByDate = new Map<string, Record<Currency, number>>(
-			ratesForDates.map((r) => [r.date, r.rates]),
-		)
-
-		const budgetsList = await db.query.budgets.findMany({
-			where: inArray(budgets.userId, allowedUserIds),
-		})
+		const budgetsList = await fetchBudgetsForUser(db, userId)
 
 		const categoryTotals = new Map<Category, number>()
-		for (const entry of foundEntries) {
-			const dateKey =
-				DateTime.fromJSDate(entry.executedAt, { zone: timeZone }).toISODate() ||
-				latest.date
-			const rateMap = rateByDate.get(dateKey) ?? latest.rates
-			const srcRate = rateMap[entry.currency as Currency]
-			const dstRate = rateMap[displayCurrency]
-			if (
-				typeof srcRate === "number" &&
-				srcRate > 0 &&
-				typeof dstRate === "number"
-			) {
-				const converted = entry.amount * (dstRate / srcRate)
+		for (const entry of entriesResult.entries) {
+			if (entry.convertedAmount !== null) {
 				const current = categoryTotals.get(entry.category as Category) || 0
-				categoryTotals.set(entry.category as Category, current + converted)
+				categoryTotals.set(
+					entry.category as Category,
+					current + entry.convertedAmount,
+				)
 			}
 		}
 
 		const budgetProgress = await this.calculateBudgetProgress(
-			db,
-			allowedUserIds,
 			budgetsList,
-			foundEntries,
-			rateByDate,
+			entriesResult.entries,
 			latest.rates,
-			timeZone,
 			displayCurrency,
 		)
 
@@ -264,32 +221,22 @@ export class NotificationScheduler extends DurableObject {
 		if (type === "weekly") {
 			const previousWeekStart = start.minus({ weeks: 1 })
 			const previousWeekEnd = start
-			const previousWeekEntries = await db.query.entries.findMany({
-				where: and(
-					inArray(entries.userId, allowedUserIds),
-					eq(entries.entryType, "Expense"),
-					gte(entries.executedAt, previousWeekStart.toJSDate()),
-					lt(entries.executedAt, previousWeekEnd.toJSDate()),
-				),
-			})
+			const previousWeekResult = await fetchConvertedEntriesForRange(
+				db,
+				userId,
+				{
+					start: previousWeekStart.toJSDate(),
+					end: previousWeekEnd.toJSDate(),
+					timezone: timeZone,
+					displayCurrency,
+					entryType: "Expense",
+				},
+			)
 
-			let previousWeekTotal = 0
-			for (const entry of previousWeekEntries) {
-				const dateKey =
-					DateTime.fromJSDate(entry.executedAt, {
-						zone: timeZone,
-					}).toISODate() || latest.date
-				const rateMap = rateByDate.get(dateKey) ?? latest.rates
-				const srcRate = rateMap[entry.currency as Currency]
-				const dstRate = rateMap[displayCurrency]
-				if (
-					typeof srcRate === "number" &&
-					srcRate > 0 &&
-					typeof dstRate === "number"
-				) {
-					previousWeekTotal += entry.amount * (dstRate / srcRate)
-				}
-			}
+			const previousWeekTotal = previousWeekResult.entries.reduce(
+				(sum, entry) => sum + (entry.convertedAmount ?? 0),
+				0,
+			)
 
 			const diff = totalSpent - previousWeekTotal
 			const sign = diff >= 0 ? "+" : ""
@@ -317,11 +264,8 @@ export class NotificationScheduler extends DurableObject {
 			)
 
 			const topSpendingDay = this.findTopSpendingDay(
-				foundEntries,
-				rateByDate,
-				latest.rates,
+				entriesResult.entries,
 				timeZone,
-				displayCurrency,
 			)
 			if (topSpendingDay) {
 				lines.push(
@@ -329,7 +273,7 @@ export class NotificationScheduler extends DurableObject {
 				)
 			}
 
-			const mostUsedCategory = this.findMostUsedCategory(foundEntries)
+			const mostUsedCategory = this.findMostUsedCategory(entriesResult.entries)
 			if (mostUsedCategory) {
 				lines.push(
 					`Most used category: ${mostUsedCategory.category} (${mostUsedCategory.count} transactions)`,
@@ -341,8 +285,6 @@ export class NotificationScheduler extends DurableObject {
 	}
 
 	private async calculateBudgetProgress(
-		_db: ReturnType<typeof getDb>,
-		_allowedUserIds: string[],
 		budgetsList: Array<{
 			id: string
 			amount: number
@@ -350,14 +292,10 @@ export class NotificationScheduler extends DurableObject {
 			categories: unknown
 		}>,
 		entries: Array<{
-			executedAt: Date
-			amount: number
-			currency: string
 			category: string
+			convertedAmount: number | null
 		}>,
-		rateByDate: Map<string, Record<Currency, number>>,
 		latestRates: Record<Currency, number>,
-		timeZone: string,
 		displayCurrency: Currency,
 	): Promise<
 		Map<
@@ -376,22 +314,8 @@ export class NotificationScheduler extends DurableObject {
 
 			for (const entry of entries) {
 				if (!budgetCategories.includes(entry.category as Category)) continue
-
-				const isoDate = DateTime.fromJSDate(entry.executedAt, {
-					zone: timeZone,
-				}).toISODate()
-				const fallbackDate = Object.keys(latestRates)[0]
-				const dateKey = isoDate || fallbackDate || ""
-				if (!dateKey) continue
-				const rateMap = rateByDate.get(dateKey) ?? latestRates
-				const srcRate = rateMap[entry.currency as Currency]
-				const dstRate = rateMap[displayCurrency]
-				if (
-					typeof srcRate === "number" &&
-					srcRate > 0 &&
-					typeof dstRate === "number"
-				) {
-					spentDisplay += entry.amount * (dstRate / srcRate)
+				if (entry.convertedAmount !== null) {
+					spentDisplay += entry.convertedAmount
 				}
 			}
 
@@ -447,32 +371,20 @@ export class NotificationScheduler extends DurableObject {
 	}
 
 	private findTopSpendingDay(
-		entries: Array<{ executedAt: Date; amount: number; currency: string }>,
-		rateByDate: Map<string, Record<Currency, number>>,
-		latestRates: Record<Currency, number>,
+		entries: Array<{ executedAt: Date; convertedAmount: number | null }>,
 		timeZone: string,
-		displayCurrency: Currency,
 	): { date: string; amount: number } | null {
 		const dayTotals = new Map<string, number>()
 
 		for (const entry of entries) {
+			if (entry.convertedAmount === null) continue
 			const isoDate = DateTime.fromJSDate(entry.executedAt, {
 				zone: timeZone,
 			}).toISODate()
-			const dateKey = isoDate || Object.keys(latestRates)[0] || ""
+			const dateKey = isoDate || ""
 			if (!dateKey) continue
-			const rateMap = rateByDate.get(dateKey) ?? latestRates
-			const srcRate = rateMap[entry.currency as Currency]
-			const dstRate = rateMap[displayCurrency]
-			if (
-				typeof srcRate === "number" &&
-				srcRate > 0 &&
-				typeof dstRate === "number"
-			) {
-				const converted = entry.amount * (dstRate / srcRate)
-				const current = dayTotals.get(dateKey) || 0
-				dayTotals.set(dateKey, current + converted)
-			}
+			const current = dayTotals.get(dateKey) || 0
+			dayTotals.set(dateKey, current + entry.convertedAmount)
 		}
 
 		let topDay: { date: string; amount: number } | null = null
@@ -506,25 +418,6 @@ export class NotificationScheduler extends DurableObject {
 		}
 
 		return topCategory
-	}
-
-	private async findPartnerUserId(
-		db: ReturnType<typeof getDb>,
-		userId: string,
-	): Promise<string | null> {
-		const rows = await db
-			.select()
-			.from(user_connections)
-			.where(
-				or(
-					eq(user_connections.userIdLow, userId),
-					eq(user_connections.userIdHigh, userId),
-				),
-			)
-			.limit(1)
-		const conn = rows[0]
-		if (!conn) return null
-		return conn.userIdLow === userId ? conn.userIdHigh : conn.userIdLow
 	}
 
 	private async scheduleNextAlarm(): Promise<void> {

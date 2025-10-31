@@ -1,12 +1,10 @@
 import { getDb } from "@repo/data-ops/database/setup"
 import {
-	budgets,
-	entries,
-	exchange_rates,
-	type SelectEntry,
-	type SelectExchangeRate,
-	user_preferences,
-} from "@repo/data-ops/drizzle/schemas/index"
+	fetchBudgetsForUser,
+	fetchConvertedEntriesForRange,
+	fetchExchangeRatesForDates,
+} from "@repo/data-ops/drizzle/queries"
+import { budgets, user_preferences } from "@repo/data-ops/drizzle/schemas/index"
 import {
 	type Category,
 	type Currency,
@@ -14,10 +12,9 @@ import {
 	currencies,
 } from "@repo/shared-config"
 import { createServerFn } from "@tanstack/react-start"
-import { and, desc, eq, gte, inArray, lt } from "drizzle-orm"
+import { eq } from "drizzle-orm"
 import { DateTime } from "luxon"
 import { z } from "zod"
-import { getPartnerUserId } from "@/core/helpers/connections"
 import { protectedFunctionMiddleware } from "@/core/middleware/auth"
 
 export const createBudgetInput = z.object({
@@ -63,16 +60,10 @@ export const updateBudget = createServerFn({ method: "POST" })
 	.inputValidator(updateBudgetInput)
 	.handler(async (ctx) => {
 		const db = getDb()
-		const partnerId = await getPartnerUserId(db, ctx.context.userId)
-		const allowedUserIds = partnerId
-			? [ctx.context.userId, partnerId]
-			: [ctx.context.userId]
+		const budgetsList = await fetchBudgetsForUser(db, ctx.context.userId)
 
-		const existing = await db.query.budgets.findFirst({
-			where: eq(budgets.id, ctx.data.id),
-			columns: { id: true, userId: true },
-		})
-		if (!existing || !allowedUserIds.includes(existing.userId)) {
+		const existing = budgetsList.find((b) => b.id === ctx.data.id)
+		if (!existing) {
 			throw new Error("Not found or not authorized")
 		}
 
@@ -93,19 +84,14 @@ export const deleteBudget = createServerFn({ method: "POST" })
 	.inputValidator(deleteBudgetInput)
 	.handler(async (ctx) => {
 		const db = getDb()
-		const partnerId = await getPartnerUserId(db, ctx.context.userId)
-		const allowedUserIds = partnerId
-			? [ctx.context.userId, partnerId]
-			: [ctx.context.userId]
-		// Only delete if owner is allowed
-		await db
-			.delete(budgets)
-			.where(
-				and(
-					eq(budgets.id, ctx.data.id),
-					inArray(budgets.userId, allowedUserIds),
-				),
-			)
+		const budgetsList = await fetchBudgetsForUser(db, ctx.context.userId)
+
+		const existing = budgetsList.find((b) => b.id === ctx.data.id)
+		if (!existing) {
+			throw new Error("Not found or not authorized")
+		}
+
+		await db.delete(budgets).where(eq(budgets.id, ctx.data.id))
 		return { id: ctx.data.id }
 	})
 
@@ -127,15 +113,8 @@ export const listBudgetsWithProgress = createServerFn()
 	.middleware([protectedFunctionMiddleware])
 	.handler(async (ctx) => {
 		const db = getDb()
-		const partnerId = await getPartnerUserId(db, ctx.context.userId)
-		const allowedUserIds = partnerId
-			? [ctx.context.userId, partnerId]
-			: [ctx.context.userId]
 
-		// Fetch budgets owned by actor or partner
-		const bs = await db.query.budgets.findMany({
-			where: inArray(budgets.userId, allowedUserIds),
-		})
+		const bs = await fetchBudgetsForUser(db, ctx.context.userId)
 
 		if (bs.length === 0) return [] as BudgetWithProgress[]
 
@@ -150,63 +129,30 @@ export const listBudgetsWithProgress = createServerFn()
 		const start = now.startOf("month")
 		const end = start.plus({ months: 1 })
 
-		// Fetch relevant entries for actor/partner in current month (Expenses only)
-		const rows: SelectEntry[] = await db.query.entries.findMany({
-			where: and(
-				inArray(entries.userId, allowedUserIds),
-				eq(entries.entryType, "Expense"),
-				gte(entries.executedAt, start.toJSDate()),
-				lt(entries.executedAt, end.toJSDate()),
-			),
-			orderBy: desc(entries.executedAt),
-		})
-
-		// Exchange rates for conversion; collect needed entry dates
-		const neededDates = Array.from(
-			new Set(
-				rows
-					.map((r) =>
-						DateTime.fromJSDate(r.executedAt, { zone: timeZone }).toISODate(),
-					)
-					.filter((d): d is string => typeof d === "string"),
-			),
+		const entriesResult = await fetchConvertedEntriesForRange(
+			db,
+			ctx.context.userId,
+			{
+				start: start.toJSDate(),
+				end: end.toJSDate(),
+				timezone: timeZone,
+				displayCurrency,
+				entryType: "Expense",
+			},
 		)
-		const ratesForDates: SelectExchangeRate[] = neededDates.length
-			? await db.query.exchange_rates.findMany({
-					where: inArray(exchange_rates.date, neededDates),
-				})
-			: []
-		const latest = await db.query.exchange_rates.findFirst({
-			orderBy: desc(exchange_rates.date),
-		})
-		if (!latest) throw new Error("No rates available")
 
-		const rateByDate = new Map<string, Record<Currency, number>>(
-			ratesForDates.map((r) => [r.date, r.rates]),
-		)
+		const { latest } = await fetchExchangeRatesForDates(db, [])
 
 		const results: BudgetWithProgress[] = bs.map((b) => {
-			// spent in display currency using per-entry date rate
 			let spentDisplay = 0
-			for (const e of rows) {
+			for (const e of entriesResult.entries) {
 				if (!(b.categories as Category[]).includes(e.category as Category))
 					continue
-				const dateKey =
-					DateTime.fromJSDate(e.executedAt, { zone: timeZone }).toISODate() ||
-					latest.date
-				const rateMap = rateByDate.get(dateKey) ?? latest.rates
-				const srcRate = rateMap[e.currency as Currency]
-				const dstRate = rateMap[displayCurrency]
-				if (
-					typeof srcRate === "number" &&
-					srcRate > 0 &&
-					typeof dstRate === "number"
-				) {
-					spentDisplay += e.amount * (dstRate / srcRate)
+				if (e.convertedAmount !== null) {
+					spentDisplay += e.convertedAmount
 				}
 			}
 
-			// convert budget amount to display currency using latest
 			const srcBudgetRate = latest.rates[b.currency as Currency]
 			const dstBudgetRate = latest.rates[displayCurrency]
 			const amountDisplay =

@@ -65,6 +65,8 @@ Implementation: `apps/backend-service/src/durable-objects/NotificationScheduler.
 - Self-perpetuating: reschedules itself after each report send
 
 Key methods:
+- `initialize()`: Initializes scheduler and schedules first alarm
+- `revoke()`: Revokes scheduler by cancelling all alarms
 - `alarm()`: Executes at scheduled time, determines report type, generates and sends report
 - `scheduleNextAlarm()`: Calculates next run time in user's timezone, converts to UTC for alarm
 - `generateReport()`: Builds report content based on type (daily/weekly/monthly)
@@ -122,28 +124,35 @@ Behavior:
 Preferences management:
 - `apps/webapp/src/core/functions/preferences.ts:49-89`
   - `updateUserPreferences()`: Upserts preferences, triggers reschedule if any report enabled
-  - `enableReportsForUser()`: Helper to auto-enable all reports (used on WhatsApp link)
 
-Rescheduling:
-- `apps/webapp/src/core/functions/reports.ts:4-13`
+Rescheduling and revocation:
+- `apps/webapp/src/core/functions/reports.ts:4-24`
   - `rescheduleReports()`: Calls backend endpoint to trigger DO initialization
+  - `revokeReports()`: Calls backend endpoint to revoke scheduler (cancel alarms)
 
 **Backend Endpoints**
 
-- `apps/backend-service/src/hono/app.ts:74-93`
+- `apps/backend-service/src/hono/app.ts:74-118`
   - `POST /reports/reschedule`: Accepts `{ userId }`, initializes NotificationScheduler DO
+  - `POST /reports/revoke`: Accepts `{ userId }`, revokes NotificationScheduler DO (cancels alarms)
 
 **WhatsApp Integration**
 
-Auto-enable on link:
-- When user links WhatsApp, all three report types automatically enabled
-- Defaults: time "20:00", weekly day Sunday (0)
-- NotificationScheduler DO initialized immediately
-- Implementation: `apps/backend-service/src/handlers/whatsapp/index.ts:124-149`
+WhatsApp link is source of truth:
+- When user links WhatsApp, NotificationScheduler DO is initialized immediately
+- Report settings UI becomes visible (if previously hidden)
+- Report preferences in database remain unchanged (not auto-enabled)
+- Implementation: `apps/backend-service/src/handlers/whatsapp/index.ts:124-127`
+
+When unlinking:
+- NotificationScheduler DO is revoked (alarms cancelled)
+- Report settings UI is hidden
+- Report preferences in database remain unchanged
+- Implementation: `apps/backend-service/src/handlers/whatsapp/index.ts:189-196` (backend), `apps/webapp/src/core/functions/whatsapp.ts:53-65` (webapp)
 
 Welcome message:
 - Sent after successful WhatsApp link
-- Confirms reports are enabled
+- Does not mention reports (user controls reports separately)
 
 **Edge Cases**
 
@@ -151,7 +160,7 @@ Welcome message:
 - Weekly reports clamp to current month to avoid cross-month leakage
 - DST transitions handled by Luxon (timezone conversions)
 - Timezone changes recompute next run immediately
-- WhatsApp unlinked: skips sending, disables all reports
+- WhatsApp unlinked: scheduler is revoked (alarms cancelled), report settings hidden from UI, but preferences persist in database
 - Network/API failures: retry logic in send pipeline
 - DO eviction: alarms rehydrate, preferences re-read from DB
 - Late alarms: send once for intended slot, then advance
@@ -160,7 +169,7 @@ Welcome message:
 
 **File Locations**
 
-- DO Implementation: `apps/backend-service/src/durable-objects/NotificationScheduler.ts`
+- DO Implementation: `apps/backend-service/src/durable-objects/NotificationScheduler.ts` (includes `revoke()` method)
 - Schema: `packages/data-ops/src/drizzle/schemas/user_preferences.ts`
 - Settings UI: `apps/webapp/src/routes/_auth/app/settings/index.tsx`
 - Server Functions: `apps/webapp/src/core/functions/preferences.ts`, `apps/webapp/src/core/functions/reports.ts`

@@ -1,6 +1,7 @@
 import type { currencies } from "@repo/shared-config"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { createFileRoute } from "@tanstack/react-router"
+import { Loader2 } from "lucide-react"
 import * as React from "react"
 import { useTimezoneSelect } from "react-timezone-select"
 import { CurrencyCombobox } from "@/components/combobox/CurrencyCombobox"
@@ -169,6 +170,7 @@ function RouteComponent() {
 
 	const updatePref = React.useCallback(
 		(patch: Partial<PrefsState>) => {
+			const prev = local
 			const next: PrefsState = {
 				defaultEntryCurrency:
 					patch.defaultEntryCurrency ?? local.defaultEntryCurrency,
@@ -183,10 +185,9 @@ function RouteComponent() {
 				reportsTime: patch.reportsTime ?? local.reportsTime ?? "20:00",
 				reportsWeeklyDay: patch.reportsWeeklyDay ?? local.reportsWeeklyDay ?? 0,
 			}
-			const prev = local
 			setLocal(next)
-			// Persist immediately
-			mutation.mutate(next, {
+			// Persist only the changed fields
+			mutation.mutate(patch, {
 				onError: () => {
 					setLocal(prev)
 				},
@@ -194,7 +195,6 @@ function RouteComponent() {
 		},
 		[local, mutation],
 	)
-
 
 	React.useEffect(() => {
 		if (prefsQuery.data) {
@@ -287,9 +287,10 @@ function RouteComponent() {
 							<Button
 								className="self-center"
 								disabled={
-									whatsappStatusQuery.data?.linked
+									whatsappStatusQuery.isLoading ||
+									(whatsappStatusQuery.data?.linked
 										? unlinkMutation.isPending
-										: startLinkMutation.isPending
+										: startLinkMutation.isPending)
 								}
 								onClick={() => {
 									if (whatsappStatusQuery.data?.linked) {
@@ -300,13 +301,28 @@ function RouteComponent() {
 								}}
 								variant="outline"
 							>
-								{whatsappStatusQuery.data?.linked
-									? unlinkMutation.isPending
-										? "Unlinking..."
-										: "Unlink"
-									: startLinkMutation.isPending
-										? "Opening..."
-										: "Link WhatsApp"}
+								{whatsappStatusQuery.isLoading ? (
+									<>
+										<Loader2 className="size-4 animate-spin" />
+										Checking...
+									</>
+								) : whatsappStatusQuery.data?.linked ? (
+									unlinkMutation.isPending ? (
+										<>
+											<Loader2 className="size-4 animate-spin" />
+											Unlinking...
+										</>
+									) : (
+										"Unlink"
+									)
+								) : startLinkMutation.isPending ? (
+									<>
+										<Loader2 className="size-4 animate-spin" />
+										Opening...
+									</>
+								) : (
+									"Link WhatsApp"
+								)}
 							</Button>
 						</Field>
 
@@ -327,10 +343,16 @@ function RouteComponent() {
 										disabled={unlinkMutation.isPending}
 										onClick={() => {
 											unlinkMutation.mutate()
-											setUnlinkOpen(false)
 										}}
 									>
-										{unlinkMutation.isPending ? "Unlinking..." : "Unlink"}
+										{unlinkMutation.isPending ? (
+											<>
+												<Loader2 className="size-4 animate-spin" />
+												Unlinking...
+											</>
+										) : (
+											"Unlink"
+										)}
 									</AlertDialogAction>
 								</AlertDialogFooter>
 							</AlertDialogContent>
@@ -391,7 +413,9 @@ function RouteComponent() {
 												Day of the week to send weekly reports
 											</FieldDescription>
 										</FieldContent>
-										<Tooltip open={!local.reportsWeeklyEnabled ? undefined : false}>
+										<Tooltip
+											open={!local.reportsWeeklyEnabled ? undefined : false}
+										>
 											<TooltipTrigger asChild>
 												<div>
 													<Select

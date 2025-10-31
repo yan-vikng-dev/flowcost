@@ -29,17 +29,21 @@ export const getUserPreferences = createServerFn()
 	})
 
 export const updateUserPreferencesInput = z.object({
-	defaultEntryCurrency: z.enum(currencies),
-	displayCurrency: z.enum(currencies),
+	defaultEntryCurrency: z.enum(currencies).optional(),
+	displayCurrency: z.enum(currencies).optional(),
 	timezone: z
 		.string()
 		.min(1)
-		.refine((tz) => isValidTimeZone(tz), { message: "Invalid timezone" }),
-	reportsDailyEnabled: z.boolean(),
-	reportsWeeklyEnabled: z.boolean(),
-	reportsMonthlyEnabled: z.boolean(),
-	reportsTime: z.string().regex(/^([0-1][0-9]|2[0-3]):[0-5][0-9]$/),
-	reportsWeeklyDay: z.number().int().min(0).max(6),
+		.refine((tz) => isValidTimeZone(tz), { message: "Invalid timezone" })
+		.optional(),
+	reportsDailyEnabled: z.boolean().optional(),
+	reportsWeeklyEnabled: z.boolean().optional(),
+	reportsMonthlyEnabled: z.boolean().optional(),
+	reportsTime: z
+		.string()
+		.regex(/^([0-1][0-9]|2[0-3]):[0-5][0-9]$/)
+		.optional(),
+	reportsWeeklyDay: z.number().int().min(0).max(6).optional(),
 })
 
 export type UpdateUserPreferencesInput = z.infer<
@@ -52,16 +56,13 @@ export const updateUserPreferences = createServerFn({ method: "POST" })
 	.handler(async (ctx) => {
 		const db = getDb()
 		const payload = ctx.data
-		// Upsert logic
-		const updateData = {
-			defaultEntryCurrency: payload.defaultEntryCurrency,
-			displayCurrency: payload.displayCurrency,
-			timezone: payload.timezone,
-			reportsDailyEnabled: payload.reportsDailyEnabled,
-			reportsWeeklyEnabled: payload.reportsWeeklyEnabled,
-			reportsMonthlyEnabled: payload.reportsMonthlyEnabled,
-			reportsTime: payload.reportsTime,
-			reportsWeeklyDay: payload.reportsWeeklyDay,
+
+		const updateData = Object.fromEntries(
+			Object.entries(payload).filter(([, value]) => value !== undefined),
+		) as Partial<typeof user_preferences.$inferInsert>
+
+		if (Object.keys(updateData).length === 0) {
+			return { ok: true } as const
 		}
 
 		await db
@@ -75,14 +76,30 @@ export const updateUserPreferences = createServerFn({ method: "POST" })
 				set: updateData,
 			})
 
-		const hasAnyReportEnabled =
-			payload.reportsDailyEnabled ||
-			payload.reportsWeeklyEnabled ||
-			payload.reportsMonthlyEnabled
+		const reportFields = [
+			"reportsDailyEnabled",
+			"reportsWeeklyEnabled",
+			"reportsMonthlyEnabled",
+			"reportsTime",
+			"reportsWeeklyDay",
+		] as const
+		const reportFieldsChanged = reportFields.some(
+			(field) => field in updateData,
+		)
 
-		if (hasAnyReportEnabled) {
-			const mod = await import("./reports")
-			await mod.rescheduleReports()
+		if (reportFieldsChanged) {
+			const current = await db.query.user_preferences.findFirst({
+				where: eq(user_preferences.userId, ctx.context.userId),
+			})
+			const hasAnyReportEnabled =
+				current?.reportsDailyEnabled ||
+				current?.reportsWeeklyEnabled ||
+				current?.reportsMonthlyEnabled
+
+			if (hasAnyReportEnabled) {
+				const mod = await import("./reports")
+				await mod.rescheduleReports()
+			}
 		}
 
 		return { ok: true } as const

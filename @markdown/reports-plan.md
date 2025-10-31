@@ -2,10 +2,10 @@
 
 ### Terminology and defaults
 
-- **Feature name**: “reports” across code, UI, and docs.
+- **Feature name**: "reports" across code, UI, and docs.
 - **Report types**: daily, weekly, monthly.
 - **Defaults**: all report types are OFF by default for new users.
-- **Auto-enable on WhatsApp link**: when a user links their WhatsApp number, all report types automatically switch to ON and the scheduler initializes.
+- **WhatsApp link is source of truth**: when a user links their WhatsApp number, the scheduler is initialized. When unlinked, the scheduler is revoked. Report settings UI is hidden when not linked, but preferences persist in database.
 
 ### Data model (extend `user_preferences`)
 
@@ -151,14 +151,17 @@ Most used category: Food (23 transactions)
 - DOs are created lazily when first accessed via `idFromName(userId)` + `get()`
 - **Initial creation triggers**:
   1. **Primary**: When user links WhatsApp
-     - Automatically enables all three report types (daily, weekly, monthly) in `user_preferences`
-     - Sets default time to "20:00" and weekly day to Sunday (0) if not already set
-     - Creates/initializes the NotificationScheduler DO
-     - DO calculates next alarm time and calls `setAlarm()`
-     - Sends a welcome message confirming reports are enabled
+     - Creates/initializes the NotificationScheduler DO (via `initialize()`)
+     - DO calculates next alarm time and calls `setAlarm()` (if reports are enabled)
+     - Report preferences in database remain unchanged (not auto-enabled)
+     - Report settings UI becomes visible
   2. **Secondary**: When user preferences are updated and at least one report type is enabled
      - Happens in webapp server function after saving preferences
      - Calls backend worker/DO to reschedule alarms
+- **Revocation**: When user unlinks WhatsApp
+     - Scheduler is revoked via `revoke()` method (cancels alarms)
+     - Report settings UI is hidden
+     - Report preferences in database remain unchanged
 - **Constructor behavior**: On first creation, DO reads preferences from DB, calculates next alarm time, and calls `setAlarm()`
 - **After initialization**: Once an alarm is set, the DO will keep rescheduling itself after each report send (self-perpetuating)
 - **If all reports disabled**: DO can be left idle; alarms won't fire, but DO will remain in storage
@@ -170,8 +173,8 @@ Most used category: Food (23 transactions)
 - **Weekly spanning months**: clamp the data to the current month range to avoid double-counting.
 - **DST transitions**: if HH:MM falls into a skipped/repeated hour, schedule at the closest valid local time; rely on idempotent message IDs to avoid duplicates.
 - **Timezone changes**: recompute next run immediately upon saving a new timezone.
-- **WhatsApp unlinked**: skip sending for that slot; optionally send a gentle re-link reminder at most once per week.
-- **WhatsApp linking**: automatically enables all report types, updates preferences in DB, initializes DO, and sends welcome message.
+- **WhatsApp unlinked**: scheduler is revoked (alarms cancelled), report settings UI hidden, but preferences persist in database.
+- **WhatsApp linking**: initializes NotificationScheduler DO, makes report settings UI visible, but does not auto-enable reports.
 - **Network/API failures**: retry with exponential backoff; maintain idempotent IDs to prevent duplicate content.
 - **Worker/DO eviction**: alarms rehydrate; on execution, re-read preferences from DB and proceed.
 - **Late/already passed slots**: if fired late, send once for the intended slot and then advance; do not backfill multiple reports.
@@ -180,9 +183,12 @@ Most used category: Food (23 transactions)
 
 ### Operational notes
 
-- All report types are OFF by default; automatically enabled when WhatsApp is linked.
-- Users can toggle reports on/off and adjust schedules via the Assistant settings card.
-- No dedicated reschedule endpoint; all scheduling logic is invoked from webapp server functions and backend DO/worker logic.
+- All report types are OFF by default.
+- WhatsApp link is source of truth: scheduler initialized when linked, revoked when unlinked.
+- Report settings UI is hidden when WhatsApp is not linked, but preferences persist in database.
+- Users can toggle reports on/off and adjust schedules via the Assistant settings card (when WhatsApp is linked).
+- Scheduling logic invoked from webapp server functions and backend DO/worker logic.
+- Revocation endpoint available: `POST /reports/revoke` to cancel alarms when unlinking.
 - Reports are always appended to the assistant conversation history for contextual follow-ups.
 
 
