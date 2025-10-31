@@ -5,7 +5,7 @@ import {
 } from "@repo/data-ops/drizzle/schemas/index"
 import { sha256Hex, timingSafeEqualHex } from "@repo/shared-config/crypto"
 import { and, eq, gt, isNull } from "drizzle-orm"
-import type { MessageContext } from "@/durable-objects/Assistant/AiConversationServer"
+import type { MessageContext } from "@/durable-objects/AiConversationServer"
 import { sendWhatsAppText } from "./helpers"
 
 export async function verifyWhatsAppSignature(
@@ -70,17 +70,13 @@ export async function handleIncomingMessage(
 		const tokenHash = await sha256Hex(rawToken)
 
 		const now = new Date()
-		const rows = await db
-			.select()
-			.from(whatsapp_link_tokens)
-			.where(
-				and(
-					eq(whatsapp_link_tokens.tokenHash, tokenHash),
-					gt(whatsapp_link_tokens.expiresAt, now),
-					isNull(whatsapp_link_tokens.usedAt),
-				),
-			)
-		const token = rows[0]
+		const token = await db.query.whatsapp_link_tokens.findFirst({
+			where: and(
+				eq(whatsapp_link_tokens.tokenHash, tokenHash),
+				gt(whatsapp_link_tokens.expiresAt, now),
+				isNull(whatsapp_link_tokens.usedAt),
+			),
+		})
 		if (!token) {
 			await sendWhatsAppText({
 				env,
@@ -91,11 +87,10 @@ export async function handleIncomingMessage(
 		}
 
 		// Relink logic: if this waId belongs to another user, move it
-		const existingByWa = await db
-			.select()
-			.from(whatsapp_links)
-			.where(eq(whatsapp_links.waId, waId))
-		if (existingByWa[0] && existingByWa[0].userId !== token.userId) {
+		const existingByWa = await db.query.whatsapp_links.findFirst({
+			where: eq(whatsapp_links.waId, waId),
+		})
+		if (existingByWa && existingByWa.userId !== token.userId) {
 			await sendWhatsAppText({
 				env,
 				waId,
@@ -123,7 +118,7 @@ export async function handleIncomingMessage(
 		// Initialize NotificationScheduler DO
 		const schedulerId = env.NOTIFICATION_SCHEDULER.idFromName(token.userId)
 		const schedulerStub = env.NOTIFICATION_SCHEDULER.get(schedulerId)
-		await schedulerStub.initialize()
+		await schedulerStub.initialize(token.userId)
 
 		await sendWhatsAppText({
 			env,

@@ -3,7 +3,7 @@ import { fetchConvertedEntriesForRange } from "@repo/data-ops/drizzle/queries"
 import { tool } from "ai"
 import { DateTime } from "luxon"
 import { z } from "zod"
-import type { MessageContext } from "../AiConversationServer"
+import type { MessageContext } from ".."
 
 const getEntriesSchema = z.object({
 	date: z

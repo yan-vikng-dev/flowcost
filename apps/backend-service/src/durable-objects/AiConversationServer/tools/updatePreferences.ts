@@ -3,7 +3,7 @@ import { user_preferences } from "@repo/data-ops/drizzle/schemas/index"
 import { type Currency, currencies } from "@repo/shared-config"
 import { tool } from "ai"
 import { z } from "zod"
-import type { MessageContext } from "../AiConversationServer"
+import type { MessageContext } from ".."
 
 const updatePreferencesSchema = z.object({
 	timezone: z

@@ -91,6 +91,11 @@ function RouteComponent() {
 		reportsWeeklyDay: number
 	}
 
+	const [linkInitiatedAt, setLinkInitiatedAt] = React.useState<number | null>(
+		null,
+	)
+	const [unlinkOpen, setUnlinkOpen] = React.useState(false)
+
 	const prefsQuery = useQuery({
 		queryKey: ["userPreferences"],
 		queryFn: () => getUserPreferences(),
@@ -115,6 +120,17 @@ function RouteComponent() {
 		queryKey: ["whatsappLinkStatus"],
 		queryFn: () => getWhatsappLinkStatus(),
 		staleTime: 60 * 1000,
+		refetchInterval: (query) => {
+			// Poll every 2 seconds if user just initiated a link and it's not yet linked
+			if (
+				linkInitiatedAt !== null &&
+				!query.state.data?.linked &&
+				Date.now() - linkInitiatedAt < 5 * 60 * 1000
+			) {
+				return 2000
+			}
+			return false
+		},
 	})
 
 	const startLinkMutation = useMutation({
@@ -125,6 +141,7 @@ function RouteComponent() {
 			}
 		},
 		onSuccess: async () => {
+			setLinkInitiatedAt(Date.now())
 			await whatsappStatusQuery.refetch()
 		},
 	})
@@ -162,7 +179,6 @@ function RouteComponent() {
 			}
 
 	const [local, setLocal] = React.useState<PrefsState>(current)
-	const [unlinkOpen, setUnlinkOpen] = React.useState(false)
 
 	const { options: timezoneOptions } = useTimezoneSelect({
 		labelStyle: "original",
@@ -210,6 +226,13 @@ function RouteComponent() {
 			})
 		}
 	}, [prefsQuery.data])
+
+	React.useEffect(() => {
+		// Stop polling once linked
+		if (whatsappStatusQuery.data?.linked && linkInitiatedAt !== null) {
+			setLinkInitiatedAt(null)
+		}
+	}, [whatsappStatusQuery.data?.linked, linkInitiatedAt])
 
 	const weekdays = [
 		{ value: 0, label: "Sunday" },

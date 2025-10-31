@@ -88,7 +88,7 @@ app.post("/reports/reschedule", async (c) => {
 		parsed.data.userId,
 	)
 	const schedulerStub = c.env.NOTIFICATION_SCHEDULER.get(schedulerId)
-	c.executionCtx.waitUntil(schedulerStub.initialize())
+	c.executionCtx.waitUntil(schedulerStub.initialize(parsed.data.userId))
 	return c.json({ ok: true })
 })
 
