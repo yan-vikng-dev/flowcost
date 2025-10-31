@@ -1,5 +1,6 @@
 import { getDb } from "@repo/data-ops/database/setup"
 import {
+	user_preferences,
 	whatsapp_link_tokens,
 	whatsapp_links,
 } from "@repo/data-ops/drizzle/schemas/index"
@@ -114,6 +115,24 @@ export async function handleIncomingMessage(
 			.update(whatsapp_link_tokens)
 			.set({ usedAt: now, updatedAt: now })
 			.where(eq(whatsapp_link_tokens.id, token.id))
+
+		// Enable all three report types when WhatsApp is linked
+		await db
+			.insert(user_preferences)
+			.values({
+				userId: token.userId,
+				reportsDailyEnabled: true,
+				reportsWeeklyEnabled: true,
+				reportsMonthlyEnabled: true,
+			})
+			.onConflictDoUpdate({
+				target: user_preferences.userId,
+				set: {
+					reportsDailyEnabled: true,
+					reportsWeeklyEnabled: true,
+					reportsMonthlyEnabled: true,
+				},
+			})
 
 		// Initialize NotificationScheduler DO
 		const schedulerId = env.NOTIFICATION_SCHEDULER.idFromName(token.userId)
