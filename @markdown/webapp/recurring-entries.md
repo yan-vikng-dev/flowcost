@@ -25,16 +25,14 @@ Recurring entries allow users to define templates that automatically generate en
 - **Rationale**:
   - Matches existing pattern (`userId` is direct column)
   - One-to-many relationship (one template → many entries)
-  - Simple queries and regeneration logic
-  - Easy to filter generated vs manual entries
 
 ### Generation Timing
-- **Approach**: Check on every query using `generationValidUntil` timestamp
+- **Approach**: On every entries query, ensure materialization for the requested range. Use a `generationValidUntil` horizon check against the end-of-month of the query range (not "now"). Users do not query future months by design.
 - **Rationale**:
-  - Always accurate (checks templates every query)
-  - Simple logic (no mutation hooks needed)
-  - Fast check (timestamp comparison)
-  - Works even if mutations happen elsewhere
+  - Correct for past and current months: compares `generationValidUntil` to the query month end
+  - Keeps consumers simple: queries stay unaware of recurring
+  - Efficient: Only materialize viewed months; no eager future generation
+  - Robust to updates: template edits update only non-overridden instances; instance edits persist
 
 ## Data Model
 
@@ -53,11 +51,12 @@ recurring_entry_templates {
   description: text (nullable)
   
   // Recurrence configuration
-  rrule: text (not null) // RRULE string (RFC 5545), e.g., "FREQ=MONTHLY;BYMONTHDAY=10"
-  dtstart: timestamp (not null) // DTSTART for RRULE (when recurrence begins)
+  rrule: text (not null) // RRULE string WITHOUT DTSTART/UNTIL/COUNT, e.g., "FREQ=MONTHLY;BYMONTHDAY=10"
+  dtstart: timestamp (not null) // Anchor when recurrence begins (separate column)
+  endAt?: timestamp // Optional app-level end bound (separate from RRULE)
   
   // Generation tracking
-  generationValidUntil: timestamp (not null) // When current generation expires
+  generationValidUntil: timestamp (not null) // Horizon up to which entries are materialized
   
   // Control
   isActive: boolean (not null, default: true)
@@ -69,33 +68,28 @@ recurring_entry_templates {
 
 // Indexes
 - by_user: (userId, isActive)
-- by_valid_until: (generationValidUntil) // For efficient stale check
+- by_valid_until: (generationValidUntil)
+- by_end_at: (endAt)
 ```
 
-### Schema: `entry_overrides`
+### Entries: Additional Fields (Overrides-in-Row)
+
+We do not use a separate overrides table. Instance changes are applied directly to the `entries` row and tracked with a flag.
 
 ```typescript
-entry_overrides {
-  id: uuid (primary key)
-  templateId: uuid -> recurring_entry_templates.id (onDelete: cascade)
-  executedAt: timestamp (not null) // Specific date to override
-  
-  // All nullable - only override what's different
-  amount?: real
-  currency?: currency enum
-  category?: category enum
-  entryType?: entryType enum
-  description?: text
-  deletedAt?: timestamp // To skip this instance (soft delete)
-  
-  // Timestamps
-  createdAt: timestamp
-  updatedAt: timestamp
+entries {
+  // ... existing fields ...
+
+  // NEW: Optional link to template
+  recurringTemplateId?: text -> recurring_entry_templates.id (onDelete: cascade)
+
+  // NEW: Mark that this instance was customized
+  isOverridden: boolean (not null, default: false)
 }
 
 // Indexes
-- by_template_date: (templateId, executedAt) // For fast override lookup
-- by_date_range: (executedAt) // For range queries
+- by_recurring_template: (recurringTemplateId)
+- unique_recurring_by_executedAt: unique(recurringTemplateId, executedAt)
 ```
 
 ### Schema: `entries` (modification)
@@ -106,14 +100,18 @@ entries {
   
   // NEW: Optional link to template
   recurringTemplateId?: text -> recurring_entry_templates.id (onDelete: set null)
-  
-  // Rationale: set null on delete to preserve historical entries
+
+  // NEW: Instance override flag (edits only)
+  isOverridden: boolean (not null, default: false)
+
+  // Rationale: cascade on delete to support the nuke option (template deletion removes all generated instances)
   // NULL = manually created entry
   // NOT NULL = generated from template
 }
 
 // Indexes
-- by_recurring_template: (recurringTemplateId) // For regeneration queries
+- by_recurring_template: (recurringTemplateId) // For template-scoped queries
+- unique_recurring_by_executedAt: unique(recurringTemplateId, executedAt)
 ```
 
 ### Relations
@@ -135,19 +133,15 @@ recurringEntryTemplatesRelations = relations(recurring_entry_templates, ({ one, 
     references: [auth_users.id],
   }),
   entries: many(entries),
-  overrides: many(entry_overrides),
-}))
-
-// entry_overrides -> recurring_entry_templates
-entryOverridesRelations = relations(entry_overrides, ({ one }) => ({
-  template: one(recurring_entry_templates, {
-    fields: [entry_overrides.templateId],
-    references: [recurring_entry_templates.id],
-  }),
 }))
 ```
 
 ## RRULE Implementation
+
+### Rule Storage & Validation
+- Store RRULE text without DTSTART/UNTIL/COUNT; those are managed by `dtstart` and `endAt` columns and the app query window.
+- On create/update, validate that RRULE contains no `UNTIL` or `COUNT`; reject or strip if provided.
+- Effective generation end = min(endAt (if set), end-of-month(queryEnd in user's timezone)).
 
 ### Library Choice
 - **Package**: `rrule` (npm) - RFC 5545 compliant
@@ -162,9 +156,9 @@ entryOverridesRelations = relations(entry_overrides, ({ one }) => ({
   dtstart: "2025-01-10T00:00:00Z"
 }
 
-// Weekly on Monday, 10 occurrences
+// Weekly on Monday (no COUNT; unbounded by rule)
 {
-  rrule: "FREQ=WEEKLY;BYDAY=MO;COUNT=10",
+  rrule: "FREQ=WEEKLY;BYDAY=MO",
   dtstart: "2025-01-06T00:00:00Z"
 }
 
@@ -178,6 +172,56 @@ entryOverridesRelations = relations(entry_overrides, ({ one }) => ({
 {
   rrule: "FREQ=WEEKLY;INTERVAL=2;BYDAY=FR",
   dtstart: "2025-01-03T00:00:00Z"
+}
+```
+
+### Building RRULE from UI
+
+```typescript
+type FrequencyUnit = "day" | "week" | "month" | "year"
+
+type MonthlyMode =
+  | { type: "byMonthDay" } // nth day by dtstart.day
+  | { type: "byWeekday" } // nth weekday by dtstart (e.g., 3rd Saturday)
+
+type RecurrenceUi = {
+  every: number // default 1
+  unit: FrequencyUnit // default month
+  weeklyDays?: ("SU"|"MO"|"TU"|"WE"|"TH"|"FR"|"SA")[] // if unit=week
+  monthlyMode?: MonthlyMode // if unit=month
+}
+
+function buildRRuleFromUi(dtstart: Date, ui: RecurrenceUi): string {
+  const { every, unit } = ui
+  const dt = DateTime.fromJSDate(dtstart)
+  const parts: string[] = []
+  const freq = unit.toUpperCase()
+  parts.push(`FREQ=${freq}`)
+  if (every && every > 1) parts.push(`INTERVAL=${every}`)
+
+  if (unit === "week" && ui.weeklyDays?.length) {
+    parts.push(`BYDAY=${ui.weeklyDays.join(",")}`)
+  }
+
+  if (unit === "month") {
+    if (ui.monthlyMode?.type === "byMonthDay") {
+      parts.push(`BYMONTHDAY=${dt.day}`)
+    } else if (ui.monthlyMode?.type === "byWeekday") {
+      const weekday = dt.toFormat("ccc").toUpperCase().slice(0, 2) // MO,TU,...
+      const weekOfMonth = Math.ceil(dt.day / 7) // 1..5
+      parts.push(`BYDAY=${weekday}`)
+      parts.push(`BYSETPOS=${weekOfMonth}`)
+    }
+  }
+
+  if (unit === "year") {
+    // Encode by month and either day or weekday-of-month
+    parts.push(`BYMONTH=${dt.month}`)
+    // Default to day-of-month; advanced UI could support weekday-of-month similar to monthly
+    parts.push(`BYMONTHDAY=${dt.day}`)
+  }
+
+  return parts.join(";")
 }
 ```
 
@@ -240,22 +284,21 @@ async function ensureRecurringEntriesMaterialized(
     )
   })
   
-  const now = DateTime.now().setZone(timezone)
-  
-  // 2. Check each template for stale generation
+  // 2. Compute target horizon = end of the query's month in user's TZ
+  const targetHorizon = DateTime.fromJSDate(end, { zone: timezone })
+    .endOf('month')
+    .toJSDate()
+
+  // 3. Check each template for stale generation vs target horizon
   for (const template of templates) {
-    const validUntil = DateTime.fromJSDate(
-      template.generationValidUntil,
-      { zone: timezone }
-    )
-    
-    // 3. If stale, regenerate
-    if (validUntil < now) {
-      await regenerateTemplateEntries(
+    const validUntil = template.generationValidUntil
+    // If stale relative to target horizon, regenerate only for [start, targetHorizon]
+    if (validUntil < targetHorizon) {
+      await materializeTemplateEntries(
         db,
         template,
         start,
-        end,
+        targetHorizon,
         timezone
       )
     }
@@ -263,118 +306,59 @@ async function ensureRecurringEntriesMaterialized(
 }
 
 /**
- * Regenerate entries for a template
+ * Materialize entries for a template by inserting missing occurrences only
  */
-async function regenerateTemplateEntries(
+async function materializeTemplateEntries(
   db: DrizzleDb,
   template: RecurringTemplate,
   queryStart: Date,
   queryEnd: Date,
   timezone: string
 ): Promise<void> {
-  // 1. Calculate generation horizon (end of current month)
-  const now = DateTime.now().setZone(timezone)
-  const generateUntil = now.endOf('month').toJSDate()
-  
-  // 2. Get all overrides for this template in the range
-  const overrides = await db.query.entry_overrides.findMany({
-    where: and(
-      eq(entry_overrides.templateId, template.id),
-      gte(entry_overrides.executedAt, queryStart),
-      lt(entry_overrides.executedAt, generateUntil),
-      isNull(entry_overrides.deletedAt) // Only active overrides
-    )
-  })
-  
-  // 3. Parse RRULE
+  // 1. Calculate generation horizon for this run as end-of-month of queryEnd
+  const generateUntil = DateTime.fromJSDate(queryEnd, { zone: timezone })
+    .endOf('month')
+    .toJSDate()
+
+  // 2. Parse RRULE
   const rrule = parseRRULE(template.rrule, template.dtstart)
   
-  // 4. Generate dates from RRULE
-  const dates = generateDatesFromRRULE(rrule, queryStart, generateUntil)
+  // 3. Determine effective end bound using optional endAt
+  const cappedUntil = template.endAt
+    ? new Date(Math.min(template.endAt.getTime(), generateUntil.getTime()))
+    : generateUntil
   
-  // 5. Delete existing generated entries (within query range)
-  await db.delete(entries).where(
-    and(
-      eq(entries.recurringTemplateId, template.id),
-      gte(entries.executedAt, queryStart),
-      lt(entries.executedAt, generateUntil)
-    )
-  )
-  
-  // 6. Generate new entries applying overrides
-  const newEntries: InsertEntry[] = dates.map(date => {
-    // Find override for this specific date
-    const override = overrides.find(
-      o => isSameDay(o.executedAt, date) && !o.deletedAt
-    )
-    
-    // Skip if override marks as deleted
-    if (override?.deletedAt) {
-      return null
-    }
-    
-    // Apply override values, fall back to template defaults
-    return {
-      amount: override?.amount ?? template.amount,
-      currency: override?.currency ?? template.currency,
-      category: override?.category ?? template.category,
-      entryType: override?.entryType ?? template.entryType,
-      description: override?.description ?? template.description,
-      executedAt: date,
-      recurringTemplateId: template.id,
-      userId: template.userId,
-    }
-  }).filter((entry): entry is InsertEntry => entry !== null)
-  
-  // 7. Insert new entries
-  if (newEntries.length > 0) {
-    await db.insert(entries).values(newEntries)
+  // 4. Generate dates from RRULE within [queryStart, cappedUntil]
+  const dates = generateDatesFromRRULE(rrule, queryStart, cappedUntil)
+  // 5. Insert new rows for missing occurrences only
+  //    Use a unique(recurringTemplateId, executedAt) to make this idempotent
+  const newRows: InsertEntry[] = dates.map((date) => ({
+    amount: template.amount,
+    currency: template.currency,
+    category: template.category,
+    entryType: template.entryType,
+    description: template.description,
+    executedAt: date,
+    recurringTemplateId: template.id,
+    userId: template.userId,
+  }))
+
+  if (newRows.length > 0) {
+    // Pseudo: ON CONFLICT (recurringTemplateId, executedAt) DO NOTHING
+    await db.insert(entries).values(newRows)
   }
-  
-  // 8. Update generationValidUntil to end of current month
+
+  // 6. Update generationValidUntil to end-of-month of queryEnd
   await db.update(recurring_entry_templates)
     .set({ generationValidUntil: generateUntil })
     .where(eq(recurring_entry_templates.id, template.id))
 }
 ```
 
-### Override Application Logic
+### Instance Operations
 
-```typescript
-/**
- * Check if two dates are the same day (timezone-aware)
- */
-function isSameDay(date1: Date, date2: Date, timezone: string): boolean {
-  const d1 = DateTime.fromJSDate(date1, { zone: timezone }).startOf('day')
-  const d2 = DateTime.fromJSDate(date2, { zone: timezone }).startOf('day')
-  return d1.equals(d2)
-}
-
-/**
- * Apply override to template entry
- */
-function applyOverride(
-  template: RecurringTemplate,
-  override: EntryOverride | null,
-  date: Date
-): InsertEntry | null {
-  // Skip if deleted
-  if (override?.deletedAt) {
-    return null
-  }
-  
-  return {
-    amount: override?.amount ?? template.amount,
-    currency: override?.currency ?? template.currency,
-    category: override?.category ?? template.category,
-    entryType: override?.entryType ?? template.entryType,
-    description: override?.description ?? template.description,
-    executedAt: date,
-    recurringTemplateId: template.id,
-    userId: template.userId,
-  }
-}
-```
+- Edit generated entry: update the row and set `isOverridden = true`.
+- Delete generated entry: hard-delete the row. Lazy materialization never backfills within the current month, so deleted instances won’t resurrect.
 
 ## Query Integration
 
@@ -387,13 +371,20 @@ export async function fetchConvertedEntriesForRange(
   options: FetchConvertedEntriesOptions,
 ): Promise<FetchConvertedEntriesResult> {
   // NEW: Ensure recurring entries are materialized
-  await ensureRecurringEntriesMaterialized(
-    db,
-    userId,
-    options.start,
-    options.end,
-    options.timezone
-  )
+  // If including partner, ensure both users are materialized for the requested window
+  const partnerId = options.includePartner
+    ? await getPartnerUserId(db, userId)
+    : null
+  const materializeUserIds = partnerId ? [userId, partnerId] : [userId]
+  for (const uid of materializeUserIds) {
+    await ensureRecurringEntriesMaterialized(
+      db,
+      uid,
+      options.start,
+      options.end,
+      options.timezone
+    )
+  }
   
   // ... rest of existing code unchanged ...
   // Existing queries work as-is because entries are real rows
@@ -422,24 +413,47 @@ export async function getRecurringTemplates(
   })
 }
 
-/**
- * Get overrides for a date range
- */
-export async function getEntryOverrides(
-  db: DrizzleDb,
-  templateId: string,
-  start: Date,
-  end: Date
-): Promise<SelectEntryOverride[]> {
-  return db.query.entry_overrides.findMany({
-    where: and(
-      eq(entry_overrides.templateId, templateId),
-      gte(entry_overrides.executedAt, start),
-      lt(entry_overrides.executedAt, end),
-    ),
-  })
-}
 ```
+
+## Behavior Tree
+
+- Template: Create
+  - UI: CreateRecurringTemplate dialog mirrors createEntry, with extra fields:
+    - from: date picker (default today)
+    - until: optional date picker (maps to endAt)
+    - every: number (default 1) and unit select [day(s), week(s), month(s), year(s)] (default month)
+    - conditional: if week → pick days (SMTWTFS); if month → choose nth day (by from date) or nth weekday (by from date)
+    - no COUNT limit
+  - Actions: build RRULE without DTSTART/UNTIL/COUNT; persist template (isActive=true, generationValidUntil=epoch)
+  - Result: no rows until the month is queried; “next instance” shown via rrule.after(now) skipping skipped days
+
+- Template: Edit (entry fields only)
+  - Allowed: amount, currency, category, entryType, description
+  - Immutable: dtstart, rrule, endAt (recurrence is immutable)
+  - Actions: update template; set generationValidUntil=epoch
+  - Result: on next query, non-overridden instances rematerialize; overridden instances updated via override values
+
+- Template: Pause
+  - Actions: set isActive=false; delete generated entries with executedAt >= startOfDay(now, user TZ)
+  - Result: future occurrences stop; past remain
+
+- Template: Resume
+  - Actions: set isActive=true; set generationValidUntil=epoch
+  - Result: repopulates on next query for current month
+
+- Template: Delete (nuke)
+  - Actions: delete all entries with recurringTemplateId=template.id (past and future), delete template
+  - Result: complete removal
+
+- Instance: Edit
+  - Actions: update the entry row and set `isOverridden = true`
+  - Result: row reflects custom values; future template updates won’t overwrite it
+
+- Instance: Delete
+  - Actions: hard-delete the entry row
+  - Result: instance removed permanently; lazy generation will not recreate within the current window
+
+  
 
 ## Template CRUD Operations
 
@@ -500,8 +514,6 @@ export const updateRecurringTemplateInput = z.object({
   category: z.enum(categories).optional(),
   entryType: z.enum(entryTypes).optional(),
   description: z.string().optional(),
-  rrule: z.string().optional(),
-  dtstart: z.date().optional(),
   isActive: z.boolean().optional(),
 })
 
@@ -510,8 +522,8 @@ export const updateRecurringTemplate = createServerFn({ method: "POST" })
   .inputValidator(updateRecurringTemplateInput)
   .handler(async (ctx) => {
     const db = getDb()
-    const { id, rrule, dtstart, ...updates } = ctx.data
-    
+    const { id, ...updates } = ctx.data
+
     // Verify ownership
     const template = await db.query.recurring_entry_templates.findFirst({
       where: and(
@@ -519,44 +531,55 @@ export const updateRecurringTemplate = createServerFn({ method: "POST" })
         eq(recurring_entry_templates.userId, ctx.context.userId)
       ),
     })
-    
+
     if (!template) {
       throw new Error("Template not found")
     }
-    
-    // Validate RRULE if provided
-    if (rrule) {
-      const dtstartToUse = dtstart ?? template.dtstart
-      try {
-        parseRRULE(rrule, dtstartToUse)
-      } catch (error) {
-        throw new Error(`Invalid RRULE: ${error.message}`)
-      }
-    }
-    
-    // Update template
+
+    // Update template entry fields and active flag (recurrence is immutable)
     await db
       .update(recurring_entry_templates)
-      .set({
-        ...updates,
-        ...(rrule && { rrule }),
-        ...(dtstart && { dtstart }),
-        // Force regeneration by setting validUntil to past
-        generationValidUntil: new Date(0),
-      })
+      .set({ ...updates })
       .where(eq(recurring_entry_templates.id, id))
-    
-    // If deactivated, delete future generated entries
+
+    const tz = ctx.context.timezone
+    const now = DateTime.now().setZone(tz)
+    const monthStart = now.startOf('month').toJSDate()
+    const monthEnd = now.endOf('month').toJSDate()
+
+    // Propagate entry-field changes to non-overridden instances for the current month
+    const patch: Partial<InsertEntry> = {
+      ...(updates.amount !== undefined && { amount: updates.amount }),
+      ...(updates.currency !== undefined && { currency: updates.currency }),
+      ...(updates.category !== undefined && { category: updates.category }),
+      ...(updates.entryType !== undefined && { entryType: updates.entryType }),
+      ...(updates.description !== undefined && { description: updates.description }),
+    }
+
+    if (Object.keys(patch).length > 0) {
+      await db
+        .update(entries)
+        .set(patch)
+        .where(
+          and(
+            eq(entries.recurringTemplateId, id),
+            eq(entries.isOverridden, false),
+            gte(entries.executedAt, monthStart),
+            lt(entries.executedAt, monthEnd),
+          ),
+        )
+    }
+
+    // If deactivated, delete future generated entries (today and forward)
     if (updates.isActive === false) {
-      const now = DateTime.now().setZone(ctx.context.timezone)
       await db.delete(entries).where(
         and(
           eq(entries.recurringTemplateId, id),
-          gte(entries.executedAt, now.startOf('day').toJSDate())
-        )
+          gte(entries.executedAt, now.startOf('day').toJSDate()),
+        ),
       )
     }
-    
+
     return { success: true }
   })
 ```
@@ -587,35 +610,22 @@ export const deleteRecurringTemplate = createServerFn({ method: "POST" })
       throw new Error("Template not found")
     }
     
-    // Delete template (cascade deletes overrides)
+    // Delete template; entries cascade via FK on entries.recurringTemplateId (onDelete: cascade)
     await db
       .delete(recurring_entry_templates)
       .where(eq(recurring_entry_templates.id, id))
-    
-    // Delete future generated entries
-    const now = DateTime.now().setZone(ctx.context.timezone)
-    await db.delete(entries).where(
-      and(
-        eq(entries.recurringTemplateId, id),
-        gte(entries.executedAt, now.startOf('day').toJSDate())
-      )
-    )
-    
-    // Past entries remain (historical record)
-    // recurringTemplateId will be set to null due to onDelete: set null
     
     return { success: true }
   })
 ```
 
-## Override CRUD Operations
+## Instance CRUD (Overrides-in-Row)
 
-### Create Override
+### Edit Instance
 
 ```typescript
-export const createEntryOverrideInput = z.object({
-  templateId: z.string().uuid(),
-  executedAt: z.date(),
+export const editRecurringInstanceInput = z.object({
+  entryId: z.string(),
   amount: z.number().gt(0).optional(),
   currency: z.enum(currencies).optional(),
   category: z.enum(categories).optional(),
@@ -623,159 +633,45 @@ export const createEntryOverrideInput = z.object({
   description: z.string().optional(),
 })
 
-export const createEntryOverride = createServerFn({ method: "POST" })
+export const editRecurringInstance = createServerFn({ method: "POST" })
   .middleware([protectedFunctionMiddleware])
-  .inputValidator(createEntryOverrideInput)
+  .inputValidator(editRecurringInstanceInput)
   .handler(async (ctx) => {
     const db = getDb()
-    const { templateId, executedAt, ...overrideFields } = ctx.data
-    
-    // Verify template ownership
-    const template = await db.query.recurring_entry_templates.findFirst({
+
+    // Only allow editing entries owned by the user
+    const row = await db.query.entries.findFirst({
       where: and(
-        eq(recurring_entry_templates.id, templateId),
-        eq(recurring_entry_templates.userId, ctx.context.userId)
+        eq(entries.id, ctx.data.entryId),
+        eq(entries.userId, ctx.context.userId),
       ),
     })
-    
-    if (!template) {
-      throw new Error("Template not found")
-    }
-    
-    // Check if override already exists
-    const existing = await db.query.entry_overrides.findFirst({
-      where: and(
-        eq(entry_overrides.templateId, templateId),
-        eq(entry_overrides.executedAt, executedAt)
-      ),
-    })
-    
-    if (existing) {
-      // Update existing override
-      await db
-        .update(entry_overrides)
-        .set(overrideFields)
-        .where(eq(entry_overrides.id, existing.id))
-      
-      // Force regeneration of that month
-      await invalidateTemplateGeneration(db, templateId, executedAt)
-      
-      return { id: existing.id }
-    }
-    
-    // Create new override
-    const [result] = await db
-      .insert(entry_overrides)
-      .values({
-        templateId,
-        executedAt,
-        ...overrideFields,
-      })
-      .returning({ id: entry_overrides.id })
-    
-    // Force regeneration of that month
-    await invalidateTemplateGeneration(db, templateId, executedAt)
-    
-    return { id: result?.id }
-  })
-```
+    if (!row || !row.recurringTemplateId) throw new Error("Entry not found")
 
-### Delete Override (Skip Instance)
+    await db
+      .update(entries)
+      .set({ ...ctx.data, isOverridden: true })
+      .where(eq(entries.id, ctx.data.entryId))
 
-```typescript
-export const deleteEntryOverrideInput = z.object({
-  id: z.string().uuid(),
-})
-
-export const deleteEntryOverride = createServerFn({ method: "POST" })
-  .middleware([protectedFunctionMiddleware])
-  .inputValidator(deleteEntryOverrideInput)
-  .handler(async (ctx) => {
-    const db = getDb()
-    const { id } = ctx.data
-    
-    // Get override and verify ownership via template
-    const override = await db.query.entry_overrides.findFirst({
-      where: eq(entry_overrides.id, id),
-      with: {
-        template: true,
-      },
-    })
-    
-    if (!override || override.template.userId !== ctx.context.userId) {
-      throw new Error("Override not found")
-    }
-    
-    // Delete override (will restore template default on regeneration)
-    await db.delete(entry_overrides).where(eq(entry_overrides.id, id))
-    
-    // Force regeneration of that month
-    await invalidateTemplateGeneration(
-      db,
-      override.templateId,
-      override.executedAt
-    )
-    
     return { success: true }
   })
 ```
 
-### Skip Instance (Soft Delete)
+### Delete Instance
 
 ```typescript
-export const skipRecurringInstanceInput = z.object({
-  templateId: z.string().uuid(),
-  executedAt: z.date(),
+export const deleteRecurringInstanceInput = z.object({
+  entryId: z.string(),
 })
 
-export const skipRecurringInstance = createServerFn({ method: "POST" })
+export const deleteRecurringInstance = createServerFn({ method: "POST" })
   .middleware([protectedFunctionMiddleware])
-  .inputValidator(skipRecurringInstanceInput)
+  .inputValidator(deleteRecurringInstanceInput)
   .handler(async (ctx) => {
     const db = getDb()
-    const { templateId, executedAt } = ctx.data
-    
-    // Verify template ownership
-    const template = await db.query.recurring_entry_templates.findFirst({
-      where: and(
-        eq(recurring_entry_templates.id, templateId),
-        eq(recurring_entry_templates.userId, ctx.context.userId)
-      ),
-    })
-    
-    if (!template) {
-      throw new Error("Template not found")
-    }
-    
-    // Create or update override to mark as deleted
-    const existing = await db.query.entry_overrides.findFirst({
-      where: and(
-        eq(entry_overrides.templateId, templateId),
-        eq(entry_overrides.executedAt, executedAt)
-      ),
-    })
-    
-    if (existing) {
-      await db
-        .update(entry_overrides)
-        .set({ deletedAt: new Date() })
-        .where(eq(entry_overrides.id, existing.id))
-    } else {
-      await db.insert(entry_overrides).values({
-        templateId,
-        executedAt,
-        deletedAt: new Date(),
-      })
-    }
-    
-    // Delete generated entry if exists
-    await db.delete(entries).where(
-      and(
-        eq(entries.recurringTemplateId, templateId),
-        eq(entries.executedAt, executedAt)
-      )
-    )
-    
+    await db
+      .delete(entries)
+      .where(and(eq(entries.id, ctx.data.entryId), eq(entries.userId, ctx.context.userId)))
     return { success: true }
   })
 ```
@@ -829,35 +725,11 @@ function getEndOfMonth(timezone: string): Date {
 
 ### 1. RRULE COUNT Limit
 
-When a template has `COUNT` in RRULE (e.g., "FREQ=WEEKLY;COUNT=10"):
-
-- Track generated occurrences count
-- Stop generating when limit reached
-- Option: Add `occurrencesGenerated` column to template
-- Or: Count existing entries with `recurringTemplateId`
-
-**Implementation**:
-```typescript
-function shouldGenerateMore(
-  template: RecurringTemplate,
-  existingCount: number
-): boolean {
-  const rrule = parseRRULE(template.rrule, template.dtstart)
-  const options = rrule.options
-  
-  if (options.count === undefined) {
-    return true // Infinite
-  }
-  
-  return existingCount < options.count
-}
-```
+We do not use `COUNT` in stored RRULE. Bound generation with `endAt` (optional) and the query month window; otherwise, recurrence is unbounded.
 
 ### 2. Template Deletion
 
-- **Past entries**: Keep as-is (historical record)
-- **Future entries**: Delete generated entries
-- **Overrides**: Cascade delete (template deletion removes all overrides)
+- **Nuke behavior**: Delete template and all its generated entries (past and future)
 
 ### 3. Template Edit Scenarios
 
@@ -871,11 +743,10 @@ function shouldGenerateMore(
 | `isActive` → false | Delete future generated entries |
 | `isActive` → true | Regenerate on next query |
 
-### 4. Override Edge Cases
+### 4. Instance Edge Cases
 
-- **Override for non-existent date**: Create override anyway (will apply if template generates that date)
-- **Override deletion**: Restore template default on regeneration
-- **Override update**: Update override, regenerate that month
+- Editing an instance marks `isOverridden = true`; subsequent template updates don’t overwrite it.
+- Deleting an instance removes it permanently; lazy generation won’t recreate it in the current month.
 
 ### 5. Timezone Handling
 
@@ -898,23 +769,21 @@ function shouldGenerateMore(
 
 ## Implementation Steps
 
-### Phase 1: Schema & Migration
+### Phase 1: Schema (Drizzle Push)
 
-1. ✅ Create `recurring_entry_templates` table
-2. ✅ Create `entry_overrides` table
-3. ✅ Add `recurringTemplateId` column to `entries` table
-4. ✅ Add indexes
-5. ✅ Update relations
-6. ✅ Generate and run migration
+1. ✅ Add `recurring_entry_templates` schema (Drizzle style: `sqliteTable`, `integer({ mode: "timestamp_ms" })`, `integer({ mode: "boolean" })`)
+2. ✅ Modify `entries`: add optional `recurringTemplateId` and `isOverridden` (boolean)
+3. ✅ Add indexes in table callbacks, including unique(recurringTemplateId, executedAt)
+4. ✅ Update relations
+5. ✅ Run `pnpm --filter data-ops run drizzle:push`
 
 ### Phase 2: Core Generation Logic
 
 1. ✅ Install `rrule` package
 2. ✅ Create RRULE helper functions
 3. ✅ Implement `ensureRecurringEntriesMaterialized`
-4. ✅ Implement `regenerateTemplateEntries`
-5. ✅ Implement override application logic
-6. ✅ Integrate into `fetchConvertedEntriesForRange`
+4. ✅ Implement `materializeTemplateEntries` (insert-missing only)
+5. ✅ Integrate into `fetchConvertedEntriesForRange`
 
 ### Phase 3: Template CRUD
 
@@ -923,11 +792,10 @@ function shouldGenerateMore(
 3. ✅ Handle template updates (invalidate generation)
 4. ✅ Handle template deletion (cleanup future entries)
 
-### Phase 4: Override CRUD
+### Phase 4: Instance CRUD
 
-1. ✅ Create override server functions
-2. ✅ Implement skip instance functionality
-3. ✅ Handle override updates/deletions
+1. ✅ Edit instance: update entry row + set `isOverridden = true`
+2. ✅ Delete instance: hard-delete entry row
 
 ### Phase 5: Testing
 
@@ -940,54 +808,32 @@ function shouldGenerateMore(
 
 1. Template creation form
 2. Template list/management
-3. Override UI (edit specific instances)
+3. Instance edit/delete UI on generated entries
 4. Visual indicators for recurring entries
 
-## Migration Script
+## Drizzle Push Notes
 
-```sql
--- Create recurring_entry_templates table
-CREATE TABLE recurring_entry_templates (
-  id TEXT PRIMARY KEY,
-  userId TEXT NOT NULL REFERENCES auth_users(id) ON DELETE CASCADE,
-  amount REAL NOT NULL,
-  currency TEXT NOT NULL,
-  category TEXT NOT NULL,
-  entryType TEXT NOT NULL,
-  description TEXT,
-  rrule TEXT NOT NULL,
-  dtstart INTEGER NOT NULL,
-  generationValidUntil INTEGER NOT NULL,
-  isActive INTEGER NOT NULL DEFAULT 1,
-  createdAt INTEGER NOT NULL,
-  updatedAt INTEGER NOT NULL
-);
+- We use schema-first with Drizzle and push to D1 via the configured HTTP driver (`packages/data-ops/drizzle-kit.config.ts`).
+- After updating schemas:
+  - Run `pnpm --filter data-ops run drizzle:push`
+  - Build `@repo/data-ops` if needed by dependents
 
--- Create entry_overrides table
-CREATE TABLE entry_overrides (
-  id TEXT PRIMARY KEY,
-  templateId TEXT NOT NULL REFERENCES recurring_entry_templates(id) ON DELETE CASCADE,
-  executedAt INTEGER NOT NULL,
-  amount REAL,
-  currency TEXT,
-  category TEXT,
-  entryType TEXT,
-  description TEXT,
-  deletedAt INTEGER,
-  createdAt INTEGER NOT NULL,
-  updatedAt INTEGER NOT NULL
-);
+## UI & UX Components
 
--- Add recurringTemplateId to entries
-ALTER TABLE entries ADD COLUMN recurringTemplateId TEXT REFERENCES recurring_entry_templates(id) ON DELETE SET NULL;
+- RecurringTemplatesCard
+  - Displays all active templates with separator
+  - “Create” button opens CreateRecurringTemplate dialog
+  - Shows “next instance date” per template
+  - Edit mode per template:
+    - Edit (entry fields only; recurrence immutable)
+    - Pause (set inactive + delete future generated entries; keep template)
+    - Delete (nuke): removes template and all generated instances
 
--- Create indexes
-CREATE INDEX recurring_entry_templates_by_user_idx ON recurring_entry_templates(userId, isActive);
-CREATE INDEX recurring_entry_templates_by_valid_until_idx ON recurring_entry_templates(generationValidUntil);
-CREATE INDEX entry_overrides_by_template_date_idx ON entry_overrides(templateId, executedAt);
-CREATE INDEX entry_overrides_by_date_range_idx ON entry_overrides(executedAt);
-CREATE INDEX entries_by_recurring_template_idx ON entries(recurringTemplateId);
-```
+## Entry Operations Integration
+
+- Deleting a generated entry hard-deletes the row.
+- Editing a generated entry updates the row and sets `isOverridden = true`.
+- Manual entries (no `recurringTemplateId`) continue through existing create/delete flows.
 
 ## Open Questions
 
@@ -996,10 +842,10 @@ CREATE INDEX entries_by_recurring_template_idx ON entries(recurringTemplateId);
 3. **Batch operations**: Should users be able to edit multiple templates at once?
 4. **Import/Export**: Should templates be exportable/importable?
 5. **Analytics**: Should we track template usage statistics?
+6. **Uniqueness**: Ensure `(recurringTemplateId, executedAt)` uniqueness for generated rows; normalize executedAt for recurrences.
 
 ## References
 
 - [RFC 5545 - iCalendar](https://tools.ietf.org/html/rfc5545)
 - [rrule.js Documentation](https://github.com/jkbrzt/rrule)
 - [RRULE Generator](https://rrule.js.org/)
-
