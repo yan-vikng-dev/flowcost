@@ -1,8 +1,6 @@
 import { DurableObject } from "cloudflare:workers"
 import { getDb, initDatabase } from "@repo/data-ops/database/setup"
 import {
-	type BudgetProgressEntry,
-	calculateBudgetProgress,
 	fetchBudgetsForUser,
 	fetchConvertedEntriesForRange,
 	fetchExchangeRatesForDates,
@@ -18,6 +16,7 @@ import { DateTime } from "luxon"
 import { sendWhatsAppText } from "@/handlers/whatsapp/helpers"
 import {
 	aggregateCategoryTotals,
+	calculateBudgetProgressForBudgets,
 	determineReportType,
 	findMostUsedCategory,
 	findTopSpendingDay,
@@ -177,7 +176,7 @@ export class NotificationScheduler extends DurableObject {
 		const { latest } = await fetchExchangeRatesForDates(db, [])
 		const budgetsList = await fetchBudgetsForUser(db, userId)
 		const categoryTotals = aggregateCategoryTotals(entriesResult.entries)
-		const budgetProgress = calculateBudgetProgress(
+		const budgetProgressList = calculateBudgetProgressForBudgets(
 			budgetsList,
 			entriesResult.entries,
 			latest.rates,
@@ -209,20 +208,26 @@ export class NotificationScheduler extends DurableObject {
 
 		for (const [category, amount] of categoriesWithSpending) {
 			lines.push(`• ${category}: ${formatCurrency(amount, displayCurrency)}`)
-			const budget = budgetProgress.get(category)
-			if (budget) {
-				const bar = formatProgressBar(budget.utilizationPct)
-				lines.push(
-					`${bar} ${Math.round(budget.utilizationPct)}%`,
-				)
-				if (budget.utilizationPct >= 100) {
-					lines.push("    ⚠️ Over budget")
-				}
-			}
 		}
 
 		lines.push("━━━━━━━━━━━━━━━")
 		lines.push(`Total: ${formatCurrency(totalSpent, displayCurrency)}`)
+
+		if (budgetProgressList.length > 0) {
+			lines.push("")
+			lines.push("Budgets:")
+			for (const budget of budgetProgressList) {
+				const categoryNames = budget.categories.join(", ")
+				const bar = formatProgressBar(budget.utilizationPct)
+				lines.push(
+					`• ${categoryNames}: ${formatCurrency(budget.spentDisplay, displayCurrency)} / ${formatCurrency(budget.amountDisplay, displayCurrency)}`,
+				)
+				lines.push(`  ${bar} ${Math.round(budget.utilizationPct)}%`)
+				if (budget.utilizationPct >= 100) {
+					lines.push("  ⚠️ Over budget")
+				}
+			}
+		}
 
 		if (type === "weekly") {
 			const previousWeekStart = start.minus({ weeks: 1 })
@@ -252,23 +257,9 @@ export class NotificationScheduler extends DurableObject {
 		}
 
 		if (type === "monthly") {
-			const allBudgetsTotal = Array.from(budgetProgress.values()).reduce(
-				(sum, b: BudgetProgressEntry) => sum + b.amountDisplay,
-				0,
-			)
-			const allBudgetsSpent = Array.from(budgetProgress.values()).reduce(
-				(sum, b: BudgetProgressEntry) => sum + b.spentDisplay,
-				0,
-			)
-			const remaining = allBudgetsTotal - allBudgetsSpent
-			lines.push("")
-			lines.push(
-				`Total budget: ${formatCurrency(allBudgetsSpent, displayCurrency)} / ${formatCurrency(allBudgetsTotal, displayCurrency)}`,
-			)
-			lines.push(`Remaining: ${formatCurrency(remaining, displayCurrency)}`)
-
 			const topSpendingDay = findTopSpendingDay(entriesResult.entries, timeZone)
 			if (topSpendingDay) {
+				lines.push("")
 				lines.push(
 					`Top spending day: ${topSpendingDay.date} (${formatCurrency(topSpendingDay.amount, displayCurrency)})`,
 				)
