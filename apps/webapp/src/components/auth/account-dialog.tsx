@@ -1,3 +1,4 @@
+import { initialsFrom } from "@repo/shared-config"
 import { LogOut, Palette } from "lucide-react"
 import { ThemeToggle } from "@/components/theme/theme-toggle"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -27,9 +28,7 @@ export function AccountDialog({ children }: AccountDialogProps) {
 	}
 
 	const user = session.user
-	const fallbackText = user.name
-		? user.name.charAt(0).toUpperCase()
-		: user.email?.charAt(0).toUpperCase() || "U"
+	const fallbackText = initialsFrom(user.name ?? user.email).slice(0, 1) || "U"
 
 	return (
 		<Dialog>

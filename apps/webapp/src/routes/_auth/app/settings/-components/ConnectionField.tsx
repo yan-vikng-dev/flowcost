@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { MailPlusIcon, Trash2Icon, XIcon } from "lucide-react"
 import * as React from "react"
 import { Button } from "@/components/ui/button"
@@ -18,21 +18,17 @@ import {
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { useConnectionState } from "@/hooks/use-connection-state"
 import {
 	cancelInvitation,
 	disconnectConnection,
-	getConnectionState,
 	type SendInvitationInput,
 	sendInvitation,
 } from "../-functions/connections"
 
 export function ConnectionField() {
 	const queryClient = useQueryClient()
-	const stateQuery = useQuery({
-		queryKey: ["connectionState"],
-		queryFn: () => getConnectionState(),
-		staleTime: 30_000,
-	})
+	const stateQuery = useConnectionState()
 
 	const [email, setEmail] = React.useState("")
 	const [inviteOpen, setInviteOpen] = React.useState(false)

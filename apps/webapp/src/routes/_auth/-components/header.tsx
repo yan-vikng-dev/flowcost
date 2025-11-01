@@ -1,29 +1,22 @@
-import { useQuery } from "@tanstack/react-query"
+import { initialsFrom } from "@repo/shared-config"
 import { Link } from "@tanstack/react-router"
 import { AccountDialog } from "@/components/auth/account-dialog"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
+import {
+	hasIncomingInvites,
+	useConnectionState,
+} from "@/hooks/use-connection-state"
 import { authClient } from "@/lib/auth-client"
-import { getConnectionState } from "@/routes/_auth/app/settings/-functions/connections"
 
 export function Header() {
 	const { data: session } = authClient.useSession()
 
 	const user = session?.user
-	const fallbackText = user?.name
-		? user.name.charAt(0).toUpperCase()
-		: user?.email?.charAt(0).toUpperCase() || "U"
+	const fallbackText = initialsFrom(user?.name ?? user?.email) || "U"
 
-	const connectionStateQuery = useQuery({
-		queryKey: ["connectionState"],
-		queryFn: () => getConnectionState(),
-		staleTime: 30_000,
-	})
-
-	const hasIncomingInvites =
-		connectionStateQuery.data?.pending?.some(
-			(inv) => inv.direction === "incoming",
-		) ?? false
+	const connectionStateQuery = useConnectionState()
+	const hasIncoming = hasIncomingInvites(connectionStateQuery)
 
 	return (
 		<header className="flex h-16 items-center justify-between border-border border-b bg-background px-6">
@@ -46,7 +39,7 @@ export function Header() {
 					<Button asChild variant="ghost">
 						<Link to="/app/settings">Settings</Link>
 					</Button>
-					{hasIncomingInvites && (
+					{hasIncoming && (
 						<div className="absolute top-1 right-0 size-2 rounded-full bg-destructive" />
 					)}
 				</div>

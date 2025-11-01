@@ -1,21 +1,15 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { initialsFrom } from "@repo/shared-config"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { CheckIcon, XIcon } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import {
-	acceptInvitation,
-	declineInvitation,
-	getConnectionState,
-} from "../-functions/connections"
+import { useConnectionState } from "@/hooks/use-connection-state"
+import { acceptInvitation, declineInvitation } from "../-functions/connections"
 
 export function IncomingInviteCard() {
 	const queryClient = useQueryClient()
-	const stateQuery = useQuery({
-		queryKey: ["connectionState"],
-		queryFn: () => getConnectionState(),
-		staleTime: 30_000,
-	})
+	const stateQuery = useConnectionState()
 
 	const acceptMutation = useMutation({
 		mutationFn: (id: string) => acceptInvitation({ data: { id } }),
@@ -38,17 +32,6 @@ export function IncomingInviteCard() {
 
 	if (incomingInvites.length === 0) {
 		return null
-	}
-
-	// Simple initials from name
-	function initialsFrom(name?: string) {
-		const trimmedName = name?.trim()
-		if (!trimmedName) return "?"
-		const parts = trimmedName.split(" ").filter(Boolean)
-		if (parts.length >= 2) {
-			return `${(parts[0]?.[0] ?? "").toUpperCase()}${(parts[1]?.[0] ?? "").toUpperCase()}`
-		}
-		return (parts[0] ?? "?").slice(0, 2).toUpperCase()
 	}
 
 	return (
