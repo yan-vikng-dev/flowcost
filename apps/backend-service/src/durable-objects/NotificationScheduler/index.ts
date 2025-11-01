@@ -55,14 +55,11 @@ export class NotificationScheduler extends DurableObject {
 			idName: this.ctx.id.name ?? null,
 		})
 		if (this.ctx.id.name && this.ctx.id.name !== userId) {
-			console.warn(
-				"NotificationScheduler initialize userId mismatch",
-				{
-					provided: userId,
-					idName: this.ctx.id.name,
-					id: this.ctx.id.toString(),
-				},
-			)
+			console.warn("NotificationScheduler initialize userId mismatch", {
+				provided: userId,
+				idName: this.ctx.id.name,
+				id: this.ctx.id.toString(),
+			})
 		}
 		this.userId = userId
 		await this.ctx.storage.put("userId", userId)
@@ -130,9 +127,12 @@ export class NotificationScheduler extends DurableObject {
 		})
 
 		if (!whatsappLink) {
-			console.warn(`No WhatsApp link found for user ${userId}, skipping report`, {
-				userId,
-			})
+			console.warn(
+				`No WhatsApp link found for user ${userId}, skipping report`,
+				{
+					userId,
+				},
+			)
 			await this.scheduleNextAlarm()
 			return
 		}
@@ -157,9 +157,12 @@ export class NotificationScheduler extends DurableObject {
 		})
 
 		if (!reportType) {
-			console.debug("NotificationScheduler no report type determined, rescheduling", {
-				userId,
-			})
+			console.debug(
+				"NotificationScheduler no report type determined, rescheduling",
+				{
+					userId,
+				},
+			)
 			await this.scheduleNextAlarm()
 			return
 		}
@@ -441,11 +444,14 @@ export class NotificationScheduler extends DurableObject {
 		let nextRun = now.set({ hour, minute, second: 0, millisecond: 0 })
 
 		if (nextRun <= now) {
-			console.debug("NotificationScheduler next run is in the past, adding one day", {
-				userId,
-				nextRun: nextRun.toISO(),
-				now: now.toISO(),
-			})
+			console.debug(
+				"NotificationScheduler next run is in the past, adding one day",
+				{
+					userId,
+					nextRun: nextRun.toISO(),
+					now: now.toISO(),
+				},
+			)
 			nextRun = nextRun.plus({ days: 1 })
 		}
 
@@ -459,9 +465,7 @@ export class NotificationScheduler extends DurableObject {
 			nextRunLocal: nextRun.toISO(),
 			timeZone,
 			reportsTime,
-			previousAlarm: currentAlarm
-				? new Date(currentAlarm).toISOString()
-				: null,
+			previousAlarm: currentAlarm ? new Date(currentAlarm).toISOString() : null,
 		})
 		await this.ctx.storage.setAlarm(alarmTime)
 		console.debug(
@@ -481,11 +485,14 @@ export class NotificationScheduler extends DurableObject {
 		messageId: string,
 		report: string,
 	): Promise<void> {
-		console.debug("NotificationScheduler appending report to conversation history", {
-			userId,
-			messageId,
-			reportLength: report.length,
-		})
+		console.debug(
+			"NotificationScheduler appending report to conversation history",
+			{
+				userId,
+				messageId,
+				reportLength: report.length,
+			},
+		)
 		try {
 			const conversationId = this.env.AI_CONVERSATION_SERVER.idFromName(userId)
 			const conversationStub =

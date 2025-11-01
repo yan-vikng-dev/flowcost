@@ -10,43 +10,49 @@ export function BudgetItem({
 	budget,
 	onEdit,
 	onDelete,
+	showActions = false,
 }: {
 	budget: BudgetWithProgress
 	onEdit: (id: string) => void
 	onDelete: (id: string) => void
+	showActions?: boolean
 }) {
+	const currencySymbol = getCurrencySymbol(budget.displayCurrency as Currency)
+	const amountText = `${formatNumber(budget.spentDisplay)}/${formatNumber(budget.amountDisplay)} ${currencySymbol}`
+
 	return (
-		<div className="space-y-2 rounded-md border p-3">
+		<div className="space-y-2 py-3">
 			<div className="flex items-center justify-between gap-2">
 				<div className="flex items-center gap-2">
 					<CategoryChips categories={budget.categories} />
 				</div>
 				<div className="flex items-center gap-2">
-					<Button
-						aria-label="Edit budget"
-						onClick={() => onEdit(budget.id)}
-						size="icon-sm"
-						variant="secondary"
-					>
-						<PencilIcon />
-					</Button>
-					<Button
-						aria-label="Delete budget"
-						onClick={() => onDelete(budget.id)}
-						size="icon-sm"
-						variant="secondary"
-					>
-						<Trash2Icon />
-					</Button>
+					{showActions ? (
+						<>
+							<span className="text-sm">{amountText}</span>
+							<Button
+								aria-label="Edit budget"
+								onClick={() => onEdit(budget.id)}
+								size="icon-xs"
+								variant="secondary"
+							>
+								<PencilIcon />
+							</Button>
+							<Button
+								aria-label="Delete budget"
+								onClick={() => onDelete(budget.id)}
+								size="icon-xs"
+								variant="secondary"
+							>
+								<Trash2Icon />
+							</Button>
+						</>
+					) : (
+						<span className="text-sm">
+							{Math.round(budget.utilizationPct)}% · {amountText}
+						</span>
+					)}
 				</div>
-			</div>
-			<div className="flex items-center justify-between text-sm">
-				<span>{Math.round(budget.utilizationPct)}%</span>
-				<span className="text-right">
-					{formatNumber(budget.spentDisplay)}/
-					{formatNumber(budget.amountDisplay)}{" "}
-					{getCurrencySymbol(budget.displayCurrency as Currency)}
-				</span>
 			</div>
 			<Progress value={budget.utilizationPct} />
 		</div>

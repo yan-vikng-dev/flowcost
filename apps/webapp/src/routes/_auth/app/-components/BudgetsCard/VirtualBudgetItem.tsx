@@ -27,19 +27,20 @@ export function VirtualBudgetItem({ data }: { data: VirtualItemData }) {
 						data.currency ? ` ${getCurrencySymbol(data.currency)}` : ""
 					}`
 				: ""
+
 	return (
-		<div className="space-y-2 rounded-md border p-3">
+		<div className="space-y-2 py-3">
 			<div className="flex items-center justify-between gap-2">
 				<div className="flex items-center gap-2">
 					<div className="flex flex-wrap gap-1">
 						<Badge variant="secondary">{data.label}</Badge>
 					</div>
 				</div>
-				<div className="flex items-center gap-2" />
-			</div>
-			<div className="flex items-center justify-between text-sm">
-				<span>{Math.round(pct)}%</span>
-				<span className="text-right">{right}</span>
+				<div className="flex items-center gap-2">
+					<span className="text-sm">
+						{Math.round(pct)}% · {right}
+					</span>
+				</div>
 			</div>
 			<Progress value={pct} />
 		</div>

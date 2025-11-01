@@ -40,7 +40,7 @@ export const Route = createFileRoute("/_auth/app/")({
 
 function RouteComponent() {
 	return (
-		<div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+		<div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:items-start">
 			<BudgetsCard />
 			<MonthlyStandardSummary />
 			<ExpensesByCategoryBar />

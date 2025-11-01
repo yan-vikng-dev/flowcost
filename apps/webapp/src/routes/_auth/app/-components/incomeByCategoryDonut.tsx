@@ -73,7 +73,7 @@ export function IncomeByCategoryDonut() {
 	if (isEmpty) return null
 
 	return (
-		<Card className="flex flex-col">
+		<Card>
 			<CardHeader className="items-center pb-0">
 				<CardTitle>Income</CardTitle>
 				<CardDescription>{data?.monthLabel ?? "This month"}</CardDescription>

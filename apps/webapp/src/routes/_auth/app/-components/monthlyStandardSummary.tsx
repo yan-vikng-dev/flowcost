@@ -64,7 +64,7 @@ export function MonthlyStandardSummary() {
 	const isEmpty = (data?.entries?.length ?? 0) === 0
 
 	return (
-		<Card className="flex flex-col">
+		<Card>
 			<CardHeader>
 				<CardTitle>Summary</CardTitle>
 				<CardDescription>{data?.monthLabel ?? "This month"}</CardDescription>

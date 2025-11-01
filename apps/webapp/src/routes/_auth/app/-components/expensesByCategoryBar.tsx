@@ -62,7 +62,7 @@ export function ExpensesByCategoryBar() {
 	if (isEmpty) return null
 
 	return (
-		<Card className="flex min-w-0 flex-col">
+		<Card>
 			<CardHeader className="items-center pb-0">
 				<CardTitle>Expenses</CardTitle>
 				<CardDescription>{data?.monthLabel ?? "This month"}</CardDescription>

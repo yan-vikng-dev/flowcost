@@ -1,5 +1,6 @@
 import type { Category, Currency } from "@repo/shared-config"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { EditIcon, PlusIcon } from "lucide-react"
 import { DateTime } from "luxon"
 import * as React from "react"
 import {
@@ -20,6 +21,7 @@ import {
 	CardHeader,
 	CardTitle,
 } from "@/components/ui/card"
+import { Separator } from "@/components/ui/separator"
 import {
 	type BudgetWithProgress,
 	type CreateBudgetInput,
@@ -75,6 +77,7 @@ export function BudgetsCard() {
 	const [createOpen, setCreateOpen] = React.useState(false)
 	const [editOpen, setEditOpen] = React.useState<null | string>(null)
 	const [deleteId, setDeleteId] = React.useState<null | string>(null)
+	const [isEditMode, setIsEditMode] = React.useState(false)
 
 	const defaultCurrency: Currency =
 		(prefsQuery.data?.displayCurrency as Currency) ?? "USD"
@@ -179,31 +182,49 @@ export function BudgetsCard() {
 			<CardHeader>
 				<CardTitle>Budgets</CardTitle>
 				<CardAction>
-					<Button
-						onClick={() => setCreateOpen(true)}
-						size="sm"
-						variant="primary"
-					>
-						New Budget
-					</Button>
+					<div className="flex items-center gap-2">
+						<Button
+							aria-label={isEditMode ? "Exit edit mode" : "Enter edit mode"}
+							onClick={() => setIsEditMode(!isEditMode)}
+							size="icon"
+							variant={isEditMode ? "primary" : "secondary"}
+						>
+							<EditIcon />
+						</Button>
+						<Button
+							aria-label="New Budget"
+							onClick={() => setCreateOpen(true)}
+							size="icon"
+							variant="primary"
+						>
+							<PlusIcon />
+						</Button>
+					</div>
 				</CardAction>
 			</CardHeader>
-			<CardContent className="space-y-4">
+			<CardContent>
 				{budgetsQuery.isLoading || monthlyQuery.isLoading ? (
 					<div className="text-muted-foreground text-sm">Loading...</div>
 				) : (
-					<div className="space-y-4">
-						{realBudgets.map((budget) => (
-							<BudgetItem
-								budget={budget}
-								key={budget.id}
-								onDelete={(id) => setDeleteId(id)}
-								onEdit={(id) => setEditOpen(id)}
-							/>
+					<div>
+						{realBudgets.map((budget, index) => (
+							<div key={budget.id}>
+								{index > 0 && <Separator />}
+								<BudgetItem
+									budget={budget}
+									onDelete={(id) => setDeleteId(id)}
+									onEdit={(id) => setEditOpen(id)}
+									showActions={isEditMode}
+								/>
+							</div>
 						))}
+						{realBudgets.length > 0 && <Separator />}
 						<VirtualBudgetItem data={virtualItems["virtual:month-progress"]} />
 						{virtualItems["virtual:free-budget"] && (
-							<VirtualBudgetItem data={virtualItems["virtual:free-budget"]} />
+							<>
+								<Separator />
+								<VirtualBudgetItem data={virtualItems["virtual:free-budget"]} />
+							</>
 						)}
 					</div>
 				)}
