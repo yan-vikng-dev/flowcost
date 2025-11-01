@@ -151,6 +151,8 @@ export const protectedFunction = baseFunction
    ```
 
 4. **Client Integration with TanStack Query:**
+
+   **Basic Pattern:**
    ```typescript
    const mutation = useMutation({
      mutationFn: myServerFunction,
@@ -159,6 +161,106 @@ export const protectedFunction = baseFunction
      },
    });
    ```
+
+   **Optimistic Updates with Race Condition Prevention:**
+
+   For mutations that update UI state (like toggles, checkboxes, or form fields), use optimistic updates to provide instant feedback while preventing race conditions from rapid successive clicks:
+
+   ```typescript
+   const mutation = useMutation({
+     mutationFn: (input: UpdateUserPreferencesInput) =>
+       updateUserPreferences({ data: input }),
+     
+     // Cancel any in-flight mutations when a new one starts
+     onMutate: async (newData) => {
+       // Cancel any outgoing refetches (so they don't overwrite our optimistic update)
+       await queryClient.cancelQueries({ queryKey: ["userPreferences"] })
+
+       // Snapshot the previous value for rollback
+       const previousPrefs = queryClient.getQueryData<
+         Awaited<ReturnType<typeof getUserPreferences>>
+       >(["userPreferences"])
+
+       // Optimistically update to the new value
+       if (previousPrefs) {
+         const optimisticPrefs = {
+           ...previousPrefs,
+           ...(newData.defaultEntryCurrency !== undefined && {
+             defaultEntryCurrency: newData.defaultEntryCurrency,
+           }),
+           // ... merge other fields
+         }
+         queryClient.setQueryData(["userPreferences"], optimisticPrefs)
+       }
+
+       // Return context for rollback
+       return { previousPrefs }
+     },
+     
+     // If the mutation fails, roll back to previous state
+     onError: (_err, _newData, context) => {
+       if (context?.previousPrefs) {
+         queryClient.setQueryData(["userPreferences"], context.previousPrefs)
+       }
+     },
+     
+     // Always refetch after error or success to ensure consistency
+     onSettled: async () => {
+       await Promise.all([
+         queryClient.invalidateQueries({ queryKey: ["userPreferences"] }),
+         // Invalidate related queries as needed
+       ])
+     },
+   })
+   ```
+
+   **Key Benefits of This Pattern:**
+
+   - ✅ **Instant UI feedback**: Users see changes immediately via optimistic updates
+   - ✅ **No blocking**: Controls remain enabled during mutations
+   - ✅ **Race condition prevention**: New mutations cancel previous in-flight queries
+   - ✅ **Automatic rollback**: Failed mutations restore previous state
+   - ✅ **Consistency**: Always refetches to sync with server state
+
+   **When to Use:**
+
+   - Toggle switches, checkboxes, or any rapid-interaction controls
+   - Form fields that update on change
+   - Settings/preferences that users might toggle quickly
+   - Any mutation where users expect instant feedback
+
+   **Implementation Example:**
+
+   ```typescript
+   // In your component
+   const updatePref = React.useCallback(
+     (patch: Partial<PrefsState>) => {
+       // Convert to mutation input format
+       const mergedPatch: UpdateUserPreferencesInput = {
+         ...(patch.reportsDailyEnabled !== undefined && {
+           reportsDailyEnabled: patch.reportsDailyEnabled,
+         }),
+         // ... other fields
+       }
+       
+       // Mutation handles optimistic updates automatically
+       mutation.mutate(mergedPatch)
+     },
+     [mutation],
+   )
+
+   // In JSX - no disabled prop needed!
+   <Switch
+     checked={current.reportsDailyEnabled}
+     onCheckedChange={(checked) =>
+       updatePref({ reportsDailyEnabled: checked })
+     }
+   />
+   ```
+
+   **Real-World Example:**
+
+   See `apps/webapp/src/routes/_auth/app/settings/index.tsx` for a complete implementation of this pattern with multiple toggle switches and form fields.
 
 **Best Practices:**
 
