@@ -454,6 +454,19 @@ function RouteComponent() {
 									/>
 								</Field>
 
+								<Field orientation="horizontal">
+									<FieldContent>
+										<FieldTitle>Daily Reports</FieldTitle>
+										<FieldDescription>Sent every day</FieldDescription>
+									</FieldContent>
+									<Switch
+										checked={current.reportsDailyEnabled}
+										onCheckedChange={(checked) =>
+											updatePref({ reportsDailyEnabled: checked })
+										}
+									/>
+								</Field>
+
 								{current.reportsWeeklyEnabled && (
 									<Field orientation="horizontal">
 										<FieldContent>
@@ -486,19 +499,6 @@ function RouteComponent() {
 										</Select>
 									</Field>
 								)}
-
-								<Field orientation="horizontal">
-									<FieldContent>
-										<FieldTitle>Daily Reports</FieldTitle>
-										<FieldDescription>Sent every day</FieldDescription>
-									</FieldContent>
-									<Switch
-										checked={current.reportsDailyEnabled}
-										onCheckedChange={(checked) =>
-											updatePref({ reportsDailyEnabled: checked })
-										}
-									/>
-								</Field>
 
 								{(current.reportsDailyEnabled ||
 									current.reportsWeeklyEnabled ||
