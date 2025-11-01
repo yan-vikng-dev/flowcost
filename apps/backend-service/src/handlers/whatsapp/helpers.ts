@@ -16,7 +16,7 @@ export async function sendWhatsAppText({
 		type: "text",
 		text: { body: text },
 	}
-	return fetch(url, {
+	const response = await fetch(url, {
 		method: "POST",
 		headers: {
 			Authorization: `Bearer ${env.WHATSAPP_ACCESS_TOKEN}`,
@@ -24,4 +24,37 @@ export async function sendWhatsAppText({
 		},
 		body: JSON.stringify(body),
 	})
+	
+	if (!response.ok) {
+		const errorText = await response.text()
+		console.error("WhatsApp API error:", {
+			status: response.status,
+			statusText: response.statusText,
+			url,
+			waId,
+			errorBody: errorText,
+		})
+		throw new Error(
+			`WhatsApp API error: ${response.status} ${response.statusText} - ${errorText}`,
+		)
+	}
+	
+	try {
+		const responseBody = (await response.json()) as {
+			messages?: Array<{ id?: string }>
+		}
+		console.debug("WhatsApp message sent successfully", {
+			waId,
+			messageId: responseBody.messages?.[0]?.id,
+			status: response.status,
+		})
+	} catch (parseError) {
+		// If JSON parsing fails, log but don't fail - the response was OK
+		console.warn("WhatsApp API response OK but JSON parse failed", {
+			waId,
+			parseError: parseError instanceof Error ? parseError.message : String(parseError),
+		})
+	}
+	
+	return response
 }

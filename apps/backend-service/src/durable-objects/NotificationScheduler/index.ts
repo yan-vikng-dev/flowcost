@@ -32,28 +32,13 @@ export class NotificationScheduler extends DurableObject {
 	constructor(ctx: DurableObjectState, env: Env) {
 		super(ctx, env)
 		void ctx.blockConcurrencyWhile(async () => {
-			console.debug("NotificationScheduler constructor called", {
-				id: ctx.id.toString(),
-				idName: ctx.id.name ?? null,
-			})
 			initDatabase(env.DB)
 			const storedUserId = await ctx.storage.get<string>("userId")
 			this.userId = storedUserId ?? null
-			console.debug("NotificationScheduler constructor completed", {
-				id: ctx.id.toString(),
-				userId: this.userId,
-				hadStoredUserId: storedUserId !== null,
-			})
 		})
 	}
 
 	async initialize(userId: string) {
-		console.debug("NotificationScheduler initialize called", {
-			providedUserId: userId,
-			currentUserId: this.userId,
-			id: this.ctx.id.toString(),
-			idName: this.ctx.id.name ?? null,
-		})
 		if (this.ctx.id.name && this.ctx.id.name !== userId) {
 			console.warn("NotificationScheduler initialize userId mismatch", {
 				provided: userId,
@@ -63,32 +48,19 @@ export class NotificationScheduler extends DurableObject {
 		}
 		this.userId = userId
 		await this.ctx.storage.put("userId", userId)
-		console.debug("NotificationScheduler userId persisted", { userId })
 		await this.scheduleNextAlarm()
-		console.debug("NotificationScheduler initialize completed", { userId })
 	}
 
 	async revoke() {
-		console.debug("NotificationScheduler revoke called", {
-			userId: this.userId,
-			id: this.ctx.id.toString(),
-		})
-		const currentAlarm = await this.ctx.storage.getAlarm()
-		console.debug("NotificationScheduler current alarm before revoke", {
-			userId: this.userId,
-			alarmTime: currentAlarm ? new Date(currentAlarm).toISOString() : null,
-		})
 		await this.ctx.storage.deleteAlarm()
 		console.debug(`Revoked scheduler for user ${this.userId ?? "unknown"}`, {
 			userId: this.userId,
-			id: this.ctx.id.toString(),
 		})
 	}
 
 	async alarm() {
 		console.debug("NotificationScheduler alarm triggered", {
 			userId: this.userId,
-			id: this.ctx.id.toString(),
 			timestamp: new Date().toISOString(),
 		})
 		const db = getDb()
@@ -101,7 +73,6 @@ export class NotificationScheduler extends DurableObject {
 		}
 		const userId = this.userId
 
-		console.debug("NotificationScheduler fetching user preferences", { userId })
 		const prefs = await db.query.user_preferences.findFirst({
 			where: eq(user_preferences.userId, userId),
 		})
@@ -110,18 +81,7 @@ export class NotificationScheduler extends DurableObject {
 			console.warn(`No preferences found for user ${userId}`, { userId })
 			return
 		}
-		console.debug("NotificationScheduler preferences loaded", {
-			userId,
-			timezone: prefs.timezone,
-			displayCurrency: prefs.displayCurrency,
-			reportsDailyEnabled: prefs.reportsDailyEnabled,
-			reportsWeeklyEnabled: prefs.reportsWeeklyEnabled,
-			reportsMonthlyEnabled: prefs.reportsMonthlyEnabled,
-			reportsTime: prefs.reportsTime,
-			reportsWeeklyDay: prefs.reportsWeeklyDay,
-		})
 
-		console.debug("NotificationScheduler fetching WhatsApp link", { userId })
 		const whatsappLink = await db.query.whatsapp_links.findFirst({
 			where: eq(whatsapp_links.userId, userId),
 		})
@@ -136,17 +96,8 @@ export class NotificationScheduler extends DurableObject {
 			await this.scheduleNextAlarm()
 			return
 		}
-		console.debug("NotificationScheduler WhatsApp link found", {
-			userId,
-			waId: whatsappLink.waId,
-		})
 
 		const now = DateTime.now().setZone(prefs.timezone)
-		console.debug("NotificationScheduler determining report type", {
-			userId,
-			now: now.toISO(),
-			timezone: prefs.timezone,
-		})
 		const reportType = determineReportType(now, {
 			reportsMonthlyEnabled: prefs.reportsMonthlyEnabled,
 			reportsWeeklyEnabled: prefs.reportsWeeklyEnabled,
@@ -157,54 +108,44 @@ export class NotificationScheduler extends DurableObject {
 		})
 
 		if (!reportType) {
-			console.debug(
-				"NotificationScheduler no report type determined, rescheduling",
-				{
-					userId,
-				},
-			)
 			await this.scheduleNextAlarm()
 			return
 		}
-		console.debug("NotificationScheduler report type determined", {
+
+		console.debug("NotificationScheduler sending report", {
 			userId,
 			reportType,
 		})
 
-		console.debug("NotificationScheduler generating report", {
-			userId,
-			reportType,
-		})
 		const report = await this.generateReport(db, userId, reportType, now, prefs)
 		if (report) {
-			console.debug("NotificationScheduler report generated, sending", {
-				userId,
-				reportType,
-				reportLength: report.length,
-			})
-			await sendWhatsAppText({
-				env: this.env,
-				waId: whatsappLink.waId,
-				text: report,
-			})
-			console.debug("NotificationScheduler report sent via WhatsApp", {
-				userId,
-				waId: whatsappLink.waId,
-				reportType,
-			})
+			try {
+				await sendWhatsAppText({
+					env: this.env,
+					waId: whatsappLink.waId,
+					text: report,
+				})
+				console.debug("NotificationScheduler report sent via WhatsApp", {
+					userId,
+					waId: whatsappLink.waId,
+					reportType,
+				})
 
-			const messageId = `report:${reportType}:${now.toISODate()}`
-			await this.appendToConversationHistory(userId, messageId, report)
-		} else {
-			console.debug("NotificationScheduler no report generated", {
-				userId,
-				reportType,
-			})
+				const messageId = `report:${reportType}:${now.toISODate()}`
+				await this.appendToConversationHistory(userId, messageId, report)
+			} catch (error) {
+				console.error("NotificationScheduler failed to send WhatsApp message", {
+					userId,
+					waId: whatsappLink.waId,
+					reportType,
+					error: error instanceof Error ? error.message : String(error),
+					stack: error instanceof Error ? error.stack : undefined,
+				})
+				// Don't rethrow - we still want to reschedule the next alarm
+			}
 		}
 
-		console.debug("NotificationScheduler rescheduling next alarm", { userId })
 		await this.scheduleNextAlarm()
-		console.debug("NotificationScheduler alarm completed", { userId })
 	}
 
 	private async generateReport(
@@ -221,22 +162,6 @@ export class NotificationScheduler extends DurableObject {
 		const displayCurrency = prefs.displayCurrency
 
 		const { start, end, title } = getReportDateRange(type, now)
-		console.debug("NotificationScheduler report date range", {
-			userId,
-			type,
-			start: start.toISO(),
-			end: end.toISO(),
-			title,
-		})
-
-		console.debug("NotificationScheduler fetching entries", {
-			userId,
-			type,
-			start: start.toJSDate().toISOString(),
-			end: end.toJSDate().toISOString(),
-			timezone: timeZone,
-			displayCurrency,
-		})
 		const entriesResult = await fetchConvertedEntriesForRange(db, userId, {
 			start: start.toJSDate(),
 			end: end.toJSDate(),
@@ -245,50 +170,19 @@ export class NotificationScheduler extends DurableObject {
 			entryType: "Expense",
 		})
 
-		console.debug("NotificationScheduler entries fetched", {
-			userId,
-			type,
-			entryCount: entriesResult.entries.length,
-		})
-
 		if (entriesResult.entries.length === 0) {
-			console.debug("NotificationScheduler no entries found for period", {
-				userId,
-				type,
-			})
 			return `${title}\n\nNo expenses recorded for this period.`
 		}
 
-		console.debug("NotificationScheduler fetching exchange rates", { userId })
 		const { latest } = await fetchExchangeRatesForDates(db, [])
-		console.debug("NotificationScheduler exchange rates fetched", {
-			userId,
-			ratesCount: Object.keys(latest.rates).length,
-		})
-
-		console.debug("NotificationScheduler fetching budgets", { userId })
 		const budgetsList = await fetchBudgetsForUser(db, userId)
-		console.debug("NotificationScheduler budgets fetched", {
-			userId,
-			budgetCount: budgetsList.length,
-		})
-
 		const categoryTotals = aggregateCategoryTotals(entriesResult.entries)
-		console.debug("NotificationScheduler category totals calculated", {
-			userId,
-			categoryCount: categoryTotals.size,
-		})
-
 		const budgetProgress = calculateBudgetProgress(
 			budgetsList,
 			entriesResult.entries,
 			latest.rates,
 			displayCurrency,
 		)
-		console.debug("NotificationScheduler budget progress calculated", {
-			userId,
-			budgetProgressCount: budgetProgress.size,
-		})
 
 		const totalSpent = Array.from(categoryTotals.values()).reduce(
 			(sum, val) => sum + val,
@@ -319,7 +213,7 @@ export class NotificationScheduler extends DurableObject {
 			if (budget) {
 				const bar = formatProgressBar(budget.utilizationPct)
 				lines.push(
-					`    Budget: ${bar} ${Math.round(budget.utilizationPct)}% (${formatCurrency(budget.spentDisplay, displayCurrency)} / ${formatCurrency(budget.amountDisplay, displayCurrency)})`,
+					`${bar} ${Math.round(budget.utilizationPct)}%`,
 				)
 				if (budget.utilizationPct >= 100) {
 					lines.push("    ⚠️ Over budget")
@@ -392,9 +286,6 @@ export class NotificationScheduler extends DurableObject {
 	}
 
 	private async scheduleNextAlarm(): Promise<void> {
-		console.debug("NotificationScheduler scheduleNextAlarm called", {
-			userId: this.userId,
-		})
 		const db = getDb()
 		if (!this.userId) {
 			console.error(
@@ -405,9 +296,6 @@ export class NotificationScheduler extends DurableObject {
 		}
 		const userId = this.userId
 
-		console.debug("NotificationScheduler fetching preferences for scheduling", {
-			userId,
-		})
 		const prefs = await db.query.user_preferences.findFirst({
 			where: eq(user_preferences.userId, userId),
 		})
@@ -425,12 +313,6 @@ export class NotificationScheduler extends DurableObject {
 			prefs.reportsMonthlyEnabled
 
 		if (!hasAnyReportEnabled) {
-			console.debug(`No reports enabled for user ${userId}, not scheduling`, {
-				userId,
-				reportsDailyEnabled: prefs.reportsDailyEnabled,
-				reportsWeeklyEnabled: prefs.reportsWeeklyEnabled,
-				reportsMonthlyEnabled: prefs.reportsMonthlyEnabled,
-			})
 			return
 		}
 
@@ -444,40 +326,19 @@ export class NotificationScheduler extends DurableObject {
 		let nextRun = now.set({ hour, minute, second: 0, millisecond: 0 })
 
 		if (nextRun <= now) {
-			console.debug(
-				"NotificationScheduler next run is in the past, adding one day",
-				{
-					userId,
-					nextRun: nextRun.toISO(),
-					now: now.toISO(),
-				},
-			)
 			nextRun = nextRun.plus({ days: 1 })
 		}
 
 		const nextRunUtc = nextRun.toUTC()
 		const alarmTime = nextRunUtc.toMillis()
 
-		const currentAlarm = await this.ctx.storage.getAlarm()
-		console.debug("NotificationScheduler setting alarm", {
+		await this.ctx.storage.setAlarm(alarmTime)
+		console.debug("NotificationScheduler scheduled next alarm", {
 			userId,
 			alarmTime: new Date(alarmTime).toISOString(),
 			nextRunLocal: nextRun.toISO(),
 			timeZone,
-			reportsTime,
-			previousAlarm: currentAlarm ? new Date(currentAlarm).toISOString() : null,
 		})
-		await this.ctx.storage.setAlarm(alarmTime)
-		console.debug(
-			`Scheduled next alarm for user ${userId} at ${nextRunUtc.toISO()} (${nextRun.toISO()} ${timeZone})`,
-			{
-				userId,
-				alarmTime: new Date(alarmTime).toISOString(),
-				nextRunUtc: nextRunUtc.toISO(),
-				nextRunLocal: nextRun.toISO(),
-				timeZone,
-			},
-		)
 	}
 
 	private async appendToConversationHistory(
@@ -485,23 +346,11 @@ export class NotificationScheduler extends DurableObject {
 		messageId: string,
 		report: string,
 	): Promise<void> {
-		console.debug(
-			"NotificationScheduler appending report to conversation history",
-			{
-				userId,
-				messageId,
-				reportLength: report.length,
-			},
-		)
 		try {
 			const conversationId = this.env.AI_CONVERSATION_SERVER.idFromName(userId)
 			const conversationStub =
 				this.env.AI_CONVERSATION_SERVER.get(conversationId)
 			await conversationStub.appendReport(messageId, report)
-			console.debug("NotificationScheduler report appended to conversation", {
-				userId,
-				messageId,
-			})
 		} catch (error) {
 			console.error(`Error appending report to conversation:`, {
 				userId,
