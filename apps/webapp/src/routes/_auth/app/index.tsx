@@ -40,11 +40,15 @@ export const Route = createFileRoute("/_auth/app/")({
 
 function RouteComponent() {
 	return (
-		<div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:items-start">
-			<BudgetsCard />
-			<MonthlyStandardSummary />
-			<ExpensesByCategoryBar />
-			<IncomeByCategoryDonut />
+		<div className="flex flex-col gap-4 md:flex-row md:items-start">
+			<div className="flex flex-1 flex-col gap-4">
+				<BudgetsCard />
+				<ExpensesByCategoryBar />
+			</div>
+			<div className="flex flex-1 flex-col gap-4">
+				<MonthlyStandardSummary />
+				<IncomeByCategoryDonut />
+			</div>
 		</div>
 	)
 }

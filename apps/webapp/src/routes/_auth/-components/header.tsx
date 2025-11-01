@@ -1,9 +1,10 @@
+import { useQuery } from "@tanstack/react-query"
 import { Link } from "@tanstack/react-router"
-import { BellIcon } from "lucide-react"
 import { AccountDialog } from "@/components/auth/account-dialog"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { authClient } from "@/lib/auth-client"
+import { getConnectionState } from "@/routes/_auth/app/settings/-functions/connections"
 
 export function Header() {
 	const { data: session } = authClient.useSession()
@@ -12,6 +13,17 @@ export function Header() {
 	const fallbackText = user?.name
 		? user.name.charAt(0).toUpperCase()
 		: user?.email?.charAt(0).toUpperCase() || "U"
+
+	const connectionStateQuery = useQuery({
+		queryKey: ["connectionState"],
+		queryFn: () => getConnectionState(),
+		staleTime: 30_000,
+	})
+
+	const hasIncomingInvites =
+		connectionStateQuery.data?.pending?.some(
+			(inv) => inv.direction === "incoming",
+		) ?? false
 
 	return (
 		<header className="flex h-16 items-center justify-between border-border border-b bg-background px-6">
@@ -30,13 +42,14 @@ export function Header() {
 				<Button asChild variant="ghost">
 					<Link to="/app/advanced">Advanced</Link>
 				</Button>
-				<Button asChild variant="ghost">
-					<Link to="/app/settings">Settings</Link>
-				</Button>
-				<Button className="relative" size="icon" variant="ghost">
-					<BellIcon className="h-5 w-5" />
-					{/* <span className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-destructive"></span> */}
-				</Button>
+				<div className="relative">
+					<Button asChild variant="ghost">
+						<Link to="/app/settings">Settings</Link>
+					</Button>
+					{hasIncomingInvites && (
+						<div className="absolute top-1 right-0 size-2 rounded-full bg-destructive" />
+					)}
+				</div>
 
 				<AccountDialog>
 					<Button className="flex items-center gap-2 px-3" variant="ghost">

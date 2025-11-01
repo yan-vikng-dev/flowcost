@@ -1,3 +1,4 @@
+import { formatCurrency } from "@repo/shared-config"
 import { useQuery } from "@tanstack/react-query"
 import * as React from "react"
 import { Bar, BarChart, Cell, LabelList, XAxis, YAxis } from "recharts"
@@ -16,7 +17,12 @@ import {
 } from "@/components/ui/chart"
 import { getMonthlyEntriesForCharts } from "../-functions/monthlyEntries"
 
-type ChartSlice = { category: string; amount: number; fill: string }
+type ChartSlice = {
+	category: string
+	amount: number
+	formattedAmount: string
+	fill: string
+}
 
 export function ExpensesByCategoryBar() {
 	const { data } = useQuery({
@@ -25,6 +31,7 @@ export function ExpensesByCategoryBar() {
 	})
 
 	const { chartData, total } = React.useMemo(() => {
+		const displayCurrency = data?.displayCurrency ?? "USD"
 		const base = (data?.entries ?? [])
 			.filter((e) => e.entryType === "Expense")
 			.map((e) => ({
@@ -42,6 +49,7 @@ export function ExpensesByCategoryBar() {
 		const chartData: ChartSlice[] = display.map((item, i) => ({
 			category: item.category,
 			amount: item.amount,
+			formattedAmount: formatCurrency(item.amount, displayCurrency),
 			fill: `var(--chart-${(i % 5) + 1})`,
 		}))
 		const total = chartData.reduce((acc, s) => acc + s.amount, 0)
@@ -88,7 +96,15 @@ export function ExpensesByCategoryBar() {
 							width={96}
 						/>
 						<ChartTooltip
-							content={<ChartTooltipContent hideLabel />}
+							content={
+								<ChartTooltipContent
+									formatter={(_value, _name, item) => {
+										const entry = item.payload as ChartSlice
+										return entry.formattedAmount
+									}}
+									hideLabel
+								/>
+							}
 							cursor={false}
 						/>
 						<Bar dataKey="amount" fill="var(--color-amount)" radius={4}>
@@ -97,7 +113,7 @@ export function ExpensesByCategoryBar() {
 							))}
 							<LabelList
 								className="fill-foreground"
-								dataKey="amount"
+								dataKey="formattedAmount"
 								fontSize={12}
 								offset={4}
 								position="right"

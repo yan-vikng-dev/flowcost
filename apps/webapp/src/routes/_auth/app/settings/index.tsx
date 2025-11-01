@@ -51,7 +51,8 @@ import {
 	unlinkWhatsapp,
 } from "@/core/functions/whatsapp"
 import { formatPhoneNumber } from "@/utils/phone"
-import { ConnectionsCard } from "./-components/ConnectionsCard"
+import { ConnectionField } from "./-components/ConnectionField"
+import { IncomingInviteCard } from "./-components/IncomingInviteCard"
 
 export const Route = createFileRoute("/_auth/app/settings/")({
 	loader: async ({ context }) => {
@@ -246,6 +247,8 @@ function RouteComponent() {
 
 	return (
 		<div className="mx-auto grid max-w-xl gap-6">
+			<IncomingInviteCard />
+
 			<Card>
 				<CardHeader>
 					<CardTitle>Preferences</CardTitle>
@@ -286,6 +289,8 @@ function RouteComponent() {
 								)
 							})()}
 						</Field>
+
+						<ConnectionField />
 					</div>
 				</CardContent>
 			</Card>
@@ -308,7 +313,6 @@ function RouteComponent() {
 								</FieldDescription>
 							</FieldContent>
 							<Button
-								className="self-center"
 								disabled={
 									whatsappStatusQuery.isLoading ||
 									(whatsappStatusQuery.data?.linked
@@ -509,8 +513,6 @@ function RouteComponent() {
 					</div>
 				</CardContent>
 			</Card>
-
-			<ConnectionsCard />
 		</div>
 	)
 }
