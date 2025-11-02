@@ -1,15 +1,12 @@
-import { initialsFrom } from "@repo/shared-lib"
 import { Link } from "@tanstack/react-router"
-import { BookIcon, ExternalLinkIcon, LogInIcon, MenuIcon } from "lucide-react"
+import { BookIcon, LogInIcon, MenuIcon } from "lucide-react"
 import * as React from "react"
-import { AccountDialog } from "@/components/auth/account-dialog"
 import {
 	GithubIcon,
 	type MergedIconComponent,
 	WhatsappIcon,
 } from "@/components/icons"
 import { ThemeToggle } from "@/components/theme"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import {
 	Sheet,
@@ -19,10 +16,12 @@ import {
 	SheetTitle,
 	SheetTrigger,
 } from "@/components/ui/sheet"
+import { UserAvatar } from "@/components/user-avatar"
 import { authClient } from "@/lib/auth-client"
 import { cn } from "@/lib/utils"
+import { NavigationItem } from "./NavigationItem"
 
-interface NavigationItem {
+type NavigationItemConfig = {
 	label: string
 	href: string
 	isExternal?: boolean
@@ -31,7 +30,7 @@ interface NavigationItem {
 	icon?: MergedIconComponent
 }
 
-const navigationItems: NavigationItem[] = [
+const navigationItems: NavigationItemConfig[] = [
 	{
 		label: "Documentation",
 		href: "/docs",
@@ -69,8 +68,6 @@ export function NavigationBar() {
 	}
 
 	const user = session?.user
-	const fallbackText =
-		initialsFrom(user?.name ?? user?.email).slice(0, 1) || "U"
 
 	React.useEffect(() => {
 		const handleScroll = () => {
@@ -110,61 +107,32 @@ export function NavigationBar() {
 					<div className="hidden items-center space-x-1 lg:flex">
 						{navigationItems.map((item) => (
 							<div className="group relative" key={item.label}>
-								{item.isExternal ? (
-									<a
-										className="group flex items-center gap-2 space-x-2 rounded-lg px-4 py-2 font-medium text-muted-foreground text-sm transition-all duration-300 hover:bg-accent/50 hover:text-foreground"
-										href={item.href}
-										rel="noopener noreferrer"
-										target="_blank"
-									>
-										{!item.hideLabel && item.label}
-										{item.icon && <item.icon className="size-4" />}
-									</a>
-								) : (
-									<Link
-										className="flex items-center gap-2 rounded-lg px-4 py-2 font-medium text-muted-foreground text-sm transition-all duration-300 hover:bg-accent/50 hover:text-foreground"
-										onClick={() => handleNavClick()}
-										to={item.href}
-									>
-										{!item.hideLabel && item.label}
-										{item.icon && <item.icon className="h-4 w-4" />}
-										{item.isExternal && (
-											<ExternalLinkIcon className="h-4 w-4" />
-										)}
-									</Link>
-								)}
+								<NavigationItem {...item} onClick={handleNavClick} />
 								<div className="-translate-x-1/2 absolute bottom-0 left-1/2 h-0.5 w-0 transform bg-linear-to-r from-primary to-primary/80 transition-all duration-300 group-hover:w-3/4" />
 							</div>
 						))}
 
 						{/* Theme Toggle */}
 						<div className="ml-2 border-border/30 border-l pl-2">
-							<ThemeToggle align="end" variant="ghost" />
+							<ThemeToggle />
 						</div>
 					</div>
 
 					{/* Auth Button - Desktop */}
 					<div className="hidden lg:block">
-						{session ? (
-							<AccountDialog>
-								<Button
-									className="flex items-center gap-2 px-3"
-									variant="ghost"
-								>
-									<Avatar className="h-7 w-7">
-										<AvatarImage
-											alt={user?.name || "User"}
-											src={user?.image || undefined}
-										/>
-										<AvatarFallback className="bg-primary text-primary-foreground text-xs">
-											{fallbackText}
-										</AvatarFallback>
-									</Avatar>
+						{session && user ? (
+							<Button
+								asChild
+								className="flex items-center gap-2 px-3"
+								variant="ghost"
+							>
+								<Link to="/app/settings">
+									<UserAvatar className="h-7 w-7" user={user} />
 									<span className="font-medium text-sm">
-										{user?.name || "Account"}
+										{user.name || "Account"}
 									</span>
-								</Button>
-							</AccountDialog>
+								</Link>
+							</Button>
 						) : (
 							<Button
 								className="gap-2"
@@ -178,7 +146,7 @@ export function NavigationBar() {
 
 					{/* Mobile Menu Button + Theme Toggle */}
 					<div className="flex items-center space-x-2 lg:hidden">
-						<ThemeToggle align="end" variant="ghost" />
+						<ThemeToggle />
 						<Sheet onOpenChange={setIsOpen} open={isOpen}>
 							<SheetTrigger asChild>
 								<Button
@@ -205,53 +173,26 @@ export function NavigationBar() {
 
 								<div className="flex flex-col space-y-2 pb-6">
 									{navigationItems.map((item) => (
-										<div className="group relative" key={item.label}>
-											{item.isExternal ? (
-												<a
-													className="flex w-full items-center justify-between rounded-lg px-4 py-3 font-medium text-muted-foreground text-sm transition-all duration-300 hover:bg-accent/50 hover:text-foreground"
-													href={item.href}
-													onClick={() => setIsOpen(false)}
-													rel="noopener noreferrer"
-													target="_blank"
-												>
-													<span>{item.label}</span>
-													{item.icon && <item.icon className="h-4 w-4" />}
-													{item.isExternal && (
-														<ExternalLinkIcon className="h-4 w-4" />
-													)}
-												</a>
-											) : (
-												<Link
-													className="flex w-full items-center rounded-lg px-4 py-3 text-left font-medium text-muted-foreground text-sm transition-all duration-300 hover:bg-accent/50 hover:text-foreground"
-													onClick={() => handleNavClick()}
-													to={item.href}
-												>
-													{item.label}
-												</Link>
-											)}
-										</div>
+										<NavigationItem
+											key={item.label}
+											{...item}
+											onClick={() => setIsOpen(false)}
+											variant="mobile"
+										/>
 									))}
 								</div>
 
 								{/* Mobile Auth */}
 								<div className="border-border/50 border-t pt-4">
-									{session ? (
+									{session && user ? (
 										<div className="flex items-center gap-3 rounded-lg bg-accent/30 px-4 py-3">
-											<Avatar className="h-10 w-10">
-												<AvatarImage
-													alt={user?.name || "User"}
-													src={user?.image || undefined}
-												/>
-												<AvatarFallback className="bg-primary text-primary-foreground text-sm">
-													{fallbackText}
-												</AvatarFallback>
-											</Avatar>
+											<UserAvatar className="h-10 w-10" user={user} />
 											<div className="flex-1">
 												<p className="font-medium text-sm">
-													{user?.name || "User"}
+													{user.name || "User"}
 												</p>
 												<p className="text-muted-foreground text-xs">
-													{user?.email}
+													{user.email}
 												</p>
 											</div>
 										</div>

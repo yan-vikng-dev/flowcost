@@ -1,9 +1,8 @@
-import { initialsFrom } from "@repo/shared-lib"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { CheckIcon, XIcon } from "lucide-react"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { UserAvatar } from "@/components/user-avatar"
 import { useConnectionState } from "@/hooks/use-connection-state"
 import { acceptInvitation, declineInvitation } from "../-functions/connections"
 
@@ -48,15 +47,7 @@ export function IncomingInviteCard() {
 							key={inv.id}
 						>
 							<div className="flex items-center gap-3">
-								<Avatar>
-									{inv.user.image ? (
-										<AvatarImage
-											alt={inv.user.name ?? inv.user.email}
-											src={inv.user.image}
-										/>
-									) : null}
-									<AvatarFallback>{initialsFrom(inv.user.name)}</AvatarFallback>
-								</Avatar>
+								<UserAvatar className="h-10 w-10" user={inv.user} />
 								<div className="text-sm">
 									<div className="font-medium">
 										{inv.user.name ?? inv.user.email}

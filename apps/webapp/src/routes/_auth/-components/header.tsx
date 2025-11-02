@@ -1,8 +1,6 @@
-import { initialsFrom } from "@repo/shared-lib"
 import { Link } from "@tanstack/react-router"
-import { AccountDialog } from "@/components/auth/account-dialog"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
+import { UserAvatar } from "@/components/user-avatar"
 import {
 	hasIncomingInvites,
 	useConnectionState,
@@ -13,7 +11,6 @@ export function Header() {
 	const { data: session } = authClient.useSession()
 
 	const user = session?.user
-	const fallbackText = initialsFrom(user?.name ?? user?.email) || "U"
 
 	const connectionStateQuery = useConnectionState()
 	const hasIncoming = hasIncomingInvites(connectionStateQuery)
@@ -44,25 +41,7 @@ export function Header() {
 					)}
 				</div>
 
-				<AccountDialog>
-					<Button className="flex items-center gap-2 px-3" variant="ghost">
-						<Avatar className="h-8 w-8">
-							<AvatarImage
-								alt={user?.name || "User"}
-								src={user?.image || undefined}
-							/>
-							<AvatarFallback className="bg-primary text-primary-foreground text-sm">
-								{fallbackText}
-							</AvatarFallback>
-						</Avatar>
-						<div className="hidden flex-col items-start sm:flex">
-							<span className="font-medium text-sm">
-								{user?.name || "User"}
-							</span>
-							<span className="text-muted-foreground text-xs">Online</span>
-						</div>
-					</Button>
-				</AccountDialog>
+				{user && <UserAvatar className="h-8 w-8" user={user} />}
 			</div>
 		</header>
 	)

@@ -9,22 +9,9 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { useTheme } from "./theme-provider"
 
-interface ThemeToggleProps {
-	variant?: "primary" | "outline" | "ghost"
-	size?: "sm" | "default" | "lg"
-	showLabel?: boolean
-	align?: "start" | "center" | "end"
-}
-
-export function ThemeToggle({
-	variant = "ghost",
-	size = "default",
-	showLabel = false,
-	align = "end",
-}: ThemeToggleProps) {
+export function ThemeToggle() {
 	const { theme, setTheme, resolvedTheme } = useTheme()
 
-	// Animation variants for icons
 	const iconVariants = {
 		sun: "transition-all duration-500 ease-in-out",
 		moon: "transition-all duration-500 ease-in-out",
@@ -36,24 +23,22 @@ export function ThemeToggle({
 			return (
 				<Monitor
 					aria-hidden="true"
-					className={`h-4 w-4 ${iconVariants.system} rotate-0 scale-100`}
+					className={`${iconVariants.system} rotate-0 scale-100`}
 				/>
 			)
 		}
-
 		if (resolvedTheme === "dark") {
 			return (
 				<Moon
 					aria-hidden="true"
-					className={`h-4 w-4 ${iconVariants.moon} rotate-0 scale-100`}
+					className={`${iconVariants.moon} rotate-0 scale-100`}
 				/>
 			)
 		}
-
 		return (
 			<Sun
 				aria-hidden="true"
-				className={`h-4 w-4 ${iconVariants.sun} rotate-0 scale-100`}
+				className={`${iconVariants.sun} rotate-0 scale-100`}
 			/>
 		)
 	}
@@ -88,19 +73,13 @@ export function ThemeToggle({
 			<DropdownMenuTrigger asChild>
 				<Button
 					aria-label="Toggle theme"
-					className={`relative overflow-hidden transition-all duration-200 ease-in-out hover:scale-105 focus:ring-2 focus:ring-ring focus:ring-offset-2 active:scale-95 ${showLabel ? "gap-2" : "aspect-square"}
-          `}
-					size={size}
-					variant={variant}
+					className="relative overflow-hidden transition-all duration-200 ease-in-out hover:scale-105 focus:ring-2 focus:ring-ring focus:ring-offset-2 active:scale-95"
+					size="icon"
+					variant="outline"
 				>
 					<div className="relative flex items-center justify-center">
 						{getCurrentIcon()}
 					</div>
-					{showLabel && (
-						<span className="font-medium text-sm">
-							{themeOptions.find((option) => option.value === theme)?.label}
-						</span>
-					)}
 					<span className="sr-only">
 						Current theme:{" "}
 						{theme === "system" ? `System (${resolvedTheme})` : theme}
@@ -109,7 +88,7 @@ export function ThemeToggle({
 			</DropdownMenuTrigger>
 
 			<DropdownMenuContent
-				align={align}
+				align="end"
 				className="w-56 border border-border/50 bg-popover/95 p-2 shadow-lg backdrop-blur-sm"
 			>
 				<div className="grid gap-1">
@@ -119,21 +98,27 @@ export function ThemeToggle({
 
 						return (
 							<DropdownMenuItem
-								className={`group flex cursor-pointer items-center gap-3 rounded-md px-3 py-2.5 transition-all duration-200 ease-in-out hover:bg-accent/80 focus:bg-accent/80 ${isSelected ? "bg-accent/60 text-accent-foreground" : ""}
-                `}
+								className={`group flex cursor-pointer items-center gap-3 rounded-md px-3 py-2.5 transition-all duration-200 ease-in-out hover:bg-accent/80 focus:bg-accent/80 ${
+									isSelected ? "bg-accent/60 text-accent-foreground" : ""
+								}`}
 								key={option.value}
 								onClick={() => handleThemeSelect(option.value)}
 							>
 								<div className="flex h-5 w-5 items-center justify-center">
 									<Icon
-										className={`h-4 w-4 transition-all duration-200 ${isSelected ? "scale-110 text-accent-foreground" : "text-muted-foreground"}group-hover:scale-105`}
+										className={`h-4 w-4 transition-all duration-200 ${
+											isSelected
+												? "scale-110 text-accent-foreground"
+												: "text-muted-foreground"
+										} group-hover:scale-105`}
 									/>
 								</div>
 
 								<div className="flex min-w-0 flex-1 flex-col">
 									<span
-										className={`font-medium text-sm leading-none ${isSelected ? "text-accent-foreground" : "text-foreground"}
-                  `}
+										className={`font-medium text-sm leading-none ${
+											isSelected ? "text-accent-foreground" : "text-foreground"
+										}`}
 									>
 										{option.label}
 									</span>
