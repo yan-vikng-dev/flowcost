@@ -24,7 +24,7 @@ export async function sendWhatsAppText({
 		},
 		body: JSON.stringify(body),
 	})
-	
+
 	if (!response.ok) {
 		const errorText = await response.text()
 		console.error("WhatsApp API error:", {
@@ -38,7 +38,7 @@ export async function sendWhatsAppText({
 			`WhatsApp API error: ${response.status} ${response.statusText} - ${errorText}`,
 		)
 	}
-	
+
 	try {
 		const responseBody = (await response.json()) as {
 			messages?: Array<{ id?: string }>
@@ -52,9 +52,10 @@ export async function sendWhatsAppText({
 		// If JSON parsing fails, log but don't fail - the response was OK
 		console.warn("WhatsApp API response OK but JSON parse failed", {
 			waId,
-			parseError: parseError instanceof Error ? parseError.message : String(parseError),
+			parseError:
+				parseError instanceof Error ? parseError.message : String(parseError),
 		})
 	}
-	
+
 	return response
 }

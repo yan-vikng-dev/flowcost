@@ -1,0 +1,9 @@
+---
+globs: *.ts,*.tsx
+alwaysApply: false
+---
+- prefer full callback parameter names over shorthand like `event` instead of `e`
+- prefer drizzle .query api over .select
+- never use the `any` type
+- think twice before casting types, prefer the source to be correctly typed
+- when importing types, mark them explicitly as `type`, e.g. `import type { Category } from "@repo/shared-config"` or `import {type Category}, categories from "@repo/shared-config"`

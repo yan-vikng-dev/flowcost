@@ -1,3 +1,7 @@
+---
+globs: *.tsx
+alwaysApply: false
+---
 - text defaults to text-foreground, so no need to set explicitly
 - prefer parent `space-y-x` and `gap` over individual children `mb-x` and `mt-x`
 - when creating icon-only buttons, use `size="icon"`, `size="icon-sm"`, or `size="icon-xs"` variants. When using these icon size variants, no need to add a size class to the icon.

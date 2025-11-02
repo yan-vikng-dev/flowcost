@@ -99,7 +99,7 @@ entries {
   // ... existing fields ...
   
   // NEW: Optional link to template
-  recurringTemplateId?: text -> recurring_entry_templates.id (onDelete: set null)
+  recurringTemplateId?: text -> recurring_entry_templates.id (onDelete: cascade)
 
   // NEW: Instance override flag (edits only)
   isOverridden: boolean (not null, default: false)
@@ -771,38 +771,38 @@ We do not use `COUNT` in stored RRULE. Bound generation with `endAt` (optional) 
 
 ### Phase 1: Schema (Drizzle Push)
 
-1. ✅ Add `recurring_entry_templates` schema (Drizzle style: `sqliteTable`, `integer({ mode: "timestamp_ms" })`, `integer({ mode: "boolean" })`)
-2. ✅ Modify `entries`: add optional `recurringTemplateId` and `isOverridden` (boolean)
-3. ✅ Add indexes in table callbacks, including unique(recurringTemplateId, executedAt)
-4. ✅ Update relations
-5. ✅ Run `pnpm --filter data-ops run drizzle:push`
+1. Add `recurring_entry_templates` schema (Drizzle style: `sqliteTable`, `integer({ mode: "timestamp_ms" })`, `integer({ mode: "boolean" })`)
+2. Modify `entries`: add optional `recurringTemplateId` and `isOverridden` (boolean)
+3. Add indexes in table callbacks, including unique(recurringTemplateId, executedAt)
+4. Update relations
+5. Run `pnpm --filter data-ops run drizzle:push`
 
 ### Phase 2: Core Generation Logic
 
-1. ✅ Install `rrule` package
-2. ✅ Create RRULE helper functions
-3. ✅ Implement `ensureRecurringEntriesMaterialized`
-4. ✅ Implement `materializeTemplateEntries` (insert-missing only)
-5. ✅ Integrate into `fetchConvertedEntriesForRange`
+1. Install `rrule` package
+2. Create RRULE helper functions (parse/build, date range between)
+3. Implement `ensureRecurringEntriesMaterialized` (per userId; include partner when requested)
+4. Implement `materializeTemplateEntries` (insert-missing only; no deletes; honor `endAt` and month-end)
+5. Integrate into `fetchConvertedEntriesForRange` before selects
 
 ### Phase 3: Template CRUD
 
-1. ✅ Create template server functions
-2. ✅ Validate RRULE on create/update
-3. ✅ Handle template updates (invalidate generation)
-4. ✅ Handle template deletion (cleanup future entries)
+1. Create template server function (create): validate RRULE (no UNTIL/COUNT), store `dtstart`/`endAt`, set `isActive=true`, and set `generationValidUntil` to epoch
+2. Update template (entry fields only; recurrence immutable): update template and propagate field changes to non-overridden instances for current month
+3. Pause/resume: `isActive=false` deletes future generated entries starting today; resume sets `isActive=true` and relies on lazy materialization
+4. Delete template (nuke): delete template; entries are removed via FK cascade
 
 ### Phase 4: Instance CRUD
 
-1. ✅ Edit instance: update entry row + set `isOverridden = true`
-2. ✅ Delete instance: hard-delete entry row
+1. Edit instance: update entry row + set `isOverridden = true`
+2. Delete instance: hard-delete entry row
 
 ### Phase 5: Testing
 
-1. ✅ Unit tests for RRULE parsing
-2. ✅ Unit tests for generation logic
-3. ✅ Integration tests for CRUD operations
-4. ✅ Edge case testing
+1. Unit tests for RRULE parsing/building
+2. Unit tests for materialization logic (insert-missing) with `endAt`
+3. Integration tests for template CRUD and instance edit/delete flows
+4. Edge case testing (timezone day boundaries, uniqueness on (templateId, executedAt))
 
 ### Phase 6: UI (Future)
 

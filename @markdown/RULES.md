@@ -1,7 +1,0 @@
-- prefer full callback parameter names over shorthand like `event` instead of `e`
-- prefer drizzle .query api over .select
-- never use the `any` type
-- think twice before casting types, prefer the source to be correctly typed
-- when importing types, mark them explicitly as `type`, e.g. `import type { Category } from "@repo/shared-config"` or `import {type Category}, categories from "@repo/shared-config"`
-- always run `pnpm check` when finished making all desired changes
-- note that `pnpm check` also auto-fixes all fixable lint and formatting errors

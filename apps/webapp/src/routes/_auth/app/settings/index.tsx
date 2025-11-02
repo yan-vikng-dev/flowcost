@@ -483,15 +483,12 @@ function RouteComponent() {
 											}
 											value={String(current.reportsWeeklyDay)}
 										>
-										<SelectTrigger className="min-w-[7.5rem]">
-											<SelectValue placeholder="Select day" />
-										</SelectTrigger>
+											<SelectTrigger className="min-w-[7.5rem]">
+												<SelectValue placeholder="Select day" />
+											</SelectTrigger>
 											<SelectContent>
 												{weekdays.map((day) => (
-													<SelectItem
-														key={day.value}
-														value={String(day.value)}
-													>
+													<SelectItem key={day.value} value={String(day.value)}>
 														{day.label}
 													</SelectItem>
 												))}
@@ -506,9 +503,7 @@ function RouteComponent() {
 									<Field orientation="horizontal">
 										<FieldTitle>Report Time</FieldTitle>
 										<TimePicker
-											onChange={(value) =>
-												updatePref({ reportsTime: value })
-											}
+											onChange={(value) => updatePref({ reportsTime: value })}
 											value={current.reportsTime}
 										/>
 									</Field>
