@@ -76,7 +76,23 @@ export function ExpensesByCategoryBar() {
 	}, [])
 
 	const isEmpty = total <= 0
-	const CHART_MARGIN = { top: 24, right: 48, bottom: 12, left: 4 } as const
+	const BAR_SIZE = 32
+	const BAR_SPACING = 8
+	const TOP_MARGIN = 24
+	const BOTTOM_MARGIN = 12
+	const CHART_MARGIN = {
+		top: TOP_MARGIN,
+		right: 48,
+		bottom: BOTTOM_MARGIN,
+		left: 0,
+	} as const
+
+	const chartHeight = React.useMemo(() => {
+		if (chartData.length === 0) return 0
+		return (
+			chartData.length * (BAR_SIZE + BAR_SPACING) + TOP_MARGIN + BOTTOM_MARGIN
+		)
+	}, [chartData.length])
 
 	if (isEmpty) return null
 
@@ -88,8 +104,9 @@ export function ExpensesByCategoryBar() {
 			</CardHeader>
 			<CardContent className="min-w-0 flex-1 pb-0">
 				<ChartContainer
-					className="min-h-[220px] w-full min-w-0 overflow-visible"
+					className="w-full min-w-0 overflow-visible"
 					config={chartConfig}
+					style={{ height: chartHeight }}
 				>
 					<BarChart
 						accessibilityLayer
@@ -104,7 +121,7 @@ export function ExpensesByCategoryBar() {
 							tick={{ fontSize: 12, fill: "var(--muted-foreground)" }}
 							tickLine={false}
 							type="category"
-							width={96}
+							width={60}
 						/>
 						<ChartTooltip
 							content={
@@ -118,7 +135,12 @@ export function ExpensesByCategoryBar() {
 							}
 							cursor={false}
 						/>
-						<Bar dataKey="amount" fill="var(--color-amount)" radius={4}>
+						<Bar
+							barSize={BAR_SIZE}
+							dataKey="amount"
+							fill="var(--color-amount)"
+							radius={4}
+						>
 							{chartData.map((item) => (
 								<Cell fill={item.fill} key={`cell-${item.category}`} />
 							))}
