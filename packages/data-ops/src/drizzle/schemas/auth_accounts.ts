@@ -1,7 +1,7 @@
 import { relations } from "drizzle-orm"
 import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core"
-import { timestamps } from "../helpers"
 import { auth_users } from "./auth_users"
+import { timestamps } from "./helpers"
 
 export const auth_accounts = sqliteTable("auth_accounts", {
 	id: text().primaryKey().notNull(),

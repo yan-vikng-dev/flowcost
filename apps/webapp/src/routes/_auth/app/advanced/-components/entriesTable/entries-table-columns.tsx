@@ -1,6 +1,11 @@
 import type { EntryType } from "@repo/data-ops/drizzle/schemas/index"
 import type { ColumnDef } from "@tanstack/react-table"
-import { ArrowDownIcon, ArrowUpDownIcon, ArrowUpIcon } from "lucide-react"
+import {
+	ArrowDownIcon,
+	ArrowUpDownIcon,
+	ArrowUpIcon,
+	RepeatIcon,
+} from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { getCategoryIcon } from "@/config/categories"
 import { getEntryTypeIcon } from "@/config/entryTypes"
@@ -21,6 +26,30 @@ export function entriesTableColumns(
 	displayCurrency: string,
 ): ColumnDef<MonthlyEntry>[] {
 	return [
+		{
+			accessorKey: "recurringTemplateId",
+			enableSorting: false,
+			header: () => <div className="w-8" />,
+			cell: ({ row }) => {
+				const entry = row.original
+				if (entry.recurringTemplateId) {
+					return (
+						<div
+							className="relative flex items-center justify-center"
+							title={
+								entry.isOverridden ? "Recurring (overridden)" : "Recurring"
+							}
+						>
+							<RepeatIcon className="h-4 w-4 text-muted-foreground" />
+							{entry.isOverridden && (
+								<span className="-right-1 -top-1 absolute h-1.5 w-1.5 rounded-full bg-foreground" />
+							)}
+						</div>
+					)
+				}
+				return null
+			},
+		},
 		{
 			accessorKey: "executedAt",
 			header: ({ column }) => {

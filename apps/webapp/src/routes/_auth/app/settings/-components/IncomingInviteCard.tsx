@@ -1,4 +1,4 @@
-import { initialsFrom } from "@repo/shared-config"
+import { initialsFrom } from "@repo/shared-lib"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { CheckIcon, XIcon } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"

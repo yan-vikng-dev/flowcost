@@ -1,6 +1,6 @@
-import type { Currency } from "@repo/shared-config"
+import type { Currency } from "@repo/shared-lib"
 import { sqliteTable, text } from "drizzle-orm/sqlite-core"
-import { timestamps } from "../helpers"
+import { timestamps } from "./helpers"
 
 export type InsertExchangeRate = typeof exchange_rates.$inferInsert
 export type SelectExchangeRate = typeof exchange_rates.$inferSelect

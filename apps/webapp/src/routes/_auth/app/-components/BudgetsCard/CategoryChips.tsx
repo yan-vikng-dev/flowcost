@@ -1,4 +1,4 @@
-import type { Category } from "@repo/shared-config"
+import type { Category } from "@repo/shared-lib"
 import { Badge } from "@/components/ui/badge"
 import { getCategoryIcon } from "@/config/categories"
 

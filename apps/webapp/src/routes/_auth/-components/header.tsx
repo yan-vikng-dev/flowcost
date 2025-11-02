@@ -1,4 +1,4 @@
-import { initialsFrom } from "@repo/shared-config"
+import { initialsFrom } from "@repo/shared-lib"
 import { Link } from "@tanstack/react-router"
 import { AccountDialog } from "@/components/auth/account-dialog"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"

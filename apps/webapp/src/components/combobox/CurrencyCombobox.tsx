@@ -3,7 +3,7 @@ import {
 	currencies,
 	getCurrencyName,
 	getCurrencySymbol,
-} from "@repo/shared-config"
+} from "@repo/shared-lib"
 import { ResponsiveCombobox } from "./ResponsiveCombobox"
 
 export function CurrencyCombobox({

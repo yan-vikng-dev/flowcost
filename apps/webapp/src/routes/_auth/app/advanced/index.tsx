@@ -8,7 +8,12 @@ import {
 	listEntriesThisMonthPaginated,
 } from "@/core/functions/entries"
 import { getUserPreferences } from "@/core/functions/preferences"
+import {
+	type CreateRecurringTemplateInput,
+	createRecurringTemplate,
+} from "@/core/functions/recurring-templates"
 import { EntryDialog, getDefaultEntryInitial } from "../-components/EntryDialog"
+import { buildRRuleFromUi } from "../-components/RecurringCard/utils"
 import { MonthlyEntriesTable } from "./-components/entriesTable/index"
 
 export const Route = createFileRoute("/_auth/app/advanced/")({
@@ -55,11 +60,16 @@ function RouteComponent() {
 	const createMut = useMutation({
 		mutationFn: (input: CreateEntryInput) => createEntry({ data: input }),
 		onSuccess: async () => {
+			await queryClient.invalidateQueries({ queryKey: ["entries"] })
+		},
+	})
+	const createRecurringMut = useMutation({
+		mutationFn: (input: CreateRecurringTemplateInput) =>
+			createRecurringTemplate({ data: input }),
+		onSuccess: async () => {
 			await Promise.all([
 				queryClient.invalidateQueries({ queryKey: ["entries"] }),
-				queryClient.invalidateQueries({
-					queryKey: ["monthlyEntriesForCharts"],
-				}),
+				queryClient.invalidateQueries({ queryKey: ["recurringTemplates"] }),
 			])
 		},
 	})
@@ -92,8 +102,34 @@ function RouteComponent() {
 					})
 					setOpen(false)
 				}}
+				onSubmitRecurring={(state) => {
+					if (
+						!state.recurrence ||
+						!state.executedAt ||
+						!state.recurrence.unit ||
+						!state.recurrence.every
+					)
+						return
+					const amount = typeof state.amount === "number" ? state.amount : 0
+					const rrule = buildRRuleFromUi(state.executedAt, state.recurrence)
+					createRecurringMut.mutate({
+						amount,
+						currency: state.currency,
+						category: state.category,
+						entryType: state.entryType,
+						description: state.description,
+						rrule,
+						dtstart: state.executedAt,
+						endAt: state.endAt,
+					})
+					setOpen(false)
+				}}
 				open={open}
-				submitLabel={createMut.isPending ? "Creating..." : "Create"}
+				submitLabel={
+					createMut.isPending || createRecurringMut.isPending
+						? "Creating..."
+						: "Create"
+				}
 				title="New Entry"
 			/>
 		</div>

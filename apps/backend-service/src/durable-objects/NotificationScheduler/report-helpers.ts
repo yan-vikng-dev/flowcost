@@ -1,4 +1,4 @@
-import type { Category, Currency } from "@repo/shared-config"
+import type { Category, Currency } from "@repo/shared-lib"
 import { DateTime } from "luxon"
 
 export type ReportType = "daily" | "weekly" | "monthly"

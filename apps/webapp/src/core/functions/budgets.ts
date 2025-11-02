@@ -10,10 +10,10 @@ import {
 	type Currency,
 	categories,
 	currencies,
-} from "@repo/shared-config"
+	getCurrentMonthRange,
+} from "@repo/shared-lib"
 import { createServerFn } from "@tanstack/react-start"
 import { eq } from "drizzle-orm"
-import { DateTime } from "luxon"
 import { z } from "zod"
 import { protectedFunctionMiddleware } from "@/core/middleware/auth"
 
@@ -125,16 +125,14 @@ export const listBudgetsWithProgress = createServerFn()
 		const timeZone = prefs?.timezone || "UTC"
 		const displayCurrency: Currency =
 			(prefs?.displayCurrency as Currency) ?? "USD"
-		const now = DateTime.now().setZone(timeZone)
-		const start = now.startOf("month")
-		const end = start.plus({ months: 1 })
+		const { start, end } = getCurrentMonthRange(timeZone)
 
 		const entriesResult = await fetchConvertedEntriesForRange(
 			db,
 			ctx.context.userId,
 			{
-				start: start.toJSDate(),
-				end: end.toJSDate(),
+				start,
+				end,
 				timezone: timeZone,
 				displayCurrency,
 				entryType: "Expense",

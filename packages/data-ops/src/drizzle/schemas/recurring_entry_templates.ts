@@ -1,4 +1,4 @@
-import { categories, currencies } from "@repo/shared-config"
+import { categories, currencies } from "@repo/shared-lib"
 import { relations } from "drizzle-orm"
 import {
 	index,
@@ -7,9 +7,9 @@ import {
 	sqliteTable,
 	text,
 } from "drizzle-orm/sqlite-core"
-import { timestamps } from "../helpers"
 import { auth_users } from "./auth_users"
-import { entries, entryTypes } from "./entries"
+import { entries } from "./entries"
+import { entryTypes, timestamps } from "./helpers"
 
 export const recurring_entry_templates = sqliteTable(
 	"recurring_entry_templates",

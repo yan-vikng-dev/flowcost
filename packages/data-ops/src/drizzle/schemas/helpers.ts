@@ -8,3 +8,6 @@ export const timestamps = {
 		.$onUpdate(() => new Date())
 		.notNull(),
 }
+
+export const entryTypes = ["Expense", "Income"] as const
+export type EntryType = (typeof entryTypes)[number]

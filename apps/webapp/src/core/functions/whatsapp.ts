@@ -4,7 +4,7 @@ import {
 	whatsapp_link_tokens,
 	whatsapp_links,
 } from "@repo/data-ops/drizzle/schemas/index"
-import { sha256Hex, token44 } from "@repo/shared-config/crypto"
+import { sha256Hex, token44 } from "@repo/shared-lib/crypto"
 import { createServerFn } from "@tanstack/react-start"
 import { eq } from "drizzle-orm"
 import { z } from "zod"

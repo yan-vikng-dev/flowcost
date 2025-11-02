@@ -1,4 +1,4 @@
-import type { Category, Currency } from "@repo/shared-config"
+import type { Category, Currency } from "@repo/shared-lib"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { EditIcon, PlusIcon } from "lucide-react"
 import { DateTime } from "luxon"
@@ -32,7 +32,10 @@ import {
 } from "@/core/functions/budgets"
 import { getUserPreferences } from "@/core/functions/preferences"
 import { authClient } from "@/lib/auth-client"
-import { getMonthlyEntriesForCharts } from "../../-functions/monthlyEntries"
+import {
+	getMonthlyEntriesForCharts,
+	MONTHLY_ENTRIES_FOR_CHARTS_KEY,
+} from "../../-functions/monthlyEntries"
 import { BudgetDialog, type FormState } from "./BudgetDialog"
 import { BudgetItem } from "./BudgetItem"
 import { getMonthProgress } from "./utils"
@@ -53,7 +56,7 @@ export function BudgetsCard() {
 	})
 
 	const monthlyQuery = useQuery({
-		queryKey: ["monthlyEntriesForCharts"],
+		queryKey: MONTHLY_ENTRIES_FOR_CHARTS_KEY,
 		queryFn: () => getMonthlyEntriesForCharts(),
 	})
 

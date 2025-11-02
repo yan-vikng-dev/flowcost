@@ -1,4 +1,4 @@
-import { initialsFrom } from "@repo/shared-config"
+import { initialsFrom } from "@repo/shared-lib"
 import { Link } from "@tanstack/react-router"
 import { BookIcon, ExternalLinkIcon, LogInIcon, MenuIcon } from "lucide-react"
 import * as React from "react"

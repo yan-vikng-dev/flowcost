@@ -8,7 +8,8 @@
 		"dep": "turbo run deploy",
 		"dev": "pnpm run --filter webapp dev",
 		"studio": "pnpm run --filter data-ops drizzle:studio",
-		"check": "pnpm exec biome check --write --max-diagnostics 10 --unsafe && turbo typecheck"
+		"check": "pnpm exec biome check --write --max-diagnostics 10 --unsafe && turbo typecheck",
+		"db:push": "pnpm run --filter data-ops drizzle:push"
 	},
 	"keywords": [],
 	"author": "",
@@ -23,21 +24,5 @@
 	},
 	"dependencies": {
 		"drizzle-kit": "^0.31.6"
-	},
-	"pnpm": {
-		"overrides": {
-			"zod": "^4.1.12"
-		},
-		"peerDependencyRules": {
-			"ignoreMissing": [
-				"@vitest/runner",
-				"@vitest/snapshot"
-			],
-			"allowedVersions": {
-				"vitest": "4",
-				"@vitest/runner": "4",
-				"@vitest/snapshot": "4"
-			}
-		}
 	}
 }

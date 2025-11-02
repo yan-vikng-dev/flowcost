@@ -1,4 +1,4 @@
-import { formatCurrency } from "@repo/shared-config"
+import { formatCurrency } from "@repo/shared-lib"
 import { useQuery } from "@tanstack/react-query"
 import * as React from "react"
 import { Bar, BarChart, Cell, LabelList, XAxis, YAxis } from "recharts"
@@ -15,7 +15,10 @@ import {
 	ChartTooltip,
 	ChartTooltipContent,
 } from "@/components/ui/chart"
-import { getMonthlyEntriesForCharts } from "../-functions/monthlyEntries"
+import {
+	getMonthlyEntriesForCharts,
+	MONTHLY_ENTRIES_FOR_CHARTS_KEY,
+} from "../-functions/monthlyEntries"
 
 type ChartSlice = {
 	category: string
@@ -26,18 +29,26 @@ type ChartSlice = {
 
 export function ExpensesByCategoryBar() {
 	const { data } = useQuery({
-		queryKey: ["monthlyEntriesForCharts"],
+		queryKey: MONTHLY_ENTRIES_FOR_CHARTS_KEY,
 		queryFn: () => getMonthlyEntriesForCharts(),
 	})
 
 	const { chartData, total } = React.useMemo(() => {
 		const displayCurrency = data?.displayCurrency ?? "USD"
-		const base = (data?.entries ?? [])
-			.filter((e) => e.entryType === "Expense")
-			.map((e) => ({
-				category: e.category,
-				amount: Math.round(e.amountConverted),
-			}))
+		const expenses = (data?.entries ?? []).filter(
+			(e) => e.entryType === "Expense",
+		)
+		const aggregated = expenses.reduce(
+			(acc, e) => {
+				const category = e.category.trim()
+				const amount = Math.round(e.amountConverted)
+				acc[category] = (acc[category] ?? 0) + amount
+				return acc
+			},
+			{} as Record<string, number>,
+		)
+		const base = Object.entries(aggregated)
+			.map(([category, amount]) => ({ category, amount }))
 			.sort((a, b) => b.amount - a.amount)
 		const top = base.slice(0, 4)
 		const rest = base.slice(4)

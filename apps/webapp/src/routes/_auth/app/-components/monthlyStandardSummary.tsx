@@ -1,4 +1,4 @@
-import { currencyData } from "@repo/shared-config"
+import { currencyData } from "@repo/shared-lib"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import * as React from "react"
 import { Button } from "@/components/ui/button"
@@ -12,12 +12,20 @@ import {
 } from "@/components/ui/card"
 import { type CreateEntryInput, createEntry } from "@/core/functions/entries"
 import { getUserPreferences } from "@/core/functions/preferences"
-import { getMonthlyEntriesForCharts } from "../-functions/monthlyEntries"
+import {
+	type CreateRecurringTemplateInput,
+	createRecurringTemplate,
+} from "@/core/functions/recurring-templates"
+import {
+	getMonthlyEntriesForCharts,
+	MONTHLY_ENTRIES_FOR_CHARTS_KEY,
+} from "../-functions/monthlyEntries"
 import { EntryDialog, getDefaultEntryInitial } from "./EntryDialog"
+import { buildRRuleFromUi } from "./RecurringCard/utils"
 
 export function MonthlyStandardSummary() {
 	const { data } = useQuery({
-		queryKey: ["monthlyEntriesForCharts"],
+		queryKey: MONTHLY_ENTRIES_FOR_CHARTS_KEY,
 		queryFn: () => getMonthlyEntriesForCharts(),
 	})
 
@@ -31,11 +39,16 @@ export function MonthlyStandardSummary() {
 	const createMut = useMutation({
 		mutationFn: (input: CreateEntryInput) => createEntry({ data: input }),
 		onSuccess: async () => {
+			await queryClient.invalidateQueries({ queryKey: ["entries"] })
+		},
+	})
+	const createRecurringMut = useMutation({
+		mutationFn: (input: CreateRecurringTemplateInput) =>
+			createRecurringTemplate({ data: input }),
+		onSuccess: async () => {
 			await Promise.all([
 				queryClient.invalidateQueries({ queryKey: ["entries"] }),
-				queryClient.invalidateQueries({
-					queryKey: ["monthlyEntriesForCharts"],
-				}),
+				queryClient.invalidateQueries({ queryKey: ["recurringTemplates"] }),
 			])
 		},
 	})
@@ -110,8 +123,34 @@ export function MonthlyStandardSummary() {
 					})
 					setOpen(false)
 				}}
+				onSubmitRecurring={(state) => {
+					if (
+						!state.recurrence ||
+						!state.executedAt ||
+						!state.recurrence.unit ||
+						!state.recurrence.every
+					)
+						return
+					const amount = typeof state.amount === "number" ? state.amount : 0
+					const rrule = buildRRuleFromUi(state.executedAt, state.recurrence)
+					createRecurringMut.mutate({
+						amount,
+						currency: state.currency,
+						category: state.category,
+						entryType: state.entryType,
+						description: state.description,
+						rrule,
+						dtstart: state.executedAt,
+						endAt: state.endAt,
+					})
+					setOpen(false)
+				}}
 				open={open}
-				submitLabel={createMut.isPending ? "Creating..." : "Create"}
+				submitLabel={
+					createMut.isPending || createRecurringMut.isPending
+						? "Creating..."
+						: "Create"
+				}
 				title="New Entry"
 			/>
 		</Card>

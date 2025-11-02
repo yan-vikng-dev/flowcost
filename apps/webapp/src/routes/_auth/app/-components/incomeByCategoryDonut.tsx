@@ -1,4 +1,4 @@
-import { currencyData } from "@repo/shared-config"
+import { currencyData } from "@repo/shared-lib"
 import { useQuery } from "@tanstack/react-query"
 import * as React from "react"
 import { Label, Pie, PieChart } from "recharts"
@@ -17,13 +17,16 @@ import {
 	ChartTooltip,
 	ChartTooltipContent,
 } from "@/components/ui/chart"
-import { getMonthlyEntriesForCharts } from "../-functions/monthlyEntries"
+import {
+	getMonthlyEntriesForCharts,
+	MONTHLY_ENTRIES_FOR_CHARTS_KEY,
+} from "../-functions/monthlyEntries"
 
 type ChartSlice = { category: string; amount: number; fill: string }
 
 export function IncomeByCategoryDonut() {
 	const { data } = useQuery({
-		queryKey: ["monthlyEntriesForCharts"],
+		queryKey: MONTHLY_ENTRIES_FOR_CHARTS_KEY,
 		queryFn: () => getMonthlyEntriesForCharts(),
 	})
 

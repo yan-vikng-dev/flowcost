@@ -1,8 +1,8 @@
-import { currencies } from "@repo/shared-config"
+import { currencies } from "@repo/shared-lib"
 import { relations } from "drizzle-orm"
 import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core"
-import { timestamps } from "../helpers"
 import { auth_users } from "./auth_users"
+import { timestamps } from "./helpers"
 
 export const user_preferences = sqliteTable("user_preferences", {
 	userId: text()

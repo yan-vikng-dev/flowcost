@@ -1,4 +1,4 @@
-import { categories, SERVICE_START_DATE } from "@repo/shared-config"
+import { categories, SERVICE_START_DATE } from "@repo/shared-lib"
 import { useForm } from "@tanstack/react-form"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { ChevronDownIcon } from "lucide-react"
@@ -61,9 +61,6 @@ export function EntriesForm() {
 			await createEntry({ data: payload })
 			await Promise.all([
 				queryClient.invalidateQueries({ queryKey: ["entries"] }),
-				queryClient.invalidateQueries({
-					queryKey: ["monthlyEntriesForCharts"],
-				}),
 			])
 		},
 	})

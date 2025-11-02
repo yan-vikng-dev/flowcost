@@ -1,18 +1,21 @@
 import { getDb } from "@repo/data-ops/database/setup"
 import {
 	fetchConvertedEntriesForRange,
-	getPartnerUserId,
+	getEntryForUser,
 } from "@repo/data-ops/drizzle/queries"
+import {
+	getAllowedUserIds,
+	getUserTimezoneAndCurrency,
+} from "@repo/data-ops/drizzle/queries/helpers"
 import {
 	entries,
 	entryTypes,
+	type InsertEntry,
 	type SelectEntry,
-	user_preferences,
 } from "@repo/data-ops/drizzle/schemas/index"
-import { categories, currencies } from "@repo/shared-config"
+import { categories, currencies, getCurrentMonthRange } from "@repo/shared-lib"
 import { createServerFn } from "@tanstack/react-start"
 import { and, eq, inArray } from "drizzle-orm"
-import { DateTime } from "luxon"
 import { z } from "zod"
 import { protectedFunctionMiddleware } from "@/core/middleware/auth"
 
@@ -48,6 +51,42 @@ export const createEntry = createServerFn({ method: "POST" })
 		return { id: result?.id }
 	})
 
+export const updateEntryInput = z.object({
+	id: z.uuid(),
+	amount: z.number().gt(0).optional(),
+	currency: z.enum(currencies).optional(),
+	category: z.enum(categories).optional(),
+	entryType: z.enum(entryTypes).optional(),
+	description: z.string().optional(),
+	executedAt: z.date().optional(),
+})
+
+export type UpdateEntryInput = z.infer<typeof updateEntryInput>
+
+export const updateEntry = createServerFn({ method: "POST" })
+	.middleware([protectedFunctionMiddleware])
+	.inputValidator(updateEntryInput)
+	.handler(async (ctx) => {
+		const db = getDb()
+		const { id, ...updates } = ctx.data
+
+		const row = await getEntryForUser(db, id, ctx.context.userId)
+
+		if (!row) {
+			throw new Error("Entry not found")
+		}
+
+		const patch: Partial<InsertEntry> = { ...updates }
+
+		if (row.recurringTemplateId) {
+			patch.isOverridden = true
+		}
+
+		await db.update(entries).set(patch).where(eq(entries.id, id))
+
+		return { success: true }
+	})
+
 export const deleteEntriesInput = z.object({
 	ids: z.array(z.string()).min(1),
 })
@@ -60,10 +99,8 @@ export const deleteEntries = createServerFn({ method: "POST" })
 	.handler(async (ctx) => {
 		const db = getDb()
 		const ids = ctx.data.ids
-		const partnerId = await getPartnerUserId(db, ctx.context.userId)
-		const allowedUserIds = partnerId
-			? [ctx.context.userId, partnerId]
-			: [ctx.context.userId]
+		const allowedUserIds = await getAllowedUserIds(db, ctx.context.userId)
+
 		await db
 			.delete(entries)
 			.where(
@@ -77,20 +114,24 @@ export type MonthlyEntry = SelectEntry & {
 	amountIls: number | null
 }
 
+function mapToMonthlyEntry(
+	entry: SelectEntry & { convertedAmount: number | null },
+): MonthlyEntry {
+	return {
+		...entry,
+		amountIls: entry.convertedAmount,
+	}
+}
+
 export const listEntriesThisMonth = createServerFn()
 	.middleware([protectedFunctionMiddleware])
 	.handler(async (ctx) => {
 		const db = getDb()
-
-		const prefs = await db.query.user_preferences.findFirst({
-			where: eq(user_preferences.userId, ctx.context.userId),
-		})
-		const timezone = prefs?.timezone || "UTC"
-		const displayCurrency = prefs?.displayCurrency
-
-		const now = DateTime.now().setZone(timezone)
-		const start = now.startOf("month").toJSDate()
-		const end = now.plus({ months: 1 }).startOf("month").toJSDate()
+		const { timezone, displayCurrency } = await getUserTimezoneAndCurrency(
+			db,
+			ctx.context.userId,
+		)
+		const { start, end } = getCurrentMonthRange(timezone)
 
 		const result = await fetchConvertedEntriesForRange(db, ctx.context.userId, {
 			start,
@@ -101,14 +142,7 @@ export const listEntriesThisMonth = createServerFn()
 			sortDir: "desc",
 		})
 
-		const mapped: MonthlyEntry[] = result.entries.map(
-			(entry): MonthlyEntry => ({
-				...entry,
-				amountIls: entry.convertedAmount,
-			}),
-		)
-
-		return mapped
+		return result.entries.map(mapToMonthlyEntry)
 	})
 
 export const listEntriesThisMonthPaginatedInput = z.object({
@@ -130,19 +164,14 @@ export const listEntriesThisMonthPaginated = createServerFn()
 	.inputValidator(listEntriesThisMonthPaginatedInput)
 	.handler(async (ctx) => {
 		const db = getDb()
-
 		const { page, pageSize, sortBy, sortDir } = ctx.data
 		const offset = page * pageSize
 
-		const prefs = await db.query.user_preferences.findFirst({
-			where: eq(user_preferences.userId, ctx.context.userId),
-		})
-		const timezone = prefs?.timezone || "UTC"
-		const displayCurrency = prefs?.displayCurrency
-
-		const now = DateTime.now().setZone(timezone)
-		const start = now.startOf("month").toJSDate()
-		const end = now.plus({ months: 1 }).startOf("month").toJSDate()
+		const { timezone, displayCurrency } = await getUserTimezoneAndCurrency(
+			db,
+			ctx.context.userId,
+		)
+		const { start, end } = getCurrentMonthRange(timezone)
 
 		const result = await fetchConvertedEntriesForRange(db, ctx.context.userId, {
 			start,
@@ -155,12 +184,8 @@ export const listEntriesThisMonthPaginated = createServerFn()
 			offset,
 		})
 
-		const items: MonthlyEntry[] = result.entries.map(
-			(entry): MonthlyEntry => ({
-				...entry,
-				amountIls: entry.convertedAmount,
-			}),
-		)
-
-		return { items, total: result.total ?? 0 }
+		return {
+			items: result.entries.map(mapToMonthlyEntry),
+			total: result.total ?? 0,
+		}
 	})

@@ -1,4 +1,4 @@
-import { type Category, categories } from "@repo/shared-config"
+import { type Category, categories } from "@repo/shared-lib"
 import { CheckIcon, ChevronsUpDownIcon } from "lucide-react"
 import * as React from "react"
 import { Badge } from "@/components/ui/badge"

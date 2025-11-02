@@ -27,7 +27,7 @@
 		"@radix-ui/react-slot": "^1.2.3",
 		"@radix-ui/react-tooltip": "^1.2.8",
 		"@repo/data-ops": "workspace:^",
-		"@repo/shared-config": "workspace:^",
+		"@repo/shared-lib": "workspace:^",
 		"@tailwindcss/typography": "^0.5.19",
 		"@tailwindcss/vite": "^4.1.16",
 		"@tanstack/react-form": "^1.23.8",

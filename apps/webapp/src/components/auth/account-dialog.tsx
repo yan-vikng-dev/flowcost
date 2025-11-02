@@ -1,4 +1,4 @@
-import { initialsFrom } from "@repo/shared-config"
+import { initialsFrom } from "@repo/shared-lib"
 import { LogOut, Palette } from "lucide-react"
 import { ThemeToggle } from "@/components/theme/theme-toggle"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"

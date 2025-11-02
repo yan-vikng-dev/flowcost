@@ -1,7 +1,7 @@
 import { relations } from "drizzle-orm"
 import { index, sqliteTable, text } from "drizzle-orm/sqlite-core"
-import { timestamps } from "../helpers"
 import { auth_users } from "./auth_users"
+import { timestamps } from "./helpers"
 
 export const invitationStatuses = [
 	"pending",

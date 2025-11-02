@@ -1,4 +1,4 @@
-import { type Currency, getCurrencySymbol } from "@repo/shared-config"
+import { type Currency, getCurrencySymbol } from "@repo/shared-lib"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { formatNumber } from "./utils"

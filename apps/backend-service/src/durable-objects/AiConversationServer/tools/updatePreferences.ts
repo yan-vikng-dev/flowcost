@@ -1,6 +1,6 @@
 import type { DrizzleDb } from "@repo/data-ops/database/setup"
 import { user_preferences } from "@repo/data-ops/drizzle/schemas/index"
-import { type Currency, currencies } from "@repo/shared-config"
+import { type Currency, currencies } from "@repo/shared-lib"
 import { tool } from "ai"
 import { z } from "zod"
 import type { MessageContext } from ".."

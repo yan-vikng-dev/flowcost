@@ -4,7 +4,8 @@ import {
 	type SelectEntry,
 	user_preferences,
 } from "@repo/data-ops/drizzle/schemas/index"
-import type { Currency } from "@repo/shared-config"
+import type { Currency } from "@repo/shared-lib"
+import { getCurrentMonthRange } from "@repo/shared-lib"
 import { createServerFn } from "@tanstack/react-start"
 import { eq } from "drizzle-orm"
 import { DateTime } from "luxon"
@@ -24,6 +25,11 @@ export type MonthlyEntriesResult = {
 	entries: MonthlyEntryForCharts[]
 }
 
+export const MONTHLY_ENTRIES_FOR_CHARTS_KEY = [
+	"entries",
+	"monthlyForCharts",
+] as const
+
 export const getMonthlyEntriesForCharts = createServerFn()
 	.middleware([protectedFunctionMiddleware])
 	.handler(async (ctx): Promise<MonthlyEntriesResult> => {
@@ -35,14 +41,11 @@ export const getMonthlyEntriesForCharts = createServerFn()
 		if (!prefs) throw new Error("User preferences not found")
 		const displayCurrency = prefs.displayCurrency
 		const timeZone = prefs.timezone || "UTC"
-
-		const now = DateTime.now().setZone(timeZone)
-		const start = now.startOf("month")
-		const end = start.plus({ months: 1 })
+		const { start, end } = getCurrentMonthRange(timeZone)
 
 		const result = await fetchConvertedEntriesForRange(db, ctx.context.userId, {
-			start: start.toJSDate(),
-			end: end.toJSDate(),
+			start,
+			end,
 			timezone: timeZone,
 			displayCurrency,
 			sortBy: "executedAt",
@@ -61,10 +64,14 @@ export const getMonthlyEntriesForCharts = createServerFn()
 			}),
 		)
 
+		const monthLabel = DateTime.fromJSDate(start, { zone: timeZone }).toFormat(
+			"LLLL yyyy",
+		)
+
 		return {
 			displayCurrency,
 			timezone: timeZone,
-			monthLabel: start.toFormat("LLLL yyyy"),
+			monthLabel,
 			entries: enriched,
 		}
 	})

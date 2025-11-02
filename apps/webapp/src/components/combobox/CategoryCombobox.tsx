@@ -1,4 +1,4 @@
-import { type Category, categories } from "@repo/shared-config"
+import { type Category, categories } from "@repo/shared-lib"
 import { getCategoryIcon } from "@/config/categories"
 import { ResponsiveCombobox } from "./ResponsiveCombobox"
 

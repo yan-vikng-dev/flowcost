@@ -1,4 +1,4 @@
-import type { Category, Currency } from "@repo/shared-config"
+import type { Category, Currency } from "@repo/shared-lib"
 
 export type BudgetProgressEntry = {
 	spentDisplay: number

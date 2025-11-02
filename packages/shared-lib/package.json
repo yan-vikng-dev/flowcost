@@ -1,5 +1,5 @@
 {
-	"name": "@repo/shared-config",
+	"name": "@repo/shared-lib",
 	"version": "1.0.0",
 	"private": false,
 	"description": "Shared isomorphic config and types for Flowcost",
@@ -27,7 +27,11 @@
 	"author": "",
 	"license": "ISC",
 	"packageManager": "pnpm@10.14.0",
+	"dependencies": {
+		"luxon": "^3.5.0"
+	},
 	"devDependencies": {
+		"@types/luxon": "^3.4.2",
 		"typescript": "^5.9.3"
 	}
 }

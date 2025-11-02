@@ -1,16 +1,12 @@
-import type { Currency } from "@repo/shared-config"
-import { convertCurrency } from "@repo/shared-config/currency"
+import type { Currency } from "@repo/shared-lib"
+import { convertCurrency } from "@repo/shared-lib/currency"
 import { and, asc, count, desc, eq, gte, inArray, lt } from "drizzle-orm"
 import { DateTime } from "luxon"
 import type { DrizzleDb } from "../../database/setup"
-import {
-	type EntryType,
-	entries,
-	type SelectEntry,
-	user_preferences,
-} from "../schemas/index"
-import { getPartnerUserId } from "./connections"
+import { type EntryType, entries, type SelectEntry } from "../schemas/index"
 import { fetchExchangeRatesForDates } from "./exchange-rates"
+import { getAllowedUserIds, getUserTimezoneAndCurrency } from "./helpers"
+import { ensureRecurringEntriesMaterialized } from "./recurring-entries"
 
 export type ConvertedEntry = SelectEntry & {
 	convertedAmount: number | null
@@ -52,21 +48,15 @@ export async function fetchConvertedEntriesForRange(
 		offset,
 	} = options
 
-	let allowedUserIds: string[] = [userId]
-	if (includePartner) {
-		const partnerId = await getPartnerUserId(db, userId)
-		if (partnerId) {
-			allowedUserIds = [userId, partnerId]
-		}
+	const allowedUserIds = await getAllowedUserIds(db, userId, includePartner)
+
+	for (const uid of allowedUserIds) {
+		await ensureRecurringEntriesMaterialized(db, uid, start, end, timezone)
 	}
 
-	let displayCurrency: Currency = providedDisplayCurrency ?? "USD"
-	if (!providedDisplayCurrency) {
-		const prefs = await db.query.user_preferences.findFirst({
-			where: eq(user_preferences.userId, userId),
-		})
-		displayCurrency = (prefs?.displayCurrency as Currency) ?? "USD"
-	}
+	const displayCurrency: Currency =
+		providedDisplayCurrency ??
+		(await getUserTimezoneAndCurrency(db, userId)).displayCurrency
 
 	const baseWhere = and(
 		inArray(entries.userId, allowedUserIds),
@@ -154,4 +144,19 @@ export async function fetchConvertedEntriesForRange(
 		entries: convertedEntries,
 		...(total !== undefined && { total }),
 	}
+}
+
+export async function getEntryForUser(
+	db: DrizzleDb,
+	entryId: string,
+	userId: string,
+	includePartner = true,
+) {
+	const allowedUserIds = await getAllowedUserIds(db, userId, includePartner)
+	return db.query.entries.findFirst({
+		where: and(
+			eq(entries.id, entryId),
+			inArray(entries.userId, allowedUserIds),
+		),
+	})
 }

@@ -9,8 +9,8 @@ import {
 	user_preferences,
 	whatsapp_links,
 } from "@repo/data-ops/drizzle/schemas/index"
-import type { Currency } from "@repo/shared-config"
-import { formatCurrency } from "@repo/shared-config"
+import type { Currency } from "@repo/shared-lib"
+import { formatCurrency } from "@repo/shared-lib"
 import { eq } from "drizzle-orm"
 import { DateTime } from "luxon"
 import { sendWhatsAppText } from "@/handlers/whatsapp/helpers"

@@ -1,4 +1,4 @@
-import type { Category, Currency } from "@repo/shared-config"
+import type { Category, Currency } from "@repo/shared-lib"
 import * as React from "react"
 import { CategoryMultiCombobox } from "@/components/combobox/CategoryMultiCombobox"
 import { CurrencyCombobox } from "@/components/combobox/CurrencyCombobox"

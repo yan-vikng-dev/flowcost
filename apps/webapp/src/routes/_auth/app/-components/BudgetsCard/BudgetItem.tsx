@@ -1,4 +1,4 @@
-import { type Currency, getCurrencySymbol } from "@repo/shared-config"
+import { type Currency, getCurrencySymbol } from "@repo/shared-lib"
 import { PencilIcon, Trash2Icon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"

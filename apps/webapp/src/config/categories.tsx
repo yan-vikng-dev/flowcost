@@ -1,4 +1,4 @@
-import type { Category } from "@repo/shared-config"
+import type { Category } from "@repo/shared-lib"
 import {
 	BabyIcon,
 	BatteryPlusIcon,

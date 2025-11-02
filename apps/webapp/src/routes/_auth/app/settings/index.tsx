@@ -1,4 +1,4 @@
-import type { currencies } from "@repo/shared-config"
+import type { currencies } from "@repo/shared-lib"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { createFileRoute } from "@tanstack/react-router"
 import { Loader2 } from "lucide-react"
@@ -155,9 +155,6 @@ function RouteComponent() {
 			await Promise.all([
 				queryClient.invalidateQueries({ queryKey: ["userPreferences"] }),
 				queryClient.invalidateQueries({ queryKey: ["entries"] }),
-				queryClient.invalidateQueries({
-					queryKey: ["monthlyEntriesForCharts"],
-				}),
 			])
 		},
 	})

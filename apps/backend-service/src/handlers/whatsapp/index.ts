@@ -4,7 +4,7 @@ import {
 	whatsapp_link_tokens,
 	whatsapp_links,
 } from "@repo/data-ops/drizzle/schemas/index"
-import { sha256Hex, timingSafeEqualHex } from "@repo/shared-config/crypto"
+import { sha256Hex, timingSafeEqualHex } from "@repo/shared-lib/crypto"
 import { and, eq, gt, isNull } from "drizzle-orm"
 import type { MessageContext } from "@/durable-objects/AiConversationServer"
 import { sendWhatsAppText } from "./helpers"

@@ -1,5 +1,6 @@
 import type { DrizzleDb } from "@repo/data-ops/database/setup"
 import { fetchConvertedEntriesForRange } from "@repo/data-ops/drizzle/queries"
+import { getZonedDayRange } from "@repo/shared-lib"
 import { tool } from "ai"
 import { DateTime } from "luxon"
 import { z } from "zod"
@@ -20,7 +21,7 @@ export const makeGetEntriesTool = (context: MessageContext, db: DrizzleDb) =>
 		inputSchema: getEntriesSchema,
 		execute: async (input) => {
 			const inputDate = input.date ?? DateTime.now().toISODate()
-			const { startDate, endDate } = getZonedDayRangeUtc(
+			const { start: startDate, end: endDate } = getZonedDayRange(
 				inputDate,
 				context.userTimezone,
 			)
@@ -48,15 +49,3 @@ export const makeGetEntriesTool = (context: MessageContext, db: DrizzleDb) =>
 			return { entries: safeEntries, targetCurrency: context.displayCurrency }
 		},
 	})
-
-function getZonedDayRangeUtc(
-	dateStr: string,
-	timeZone: string,
-): { startDate: Date; endDate: Date } {
-	const start = DateTime.fromISO(dateStr, { zone: timeZone }).startOf("day")
-	const end = start.plus({ days: 1 })
-	return {
-		startDate: start.toJSDate(),
-		endDate: end.toJSDate(),
-	}
-}

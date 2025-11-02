@@ -1,4 +1,4 @@
-import { categories, currencies } from "@repo/shared-config"
+import { categories, currencies } from "@repo/shared-lib"
 import { relations } from "drizzle-orm"
 import {
 	index,
@@ -8,12 +8,9 @@ import {
 	text,
 	uniqueIndex,
 } from "drizzle-orm/sqlite-core"
-import { timestamps } from "../helpers"
 import { auth_users } from "./auth_users"
+import { entryTypes, timestamps } from "./helpers"
 import { recurring_entry_templates } from "./recurring_entry_templates"
-
-export const entryTypes = ["Expense", "Income"] as const
-export type EntryType = (typeof entryTypes)[number]
 
 export type InsertEntry = typeof entries.$inferInsert
 export type SelectEntry = typeof entries.$inferSelect
@@ -35,9 +32,9 @@ export const entries = sqliteTable(
 		executedAt: integer({ mode: "timestamp_ms" }).notNull(),
 
 		// Recurring linkage & flags
-    recurringTemplateId: text().references(() => recurring_entry_templates.id, {
-      onDelete: "cascade",
-    }),
+		recurringTemplateId: text().references(() => recurring_entry_templates.id, {
+			onDelete: "cascade",
+		}),
 		isOverridden: integer({ mode: "boolean" }).notNull().default(false),
 
 		...timestamps,

@@ -1,9 +1,9 @@
 import { relations } from "drizzle-orm"
 import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core"
-import { timestamps } from "../helpers"
 import { auth_accounts } from "./auth_accounts"
 import { auth_sessions } from "./auth_sessions"
 import { entries } from "./entries"
+import { timestamps } from "./helpers"
 import { user_preferences } from "./user_preferences"
 import { whatsapp_links } from "./whatsapp_links"
 

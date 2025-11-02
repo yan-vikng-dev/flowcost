@@ -5,7 +5,11 @@ import { BudgetsCard } from "./-components/BudgetsCard"
 import { ExpensesByCategoryBar } from "./-components/ExpensesByCategoryBar"
 import { IncomeByCategoryDonut } from "./-components/IncomeByCategoryDonut"
 import { MonthlyStandardSummary } from "./-components/MonthlyStandardSummary"
-import { getMonthlyEntriesForCharts } from "./-functions/monthlyEntries"
+import { RecurringCard } from "./-components/RecurringCard"
+import {
+	getMonthlyEntriesForCharts,
+	MONTHLY_ENTRIES_FOR_CHARTS_KEY,
+} from "./-functions/monthlyEntries"
 
 export const Route = createFileRoute("/_auth/app/")({
 	loader: async ({ context }) => {
@@ -16,7 +20,7 @@ export const Route = createFileRoute("/_auth/app/")({
 
 		// Prefetch monthly entries for charts once
 		await context.queryClient.ensureQueryData({
-			queryKey: ["monthlyEntriesForCharts"],
+			queryKey: MONTHLY_ENTRIES_FOR_CHARTS_KEY,
 			queryFn: () => getMonthlyEntriesForCharts(),
 		})
 
@@ -43,6 +47,7 @@ function RouteComponent() {
 		<div className="flex flex-col gap-4 md:flex-row md:items-start">
 			<div className="flex flex-1 flex-col gap-4">
 				<BudgetsCard />
+				<RecurringCard />
 				<ExpensesByCategoryBar />
 			</div>
 			<div className="flex flex-1 flex-col gap-4">

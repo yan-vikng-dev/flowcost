@@ -103,9 +103,6 @@ export function DataTable<TData extends RowWithId, TValue>({
 		onSuccess: async () => {
 			await Promise.all([
 				queryClient.invalidateQueries({ queryKey: ["entries"] }),
-				queryClient.invalidateQueries({
-					queryKey: ["monthlyEntriesForCharts"],
-				}),
 			])
 		},
 	})

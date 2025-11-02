@@ -1,4 +1,4 @@
-import type { Currency } from "@repo/shared-config"
+import type { Currency } from "@repo/shared-lib"
 import { desc, inArray } from "drizzle-orm"
 import type { DrizzleDb } from "../../database/setup"
 import { exchange_rates, type SelectExchangeRate } from "../schemas/index"
