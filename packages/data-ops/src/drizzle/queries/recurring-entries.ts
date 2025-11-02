@@ -1,5 +1,5 @@
-import { toUtcMidnight } from "@repo/shared-lib"
-import { and, desc, eq, inArray } from "drizzle-orm"
+import { getCurrentMonthRange, toUtcMidnight } from "@repo/shared-lib"
+import { and, desc, eq, gte, inArray, isNull, or } from "drizzle-orm"
 import { DateTime } from "luxon"
 import { RRule } from "rrule"
 import type { DrizzleDb } from "../../database/setup"
@@ -17,9 +17,35 @@ export function parseRRULE(
 	tzid?: string,
 ): RRule {
 	const options = RRule.parseString(`RRULE:${rruleString}`)
-	options.dtstart = dtstart
+
+	// RRule expects UTC-floating dates (JS offsets ignored). When tzid is provided,
+	// reconstruct dtstart as a UTC date using the calendar components in that tz.
+	if (tzid) {
+		const startInTz = DateTime.fromJSDate(dtstart, { zone: tzid })
+		options.dtstart = new Date(
+			Date.UTC(
+				startInTz.year,
+				startInTz.month - 1,
+				startInTz.day,
+				startInTz.hour,
+				startInTz.minute,
+				startInTz.second,
+				startInTz.millisecond,
+			),
+		)
+	} else {
+		options.dtstart = dtstart
+	}
 	if (until) {
-		options.until = until
+		if (tzid) {
+			// Use the calendar day in tzid, then make a UTC-floating midnight
+			const untilInTz = DateTime.fromJSDate(until, { zone: tzid })
+			options.until = new Date(
+				Date.UTC(untilInTz.year, untilInTz.month - 1, untilInTz.day, 0, 0, 0, 0),
+			)
+		} else {
+			options.until = until
+		}
 	}
 	if (tzid) {
 		options.tzid = tzid
@@ -42,12 +68,19 @@ export async function ensureRecurringEntriesMaterialized(
 	end: Date,
 	timezone: string,
 ): Promise<void> {
-	const templates = await db.query.recurring_entry_templates.findMany({
-		where: and(
-			eq(recurring_entry_templates.userId, userId),
-			eq(recurring_entry_templates.isActive, true),
-		),
-	})
+	const { start: monthStart } = getCurrentMonthRange(timezone)
+	const templates = await db
+		.select()
+		.from(recurring_entry_templates)
+		.where(
+			and(
+				eq(recurring_entry_templates.userId, userId),
+				or(
+					isNull(recurring_entry_templates.endAt),
+					gte(recurring_entry_templates.endAt, monthStart),
+				),
+			),
+		)
 
 	const targetHorizon = DateTime.fromJSDate(end, { zone: timezone })
 		.endOf("month")
@@ -144,15 +177,31 @@ export async function materializeTemplateEntries(
 export async function getRecurringTemplates(
 	db: DrizzleDb,
 	userId: string,
-	includeInactive = false,
+	includeInactive: boolean,
+	timezone: string,
 ): Promise<SelectRecurringEntryTemplate[]> {
-	return db.query.recurring_entry_templates.findMany({
-		where: includeInactive
-			? eq(recurring_entry_templates.userId, userId)
-			: and(
-					eq(recurring_entry_templates.userId, userId),
-					eq(recurring_entry_templates.isActive, true),
+	const baseWhere = eq(recurring_entry_templates.userId, userId)
+
+	if (includeInactive) {
+		return db
+			.select()
+			.from(recurring_entry_templates)
+			.where(baseWhere)
+			.orderBy(desc(recurring_entry_templates.createdAt))
+	}
+
+	const { start: monthStart } = getCurrentMonthRange(timezone)
+	return db
+		.select()
+		.from(recurring_entry_templates)
+		.where(
+			and(
+				baseWhere,
+				or(
+					isNull(recurring_entry_templates.endAt),
+					gte(recurring_entry_templates.endAt, monthStart),
 				),
-		orderBy: desc(recurring_entry_templates.createdAt),
-	})
+			),
+		)
+		.orderBy(desc(recurring_entry_templates.createdAt))
 }

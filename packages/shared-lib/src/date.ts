@@ -4,6 +4,13 @@ export function toUtcMidnight(date: Date): Date {
 	return DateTime.fromJSDate(date).startOf("day").toUTC().toJSDate()
 }
 
+// Creates a UTC-floating Date at midnight of the calendar day in the given timezone.
+// This avoids JS local offset affecting the calendar components.
+export function toUtcMidnightInTimezone(date: Date, timezone: string): Date {
+    const zoned = DateTime.fromJSDate(date, { zone: timezone })
+    return new Date(Date.UTC(zoned.year, zoned.month - 1, zoned.day, 0, 0, 0, 0))
+}
+
 export function getCurrentMonthRange(timezone: string): {
 	start: Date
 	end: Date

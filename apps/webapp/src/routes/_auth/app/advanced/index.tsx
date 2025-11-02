@@ -76,6 +76,8 @@ function RouteComponent() {
 
 	const [open, setOpen] = React.useState(false)
 
+	const timezone = prefsQuery.data?.timezone || "UTC"
+
 	return (
 		<div className="space-y-4">
 			<MonthlyEntriesTable
@@ -111,7 +113,11 @@ function RouteComponent() {
 					)
 						return
 					const amount = typeof state.amount === "number" ? state.amount : 0
-					const rrule = buildRRuleFromUi(state.executedAt, state.recurrence)
+					const rrule = buildRRuleFromUi(
+						state.executedAt,
+						state.recurrence,
+						timezone,
+					)
 					createRecurringMut.mutate({
 						amount,
 						currency: state.currency,

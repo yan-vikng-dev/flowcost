@@ -1,5 +1,6 @@
 import { parseRRULE } from "@repo/data-ops/drizzle/queries"
 import { type Category, type Currency, categories } from "@repo/shared-lib"
+import { useQuery } from "@tanstack/react-query"
 import * as React from "react"
 import { CategoryCombobox } from "@/components/combobox/CategoryCombobox"
 import { CurrencyCombobox } from "@/components/combobox/CurrencyCombobox"
@@ -36,6 +37,7 @@ import {
 } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
 import type { CreateEntryInput } from "@/core/functions/entries"
+import { getUserPreferences } from "@/core/functions/preferences"
 import {
 	buildRRuleFromUi,
 	getDefaultRecurrence,
@@ -88,6 +90,14 @@ export function EntryDialog({
 	const [datePopoverOpen, setDatePopoverOpen] = React.useState(false)
 	const [endDatePopoverOpen, setEndDatePopoverOpen] = React.useState(false)
 
+	const prefsQuery = useQuery({
+		queryKey: ["userPreferences"],
+		queryFn: () => getUserPreferences(),
+		staleTime: 5 * 60 * 1000,
+	})
+
+	const timezone = prefsQuery.data?.timezone || "UTC"
+
 	React.useEffect(() => setState(initial), [initial])
 
 	const isRecurring = state.isRecurring ?? false
@@ -95,23 +105,30 @@ export function EntryDialog({
 	const rrule = React.useMemo(() => {
 		if (!isRecurring || !state.recurrence || !state.executedAt) return ""
 		try {
-			return buildRRuleFromUi(state.executedAt, state.recurrence)
+			return buildRRuleFromUi(state.executedAt, state.recurrence, timezone)
 		} catch {
 			return ""
 		}
-	}, [isRecurring, state.recurrence, state.executedAt])
+	}, [isRecurring, state.recurrence, state.executedAt, timezone])
 
 	const rruleSummary = React.useMemo(() => {
 		if (!isRecurring || !rrule || !state.executedAt || !state.recurrence)
 			return null
 		try {
-			const rule = parseRRULE(rrule, state.executedAt, state.endAt)
+			const rule = parseRRULE(rrule, state.executedAt, state.endAt, timezone)
 			const text = rule.toText()
 			return text.charAt(0).toUpperCase() + text.slice(1)
 		} catch {
 			return null
 		}
-	}, [isRecurring, rrule, state.executedAt, state.recurrence, state.endAt])
+	}, [
+		isRecurring,
+		rrule,
+		state.executedAt,
+		state.recurrence,
+		state.endAt,
+		timezone,
+	])
 
 	const isRecurringValid =
 		!isRecurring ||

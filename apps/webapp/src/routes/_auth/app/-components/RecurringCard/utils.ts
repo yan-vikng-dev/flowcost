@@ -1,4 +1,3 @@
-import { toUtcMidnight } from "@repo/shared-lib"
 import { DateTime } from "luxon"
 
 export type FrequencyUnit = "day" | "week" | "month" | "year"
@@ -41,13 +40,19 @@ export function getDefaultRecurrence(): RecurrenceUi {
 	}
 }
 
-export function buildRRuleFromUi(dtstart: Date, ui: RecurrenceUi): string {
+export function buildRRuleFromUi(
+    dtstart: Date,
+    ui: RecurrenceUi,
+    timezone?: string,
+): string {
 	if (!ui || !ui.unit || !ui.every) {
 		throw new Error("Recurrence UI object is incomplete")
 	}
 	const { every, unit } = ui
-	const utcDate = toUtcMidnight(dtstart)
-	const dt = DateTime.fromJSDate(utcDate, { zone: "utc" })
+	// Use calendar components in the intended timezone (fallback to local)
+	const dt = timezone
+		? DateTime.fromJSDate(dtstart, { zone: timezone })
+		: DateTime.fromJSDate(dtstart)
 	const parts: string[] = []
 
 	const freq = freqMap[unit]

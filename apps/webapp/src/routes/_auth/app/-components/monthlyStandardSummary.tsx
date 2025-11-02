@@ -35,6 +35,8 @@ export function MonthlyStandardSummary() {
 		staleTime: 5 * 60 * 1000,
 	})
 
+	const timezone = prefsQuery.data?.timezone || "UTC"
+
 	const queryClient = useQueryClient()
 	const createMut = useMutation({
 		mutationFn: (input: CreateEntryInput) => createEntry({ data: input }),
@@ -132,7 +134,11 @@ export function MonthlyStandardSummary() {
 					)
 						return
 					const amount = typeof state.amount === "number" ? state.amount : 0
-					const rrule = buildRRuleFromUi(state.executedAt, state.recurrence)
+					const rrule = buildRRuleFromUi(
+						state.executedAt,
+						state.recurrence,
+						timezone,
+					)
 					createRecurringMut.mutate({
 						amount,
 						currency: state.currency,

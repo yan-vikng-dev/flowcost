@@ -36,16 +36,10 @@ export const recurring_entry_templates = sqliteTable(
 		// Generation tracking
 		generationValidUntil: integer({ mode: "timestamp_ms" }).notNull(),
 
-		// Control
-		isActive: integer({ mode: "boolean" }).notNull().default(true),
-
 		...timestamps,
 	},
 	(table) => [
-		index("recurring_entry_templates_by_user_idx").on(
-			table.userId,
-			table.isActive,
-		),
+		index("recurring_entry_templates_by_user_idx").on(table.userId),
 		index("recurring_entry_templates_by_valid_until_idx").on(
 			table.generationValidUntil,
 		),

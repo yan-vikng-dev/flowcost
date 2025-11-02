@@ -1,37 +1,57 @@
 import { parseRRULE } from "@repo/data-ops/drizzle/queries"
 import type { SelectRecurringEntryTemplate } from "@repo/data-ops/drizzle/schemas/index"
-import { currencyData } from "@repo/shared-lib"
-import { EditIcon, PauseIcon, PlayIcon, TrashIcon } from "lucide-react"
+import {
+	currencyData,
+	getCurrentMonthRange,
+	getStartOfDayInTimezone,
+} from "@repo/shared-lib"
+import { useQuery } from "@tanstack/react-query"
+import { SquareIcon, TrashIcon } from "lucide-react"
 import * as React from "react"
 import { Button } from "@/components/ui/button"
 import { getCategoryIcon } from "@/config/categories"
+import { getUserPreferences } from "@/core/functions/preferences"
 
 export function RecurringTemplateItem({
 	template,
-	onEdit,
 	onDelete,
-	onToggleActive,
+	onStop,
 	showActions,
 }: {
 	template: SelectRecurringEntryTemplate
-	onEdit: (id: string) => void
 	onDelete: (id: string) => void
-	onToggleActive: (id: string) => void
+	onStop: (id: string) => void
 	showActions: boolean
 }) {
+	const prefsQuery = useQuery({
+		queryKey: ["userPreferences"],
+		queryFn: () => getUserPreferences(),
+		staleTime: 5 * 60 * 1000,
+	})
+
+	const timezone = prefsQuery.data?.timezone || "UTC"
+	const { start: monthStart } = getCurrentMonthRange(timezone)
+	const today = getStartOfDayInTimezone(new Date(), timezone)
+	const isStopped = template.endAt !== null && template.endAt < monthStart
+	const canStop = template.endAt === null || template.endAt >= today
 	const categoryIcon = getCategoryIcon(template.category)
 	const currencySymbol =
 		currencyData[template.currency]?.symbol ?? template.currency
 
 	const rruleDescription = React.useMemo(() => {
 		try {
-			const rrule = parseRRULE(template.rrule, template.dtstart)
+			const rrule = parseRRULE(
+				template.rrule,
+				template.dtstart,
+				template.endAt ?? undefined,
+				timezone,
+			)
 			const text = rrule.toText()
 			return text.charAt(0).toUpperCase() + text.slice(1)
 		} catch {
 			return "Invalid recurrence"
 		}
-	}, [template.rrule, template.dtstart])
+	}, [template.rrule, template.dtstart, template.endAt, timezone])
 
 	const sign = template.entryType === "Income" ? "+" : "-"
 	const signedAmount = `${sign}${currencySymbol}${template.amount.toFixed(2)}`
@@ -53,38 +73,24 @@ export function RecurringTemplateItem({
 					</div>
 					<div className="text-muted-foreground text-sm">
 						{signedAmount} · {rruleDescription}
-						{!template.isActive && (
-							<span className="ml-2 text-muted-foreground">(Paused)</span>
+						{isStopped && (
+							<span className="ml-2 text-muted-foreground">(Stopped)</span>
 						)}
 					</div>
 				</div>
 			</div>
 			{showActions && (
 				<div className="flex items-center gap-1">
-					<Button
-						aria-label="Edit recurring entry"
-						onClick={() => onEdit(template.id)}
-						size="icon"
-						variant="ghost"
-					>
-						<EditIcon className="h-4 w-4" />
-					</Button>
-					<Button
-						aria-label={
-							template.isActive
-								? "Pause recurring entry"
-								: "Resume recurring entry"
-						}
-						onClick={() => onToggleActive(template.id)}
-						size="icon"
-						variant="ghost"
-					>
-						{template.isActive ? (
-							<PauseIcon className="h-4 w-4" />
-						) : (
-							<PlayIcon className="h-4 w-4" />
-						)}
-					</Button>
+					{canStop && (
+						<Button
+							aria-label="Stop recurring entry"
+							onClick={() => onStop(template.id)}
+							size="icon"
+							variant="ghost"
+						>
+							<SquareIcon className="h-4 w-4" />
+						</Button>
+					)}
 					<Button
 						aria-label="Delete recurring entry"
 						onClick={() => onDelete(template.id)}

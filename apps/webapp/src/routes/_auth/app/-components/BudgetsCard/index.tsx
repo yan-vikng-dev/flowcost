@@ -186,14 +186,16 @@ export function BudgetsCard() {
 				<CardTitle>Budgets</CardTitle>
 				<CardAction>
 					<div className="flex items-center gap-2">
-						<Button
-							aria-label={isEditMode ? "Exit edit mode" : "Enter edit mode"}
-							onClick={() => setIsEditMode(!isEditMode)}
-							size="icon"
-							variant={isEditMode ? "primary" : "secondary"}
-						>
-							<EditIcon />
-						</Button>
+						{realBudgets.length > 0 && (
+							<Button
+								aria-label={isEditMode ? "Exit edit mode" : "Enter edit mode"}
+								onClick={() => setIsEditMode(!isEditMode)}
+								size="icon"
+								variant={isEditMode ? "primary" : "secondary"}
+							>
+								<EditIcon />
+							</Button>
+						)}
 						<Button
 							aria-label="New Budget"
 							onClick={() => setCreateOpen(true)}

@@ -27,8 +27,7 @@ import {
 	createRecurringTemplate,
 	deleteRecurringTemplate,
 	listRecurringTemplates,
-	type UpdateRecurringTemplateInput,
-	updateRecurringTemplate,
+	stopRecurringTemplate,
 } from "@/core/functions/recurring-templates"
 import {
 	EntryDialog,
@@ -61,16 +60,6 @@ export function RecurringCard() {
 			])
 		},
 	})
-	const updateMut = useMutation({
-		mutationFn: (vars: UpdateRecurringTemplateInput) =>
-			updateRecurringTemplate({ data: vars }),
-		onSuccess: async () => {
-			await Promise.all([
-				queryClient.invalidateQueries({ queryKey: ["recurringTemplates"] }),
-				queryClient.invalidateQueries({ queryKey: ["entries"] }),
-			])
-		},
-	})
 	const deleteMut = useMutation({
 		mutationFn: (id: string) => deleteRecurringTemplate({ data: { id } }),
 		onSuccess: async () => {
@@ -80,38 +69,29 @@ export function RecurringCard() {
 			])
 		},
 	})
+	const stopMut = useMutation({
+		mutationFn: (id: string) => stopRecurringTemplate({ data: { id } }),
+		onSuccess: async () => {
+			await Promise.all([
+				queryClient.invalidateQueries({ queryKey: ["recurringTemplates"] }),
+				queryClient.invalidateQueries({ queryKey: ["entries"] }),
+			])
+		},
+	})
 
 	const [createOpen, setCreateOpen] = React.useState(false)
-	const [editOpen, setEditOpen] = React.useState<null | string>(null)
 	const [deleteId, setDeleteId] = React.useState<null | string>(null)
 	const [isEditMode, setIsEditMode] = React.useState(false)
 
 	const defaultCurrency: Currency =
 		(prefsQuery.data?.displayCurrency as Currency) ?? "USD"
 
+	const timezone = prefsQuery.data?.timezone || "UTC"
+
 	const createInitial: EntryFormState = getDefaultEntryInitial({
 		defaultCurrency,
 		isRecurring: true,
 	})
-
-	const editingTemplate = templatesQuery.data?.find((t) => t.id === editOpen)
-	const editInitial: EntryFormState = editingTemplate
-		? {
-				amount: editingTemplate.amount,
-				currency: editingTemplate.currency,
-				category: editingTemplate.category,
-				entryType: editingTemplate.entryType,
-				description: editingTemplate.description ?? "",
-				executedAt: editingTemplate.dtstart,
-				isRecurring: true,
-				recurrence: {
-					every: 1,
-					unit: "month",
-					monthlyMode: { type: "byMonthDay" },
-				},
-				endAt: editingTemplate.endAt ?? undefined,
-			}
-		: createInitial
 
 	return (
 		<Card>
@@ -119,14 +99,16 @@ export function RecurringCard() {
 				<CardTitle>Recurring</CardTitle>
 				<CardAction>
 					<div className="flex items-center gap-2">
-						<Button
-							aria-label={isEditMode ? "Exit edit mode" : "Enter edit mode"}
-							onClick={() => setIsEditMode(!isEditMode)}
-							size="icon"
-							variant={isEditMode ? "primary" : "secondary"}
-						>
-							<EditIcon />
-						</Button>
+						{templatesQuery.data && templatesQuery.data.length > 0 && (
+							<Button
+								aria-label={isEditMode ? "Exit edit mode" : "Enter edit mode"}
+								onClick={() => setIsEditMode(!isEditMode)}
+								size="icon"
+								variant={isEditMode ? "primary" : "secondary"}
+							>
+								<EditIcon />
+							</Button>
+						)}
 						<Button
 							aria-label="New Recurring Entry"
 							onClick={() => setCreateOpen(true)}
@@ -152,18 +134,7 @@ export function RecurringCard() {
 								{index > 0 && <Separator />}
 								<RecurringTemplateItem
 									onDelete={(id) => setDeleteId(id)}
-									onEdit={(id) => setEditOpen(id)}
-									onToggleActive={(id) => {
-										const template = templatesQuery.data?.find(
-											(t) => t.id === id,
-										)
-										if (template) {
-											updateMut.mutate({
-												id,
-												isActive: !template.isActive,
-											})
-										}
-									}}
+									onStop={(id) => stopMut.mutate(id)}
 									showActions={isEditMode}
 									template={template}
 								/>
@@ -186,7 +157,11 @@ export function RecurringCard() {
 						)
 							return
 						const amount = typeof state.amount === "number" ? state.amount : 0
-						const rrule = buildRRuleFromUi(state.executedAt, state.recurrence)
+						const rrule = buildRRuleFromUi(
+							state.executedAt,
+							state.recurrence,
+							timezone,
+						)
 						createMut.mutate({
 							amount,
 							currency: state.currency,
@@ -202,28 +177,6 @@ export function RecurringCard() {
 					open={createOpen}
 					submitLabel={createMut.isPending ? "Creating..." : "Create"}
 					title="New Recurring Entry"
-				/>
-
-				<EntryDialog
-					editing
-					initial={editInitial}
-					onOpenChange={(isOpen) => setEditOpen(isOpen ? editOpen : null)}
-					onSubmit={(state) => {
-						if (!editOpen) return
-						const amount = typeof state.amount === "number" ? state.amount : 0
-						updateMut.mutate({
-							id: editOpen,
-							amount,
-							currency: state.currency,
-							category: state.category,
-							entryType: state.entryType,
-							description: state.description,
-						})
-						setEditOpen(null)
-					}}
-					open={!!editOpen}
-					submitLabel={updateMut.isPending ? "Saving..." : "Save"}
-					title="Edit Recurring Entry"
 				/>
 
 				<AlertDialog
