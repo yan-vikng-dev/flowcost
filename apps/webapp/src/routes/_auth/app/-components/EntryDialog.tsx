@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query"
 import * as React from "react"
 import { CategoryCombobox } from "@/components/combobox/CategoryCombobox"
 import { CurrencyCombobox } from "@/components/combobox/CurrencyCombobox"
-import { EntryTypeCombobox } from "@/components/combobox/EntryTypeCombobox"
+import { EntryTypeSelect } from "@/components/combobox/EntryTypeSelect"
 import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
 import {
@@ -18,7 +18,6 @@ import {
 	Field,
 	FieldGroup,
 	FieldLabel,
-	FieldLegend,
 	FieldSeparator,
 	FieldSet,
 } from "@/components/ui/field"
@@ -154,7 +153,6 @@ export function EntryDialog({
 				<div className="space-y-6">
 					<FieldGroup>
 						<FieldSet>
-							<FieldLegend>Entry Details</FieldLegend>
 							<div className="grid grid-cols-[max-content_1fr] gap-x-4 gap-y-4">
 								<Field>
 									<FieldLabel>Currency</FieldLabel>
@@ -212,7 +210,7 @@ export function EntryDialog({
 
 								<Field>
 									<FieldLabel htmlFor={entryTypeId}>Type</FieldLabel>
-									<EntryTypeCombobox
+									<EntryTypeSelect
 										id={entryTypeId}
 										onChange={(entryType) =>
 											setState((prev) => ({ ...prev, entryType }))

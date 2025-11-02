@@ -5,7 +5,7 @@ import { ChevronDownIcon } from "lucide-react"
 import { useId, useState } from "react"
 import { CategoryCombobox } from "@/components/combobox/CategoryCombobox"
 import { CurrencyCombobox } from "@/components/combobox/CurrencyCombobox"
-import { EntryTypeCombobox } from "@/components/combobox/EntryTypeCombobox"
+import { EntryTypeSelect } from "@/components/combobox/EntryTypeSelect"
 import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -91,7 +91,7 @@ export function EntriesForm() {
 										return (
 											<Field data-invalid={isInvalid}>
 												<FieldLabel htmlFor={entryTypeId}>Type</FieldLabel>
-												<EntryTypeCombobox
+												<EntryTypeSelect
 													className="w-auto sm:w-full"
 													id={entryTypeId}
 													invalid={isInvalid}
