@@ -1,8 +1,15 @@
-import { Link } from "@tanstack/react-router"
-import { ArrowRight, Github } from "lucide-react"
+import { ArrowRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { authClient } from "@/lib/auth-client"
 
 export function HeroSection() {
+	const handleGoogleSignIn = async () => {
+		await authClient.signIn.social({
+			provider: "google",
+			callbackURL: "/app",
+		})
+	}
+
 	return (
 		<section className="relative flex min-h-screen items-center">
 			<div className="mx-auto max-w-4xl space-y-6 text-center">
@@ -18,28 +25,17 @@ export function HeroSection() {
 				</p>
 
 				<div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
-					<Link to="/app">
-						<Button className="group" size="lg">
-							Get Started
-							<ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
-						</Button>
-					</Link>
-
-					<Button disabled size="lg" variant="outline">
-						<a
-							className="inline-flex items-center"
-							href="https://github.com/yan-vikng-dev/flowcost"
-							rel="noopener noreferrer"
-							target="_blank"
-						>
-							<Github className="mr-2" />
-							Coming soon
-						</a>
+					<Button
+						className="group"
+						onClick={() => void handleGoogleSignIn()}
+						size="lg"
+					>
+						Get Started
+						<ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
 					</Button>
 				</div>
 			</div>
 
-			{/* Background gradient */}
 			<div className="-top-40 -z-10 sm:-top-80 absolute inset-x-0 transform-gpu overflow-hidden blur-3xl">
 				<div
 					className="-translate-x-1/2 relative left-[calc(50%-11rem)] aspect-[1155/678] w-[36.125rem] rotate-[30deg] bg-gradient-to-tr from-primary to-secondary opacity-20 sm:left-[calc(50%-30rem)] sm:w-[72.1875rem]"

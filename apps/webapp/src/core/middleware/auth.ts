@@ -6,7 +6,6 @@ import { getRequest } from "@tanstack/react-start/server"
 async function getAuthContext() {
 	const auth = getAuth()
 	const req = getRequest()
-
 	const session = await auth.api.getSession(req)
 	if (!session) throw redirect({ to: "/" })
 	return {
