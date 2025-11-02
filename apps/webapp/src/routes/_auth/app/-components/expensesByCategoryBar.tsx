@@ -16,8 +16,9 @@ import {
 	ChartTooltipContent,
 } from "@/components/ui/chart"
 import {
-	getMonthlyEntriesForCharts,
-	MONTHLY_ENTRIES_FOR_CHARTS_KEY,
+	getMonthlyEntries,
+	MONTHLY_ENTRIES_KEY,
+	type MonthlyEntriesResult,
 } from "../-functions/monthlyEntries"
 
 type ChartSlice = {
@@ -28,9 +29,9 @@ type ChartSlice = {
 }
 
 export function ExpensesByCategoryBar() {
-	const { data } = useQuery({
-		queryKey: MONTHLY_ENTRIES_FOR_CHARTS_KEY,
-		queryFn: () => getMonthlyEntriesForCharts(),
+	const { data } = useQuery<MonthlyEntriesResult>({
+		queryKey: MONTHLY_ENTRIES_KEY,
+		queryFn: () => getMonthlyEntries(),
 	})
 
 	const { chartData, total } = React.useMemo(() => {
@@ -38,15 +39,12 @@ export function ExpensesByCategoryBar() {
 		const expenses = (data?.entries ?? []).filter(
 			(e) => e.entryType === "Expense",
 		)
-		const aggregated = expenses.reduce(
-			(acc, e) => {
-				const category = e.category.trim()
-				const amount = Math.round(e.amountConverted)
-				acc[category] = (acc[category] ?? 0) + amount
-				return acc
-			},
-			{} as Record<string, number>,
-		)
+		const aggregated = expenses.reduce((acc: Record<string, number>, e) => {
+			const category = e.category.trim()
+			const amount = Math.round(e.amountIls ?? 0)
+			acc[category] = (acc[category] ?? 0) + amount
+			return acc
+		}, {})
 		const base = Object.entries(aggregated)
 			.map(([category, amount]) => ({ category, amount }))
 			.sort((a, b) => b.amount - a.amount)

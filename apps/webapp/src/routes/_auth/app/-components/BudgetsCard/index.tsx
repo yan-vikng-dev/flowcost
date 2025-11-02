@@ -33,8 +33,8 @@ import {
 import { getUserPreferences } from "@/core/functions/preferences"
 import { authClient } from "@/lib/auth-client"
 import {
-	getMonthlyEntriesForCharts,
-	MONTHLY_ENTRIES_FOR_CHARTS_KEY,
+	getMonthlyEntries,
+	MONTHLY_ENTRIES_KEY,
 } from "../../-functions/monthlyEntries"
 import { BudgetDialog, type FormState } from "./BudgetDialog"
 import { BudgetItem } from "./BudgetItem"
@@ -56,8 +56,8 @@ export function BudgetsCard() {
 	})
 
 	const monthlyQuery = useQuery({
-		queryKey: MONTHLY_ENTRIES_FOR_CHARTS_KEY,
-		queryFn: () => getMonthlyEntriesForCharts(),
+		queryKey: MONTHLY_ENTRIES_KEY,
+		queryFn: () => getMonthlyEntries(),
 	})
 
 	const createMut = useMutation({
@@ -134,7 +134,7 @@ export function BudgetsCard() {
 		// free budget
 		const incomeSum = entries
 			.filter((entry) => entry.entryType === "Income")
-			.reduce((sum, entry) => sum + entry.amountConverted, 0)
+			.reduce((sum, entry) => sum + (entry.amountIls ?? 0), 0)
 		const budgets = budgetsQuery.data ?? []
 		const budgetedCats = new Set<Category>()
 		for (const budget of budgets)
@@ -145,7 +145,7 @@ export function BudgetsCard() {
 				(entry) =>
 					entry.entryType === "Expense" && !budgetedCats.has(entry.category),
 			)
-			.reduce((sum, entry) => sum + entry.amountConverted, 0)
+			.reduce((sum, entry) => sum + (entry.amountIls ?? 0), 0)
 
 		const committed = budgets.reduce(
 			(sum, budget) =>

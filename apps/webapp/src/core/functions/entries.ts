@@ -1,8 +1,5 @@
 import { getDb } from "@repo/data-ops/database/setup"
-import {
-	fetchConvertedEntriesForRange,
-	getEntryForUser,
-} from "@repo/data-ops/drizzle/queries"
+import { getEntryForUser } from "@repo/data-ops/drizzle/queries"
 import {
 	getAllowedUserIds,
 	getUserTimezoneAndCurrency,
@@ -13,12 +10,7 @@ import {
 	type InsertEntry,
 	type SelectEntry,
 } from "@repo/data-ops/drizzle/schemas/index"
-import {
-	categories,
-	currencies,
-	getCurrentMonthRange,
-	toIsoDateInTimezone,
-} from "@repo/shared-lib"
+import { categories, currencies, toIsoDateInTimezone } from "@repo/shared-lib"
 import { createServerFn } from "@tanstack/react-start"
 import { and, eq, inArray } from "drizzle-orm"
 import { z } from "zod"
@@ -132,7 +124,7 @@ export type MonthlyEntry = SelectEntry & {
 	amountIls: number | null
 }
 
-function mapToMonthlyEntry(
+export function mapToMonthlyEntry(
 	entry: SelectEntry & { convertedAmount: number | null },
 ): MonthlyEntry {
 	return {
@@ -140,70 +132,3 @@ function mapToMonthlyEntry(
 		amountIls: entry.convertedAmount,
 	}
 }
-
-export const listEntriesThisMonth = createServerFn()
-	.middleware([protectedFunctionMiddleware])
-	.handler(async (ctx) => {
-		const db = getDb()
-		const { timezone, displayCurrency } = await getUserTimezoneAndCurrency(
-			db,
-			ctx.context.userId,
-		)
-		const { start, end } = getCurrentMonthRange(timezone)
-
-		const result = await fetchConvertedEntriesForRange(db, ctx.context.userId, {
-			start,
-			end,
-			timezone,
-			displayCurrency,
-			sortBy: "executedAt",
-			sortDir: "desc",
-		})
-
-		return result.entries.map(mapToMonthlyEntry)
-	})
-
-export const listEntriesThisMonthPaginatedInput = z.object({
-	page: z.number().int().min(0).default(0),
-	pageSize: z.number().int().min(1).max(100).default(10),
-	sortBy: z
-		.enum(["executedAt", "amount", "category", "entryType"])
-		.optional()
-		.default("executedAt"),
-	sortDir: z.enum(["asc", "desc"]).optional().default("desc"),
-})
-
-export type ListEntriesThisMonthPaginatedInput = z.infer<
-	typeof listEntriesThisMonthPaginatedInput
->
-
-export const listEntriesThisMonthPaginated = createServerFn()
-	.middleware([protectedFunctionMiddleware])
-	.inputValidator(listEntriesThisMonthPaginatedInput)
-	.handler(async (ctx) => {
-		const db = getDb()
-		const { page, pageSize, sortBy, sortDir } = ctx.data
-		const offset = page * pageSize
-
-		const { timezone, displayCurrency } = await getUserTimezoneAndCurrency(
-			db,
-			ctx.context.userId,
-		)
-		const { start, end } = getCurrentMonthRange(timezone)
-
-		const result = await fetchConvertedEntriesForRange(db, ctx.context.userId, {
-			start,
-			end,
-			timezone,
-			displayCurrency,
-			sortBy,
-			sortDir,
-			limit: pageSize,
-			offset,
-		})
-
-		return {
-			items: result.entries.map(mapToMonthlyEntry),
-			total: result.total ?? 0,
-		}
-	})

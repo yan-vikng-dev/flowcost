@@ -6,8 +6,8 @@ import { ExpensesByCategoryBar } from "./-components/ExpensesByCategoryBar"
 import { MonthlyStandardSummary } from "./-components/MonthlyStandardSummary"
 import { RecurringCard } from "./-components/RecurringCard"
 import {
-	getMonthlyEntriesForCharts,
-	MONTHLY_ENTRIES_FOR_CHARTS_KEY,
+	getMonthlyEntries,
+	MONTHLY_ENTRIES_KEY,
 } from "./-functions/monthlyEntries"
 
 export const Route = createFileRoute("/_auth/app/")({
@@ -17,10 +17,10 @@ export const Route = createFileRoute("/_auth/app/")({
 			queryFn: () => getUserPreferences(),
 		})
 
-		// Prefetch monthly entries for charts once
+		// Prefetch monthly entries once
 		await context.queryClient.ensureQueryData({
-			queryKey: MONTHLY_ENTRIES_FOR_CHARTS_KEY,
-			queryFn: () => getMonthlyEntriesForCharts(),
+			queryKey: MONTHLY_ENTRIES_KEY,
+			queryFn: () => getMonthlyEntries(),
 		})
 
 		// Prefetch budgets list

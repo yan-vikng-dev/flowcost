@@ -67,7 +67,7 @@ export function generateDatesFromRRULE(
 export async function ensureRecurringEntriesMaterialized(
 	db: DrizzleDb,
 	userId: string,
-	start: Date,
+	_start: Date,
 	end: Date,
 	timezone: string,
 ): Promise<void> {
@@ -96,10 +96,15 @@ export async function ensureRecurringEntriesMaterialized(
 	for (const template of templates) {
 		const validUntilDate = template.generationValidUntil
 		if (validUntilDate < targetHorizonIso) {
+			const generationStartDate = isoDateToUtcMidnight(validUntilDate)
+			const templateStartDate = isoDateToUtcMidnight(template.dtstartDate)
+			const effectiveStart = new Date(
+				Math.max(generationStartDate.getTime(), templateStartDate.getTime()),
+			)
 			await materializeTemplateEntries(
 				db,
 				template,
-				start,
+				effectiveStart,
 				targetHorizon,
 				timezone,
 			)
@@ -122,18 +127,22 @@ function computeQueryBounds(
 	queryEnd: Date,
 	template: SelectRecurringEntryTemplate,
 ): { start: Date; end: Date } {
+	const templateStartDate = isoDateToUtcMidnight(template.dtstartDate)
 	const normalizedStart = toUtcMidnight(queryStart)
+	const effectiveStart = new Date(
+		Math.max(normalizedStart.getTime(), templateStartDate.getTime()),
+	)
 	const normalizedEnd = toUtcMidnight(queryEnd)
 
 	if (!template.endDate) {
-		return { start: normalizedStart, end: normalizedEnd }
+		return { start: effectiveStart, end: normalizedEnd }
 	}
 
 	const cappedUntil = isoDateToUtcMidnight(template.endDate)
 	const finalEnd = new Date(
 		Math.min(cappedUntil.getTime(), normalizedEnd.getTime()),
 	)
-	return { start: normalizedStart, end: finalEnd }
+	return { start: effectiveStart, end: finalEnd }
 }
 
 function getTemplateDateBounds(template: SelectRecurringEntryTemplate): {
@@ -194,16 +203,21 @@ export async function materializeTemplateEntries(
 	}
 
 	const desiredDateStrings = dates.map((d) => toIsoDateString(d, timezone))
-	const existingByDate = await db.query.entries.findMany({
-		where: and(
-			eq(entries.recurringTemplateId, template.id),
-			inArray(entries.executedDate, desiredDateStrings),
-		),
-		columns: { executedDate: true },
-	})
-	const existingDateStrings = new Set(
-		existingByDate.map((e) => e.executedDate as string),
-	)
+	const existingDateStrings = new Set<string>()
+	const QUERY_BATCH_SIZE = 50
+	for (let i = 0; i < desiredDateStrings.length; i += QUERY_BATCH_SIZE) {
+		const dateBatch = desiredDateStrings.slice(i, i + QUERY_BATCH_SIZE)
+		const existingByDate = await db.query.entries.findMany({
+			where: and(
+				eq(entries.recurringTemplateId, template.id),
+				inArray(entries.executedDate, dateBatch),
+			),
+			columns: { executedDate: true },
+		})
+		for (const entry of existingByDate) {
+			existingDateStrings.add(entry.executedDate)
+		}
+	}
 
 	const newRows: InsertEntry[] = dates
 		.map((date) => ({
@@ -214,7 +228,11 @@ export async function materializeTemplateEntries(
 		.map(({ date, dateStr }) => buildEntryFromTemplate(template, date, dateStr))
 
 	if (newRows.length > 0) {
-		await db.insert(entries).values(newRows)
+		const BATCH_SIZE = 5
+		for (let i = 0; i < newRows.length; i += BATCH_SIZE) {
+			const batch = newRows.slice(i, i + BATCH_SIZE)
+			await db.insert(entries).values(batch)
+		}
 	}
 
 	const generateUntilIso = toIsoDateInTimezone(generateUntil, timezone)

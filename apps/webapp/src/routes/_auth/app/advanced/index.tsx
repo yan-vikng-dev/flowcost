@@ -2,11 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { createFileRoute } from "@tanstack/react-router"
 import * as React from "react"
 import { Button } from "@/components/ui/button"
-import {
-	type CreateEntryInput,
-	createEntry,
-	listEntriesThisMonthPaginated,
-} from "@/core/functions/entries"
+import { type CreateEntryInput, createEntry } from "@/core/functions/entries"
 import { getUserPreferences } from "@/core/functions/preferences"
 import {
 	type CreateRecurringTemplateInput,
@@ -14,37 +10,22 @@ import {
 } from "@/core/functions/recurring-templates"
 import { EntryDialog, getDefaultEntryInitial } from "../-components/EntryDialog"
 import { buildRRuleFromUi } from "../-components/RecurringCard/utils"
+import {
+	getMonthlyEntries,
+	MONTHLY_ENTRIES_KEY,
+} from "../-functions/monthlyEntries"
 import { MonthlyEntriesTable } from "./-components/entriesTable/index"
 
 export const Route = createFileRoute("/_auth/app/advanced/")({
 	loader: async ({ context }) => {
-		const prefs = await context.queryClient.ensureQueryData({
+		await context.queryClient.ensureQueryData({
 			queryKey: ["userPreferences"],
 			queryFn: () => getUserPreferences(),
 		})
 
-		const initialPageIndex = 0
-		const initialPageSize = 10
-		const initialSortBy = "executedAt" as const
-		const initialSortDir = "desc" as const
 		await context.queryClient.ensureQueryData({
-			queryKey: [
-				"entries",
-				prefs.displayCurrency,
-				initialPageIndex,
-				initialPageSize,
-				initialSortBy,
-				initialSortDir,
-			],
-			queryFn: () =>
-				listEntriesThisMonthPaginated({
-					data: {
-						page: initialPageIndex,
-						pageSize: initialPageSize,
-						sortBy: initialSortBy,
-						sortDir: initialSortDir,
-					},
-				}),
+			queryKey: MONTHLY_ENTRIES_KEY,
+			queryFn: () => getMonthlyEntries(),
 		})
 	},
 	component: RouteComponent,

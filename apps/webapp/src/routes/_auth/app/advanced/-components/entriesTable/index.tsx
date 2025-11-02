@@ -1,4 +1,4 @@
-import { keepPreviousData, useQuery } from "@tanstack/react-query"
+import { useQuery } from "@tanstack/react-query"
 import type { PaginationState, SortingState } from "@tanstack/react-table"
 import * as React from "react"
 import {
@@ -9,10 +9,9 @@ import {
 	CardTitle,
 } from "@/components/ui/card"
 import {
-	listEntriesThisMonthPaginated,
-	type MonthlyEntry,
-} from "@/core/functions/entries"
-import { getUserPreferences } from "@/core/functions/preferences"
+	getMonthlyEntries,
+	MONTHLY_ENTRIES_KEY,
+} from "@/routes/_auth/app/-functions/monthlyEntries"
 import { DataTable } from "./data-table"
 import { entriesTableColumns } from "./entries-table-columns"
 
@@ -29,42 +28,42 @@ export function MonthlyEntriesTable({
 		{ id: "executedAt", desc: true },
 	])
 
-	const prefs = useQuery({
-		queryKey: ["userPreferences"],
-		queryFn: () => getUserPreferences(),
-		staleTime: 5 * 60 * 1000,
+	const { data, isLoading, isError } = useQuery({
+		queryKey: MONTHLY_ENTRIES_KEY,
+		queryFn: () => getMonthlyEntries(),
 	})
-	const displayCurrency = prefs.data?.displayCurrency ?? "USD"
 
-	const { data, isLoading, isError, isFetching } = useQuery<{
-		items: MonthlyEntry[]
-		total: number
-	}>({
-		queryKey: [
-			"entries",
-			displayCurrency,
-			pagination.pageIndex,
-			pagination.pageSize,
-			sorting[0]?.id ?? "executedAt",
-			sorting[0]?.desc ? "desc" : "asc",
-		],
-		queryFn: () =>
-			listEntriesThisMonthPaginated({
-				data: {
-					page: pagination.pageIndex,
-					pageSize: pagination.pageSize,
-					sortBy:
-						(sorting[0]?.id as
-							| "executedAt"
-							| "amount"
-							| "category"
-							| "entryType") ?? "executedAt",
-					sortDir: sorting[0]?.desc ? "desc" : "asc",
-				},
-			}),
-		placeholderData: keepPreviousData,
-	})
-	// isFetching comes from the same query above
+	const displayCurrency = data?.displayCurrency ?? "USD"
+
+	const sortedAndPaginated = React.useMemo(() => {
+		if (!data) return { items: [], total: 0 }
+
+		const sorted = [...data.entries].sort((a, b) => {
+			const sortId = sorting[0]?.id ?? "executedAt"
+			const desc = sorting[0]?.desc ?? true
+
+			let comparison = 0
+			if (sortId === "executedAt") {
+				comparison =
+					new Date(a.executedAt ?? a.executedDate).getTime() -
+					new Date(b.executedAt ?? b.executedDate).getTime()
+			} else if (sortId === "amount") {
+				comparison = (a.amountIls ?? 0) - (b.amountIls ?? 0)
+			} else if (sortId === "category") {
+				comparison = a.category.localeCompare(b.category)
+			} else if (sortId === "entryType") {
+				comparison = a.entryType.localeCompare(b.entryType)
+			}
+
+			return desc ? -comparison : comparison
+		})
+
+		const start = pagination.pageIndex * pagination.pageSize
+		const end = start + pagination.pageSize
+		const items = sorted.slice(start, end)
+
+		return { items, total: sorted.length }
+	}, [data, sorting, pagination])
 
 	return (
 		<Card>
@@ -78,18 +77,17 @@ export function MonthlyEntriesTable({
 				) : (
 					<DataTable
 						columns={entriesTableColumns(displayCurrency)}
-						data={isLoading || !data ? [] : data.items}
-						isFetching={isFetching}
+						data={sortedAndPaginated.items}
+						isFetching={false}
 						isLoading={isLoading}
 						manualPagination
 						manualSorting
 						onPaginationChange={setPagination}
 						onSortingChange={setSorting}
-						pageCount={
-							data
-								? Math.max(1, Math.ceil(data.total / pagination.pageSize))
-								: 1
-						}
+						pageCount={Math.max(
+							1,
+							Math.ceil(sortedAndPaginated.total / pagination.pageSize),
+						)}
 						pagination={pagination}
 						sorting={sorting}
 					/>

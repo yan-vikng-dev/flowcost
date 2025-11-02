@@ -17,16 +17,16 @@ import {
 	createRecurringTemplate,
 } from "@/core/functions/recurring-templates"
 import {
-	getMonthlyEntriesForCharts,
-	MONTHLY_ENTRIES_FOR_CHARTS_KEY,
+	getMonthlyEntries,
+	MONTHLY_ENTRIES_KEY,
 } from "../-functions/monthlyEntries"
 import { EntryDialog, getDefaultEntryInitial } from "./EntryDialog"
 import { buildRRuleFromUi } from "./RecurringCard/utils"
 
 export function MonthlyStandardSummary() {
 	const { data } = useQuery({
-		queryKey: MONTHLY_ENTRIES_FOR_CHARTS_KEY,
-		queryFn: () => getMonthlyEntriesForCharts(),
+		queryKey: MONTHLY_ENTRIES_KEY,
+		queryFn: () => getMonthlyEntries(),
 	})
 
 	const prefsQuery = useQuery({
@@ -65,12 +65,12 @@ export function MonthlyStandardSummary() {
 		const incomeTotal = Math.round(
 			entries
 				.filter((e) => e.entryType === "Income")
-				.reduce((acc, e) => acc + e.amountConverted, 0),
+				.reduce((acc, e) => acc + (e.amountIls ?? 0), 0),
 		)
 		const expenseTotal = Math.round(
 			entries
 				.filter((e) => e.entryType === "Expense")
-				.reduce((acc, e) => acc + e.amountConverted, 0),
+				.reduce((acc, e) => acc + (e.amountIls ?? 0), 0),
 		)
 		const net = incomeTotal - expenseTotal
 		return { incomeTotal, expenseTotal, net }

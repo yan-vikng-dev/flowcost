@@ -10,11 +10,16 @@ export async function fetchExchangeRatesForDates(
 	ratesByDate: Map<string, Record<Currency, number>>
 	latest: SelectExchangeRate
 }> {
-	let ratesForDates: SelectExchangeRate[] = []
+	const ratesForDates: SelectExchangeRate[] = []
 	if (dates.length > 0) {
-		ratesForDates = await db.query.exchange_rates.findMany({
-			where: inArray(exchange_rates.date, dates),
-		})
+		const BATCH_SIZE = 100
+		for (let i = 0; i < dates.length; i += BATCH_SIZE) {
+			const dateBatch = dates.slice(i, i + BATCH_SIZE)
+			const batchRates = await db.query.exchange_rates.findMany({
+				where: inArray(exchange_rates.date, dateBatch),
+			})
+			ratesForDates.push(...batchRates)
+		}
 	}
 
 	const latest = await db.query.exchange_rates.findFirst({
