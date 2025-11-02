@@ -62,7 +62,7 @@ export class AiConversationServer extends DurableObject {
 		const googleProvider = createGoogleGenerativeAI({
 			apiKey: this.env.GEMINI_API_KEY,
 		})
-		const baseModel = googleProvider("gemini-2.5-flash-lite")
+		const baseModel = googleProvider("gemini-2.5-flash")
 		if (!this.posthogClient) throw new Error("Posthog client not initialized")
 		if (!this.traceId) throw new Error("Trace ID not initialized")
 		const model = withTracing(baseModel, this.posthogClient, {

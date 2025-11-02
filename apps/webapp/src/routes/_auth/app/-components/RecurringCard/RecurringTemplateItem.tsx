@@ -1,7 +1,7 @@
 import { parseRRULE } from "@repo/data-ops/drizzle/queries"
 import type { SelectRecurringEntryTemplate } from "@repo/data-ops/drizzle/schemas/index"
 import {
-	currencyData,
+	formatCurrency,
 	getCurrentMonthRange,
 	isoDateToUtcMidnight,
 	toIsoDateInTimezone,
@@ -39,8 +39,6 @@ export function RecurringTemplateItem({
 		template.endDate !== null && template.endDate < monthStartIso
 	const canStop = template.endDate === null || template.endDate > todayIso
 	const CategoryIcon = getCategoryIcon(template.category)
-	const currencySymbol =
-		currencyData[template.currency]?.symbol ?? template.currency
 
 	const rruleDescription = React.useMemo(() => {
 		try {
@@ -57,7 +55,7 @@ export function RecurringTemplateItem({
 	}, [template.rrule, template.dtstartDate, template.endDate, timezone])
 
 	const sign = template.entryType === "Income" ? "+" : "-"
-	const signedAmount = `${sign}${currencySymbol}${template.amount.toFixed(2)}`
+	const signedAmount = `${sign}${formatCurrency(template.amount, template.currency)}`
 
 	return (
 		<div className="flex items-center justify-between gap-4 py-3">

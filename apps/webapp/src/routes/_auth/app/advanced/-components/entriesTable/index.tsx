@@ -49,6 +49,8 @@ export function MonthlyEntriesTable({
 					new Date(b.executedAt ?? b.executedDate).getTime()
 			} else if (sortId === "amount") {
 				comparison = (a.amountIls ?? 0) - (b.amountIls ?? 0)
+			} else if (sortId === "amountIls") {
+				comparison = (a.amountIls ?? 0) - (b.amountIls ?? 0)
 			} else if (sortId === "category") {
 				comparison = a.category.localeCompare(b.category)
 			} else if (sortId === "entryType") {

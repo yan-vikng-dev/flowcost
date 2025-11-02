@@ -195,8 +195,25 @@ export function entriesTableColumns(
 		{
 			accessorKey: "amountIls",
 			meta: { align: "right" },
-			enableSorting: false,
-			header: () => <div className="ml-auto text-right">Converted</div>,
+			header: ({ column }) => {
+				const sorted = column.getIsSorted()
+				return (
+					<Button
+						className="ml-auto"
+						onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+						variant="ghost"
+					>
+						Converted
+						{sorted === "asc" ? (
+							<ArrowUpIcon className="ml-2 h-4 w-4" />
+						) : sorted === "desc" ? (
+							<ArrowDownIcon className="ml-2 h-4 w-4" />
+						) : (
+							<ArrowUpDownIcon className="ml-2 h-4 w-4 text-muted-foreground" />
+						)}
+					</Button>
+				)
+			},
 			cell: ({ row }) => {
 				const val = row.getValue("amountIls")
 				return (
