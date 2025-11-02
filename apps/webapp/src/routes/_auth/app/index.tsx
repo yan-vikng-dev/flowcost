@@ -3,7 +3,6 @@ import { listBudgetsWithProgress } from "@/core/functions/budgets"
 import { getUserPreferences } from "@/core/functions/preferences"
 import { BudgetsCard } from "./-components/BudgetsCard"
 import { ExpensesByCategoryBar } from "./-components/ExpensesByCategoryBar"
-import { IncomeByCategoryDonut } from "./-components/IncomeByCategoryDonut"
 import { MonthlyStandardSummary } from "./-components/MonthlyStandardSummary"
 import { RecurringCard } from "./-components/RecurringCard"
 import {
@@ -46,13 +45,12 @@ function RouteComponent() {
 	return (
 		<div className="flex flex-col gap-4 md:flex-row md:items-start">
 			<div className="flex flex-1 flex-col gap-4">
+				<MonthlyStandardSummary />
 				<BudgetsCard />
-				<RecurringCard />
-				<ExpensesByCategoryBar />
 			</div>
 			<div className="flex flex-1 flex-col gap-4">
-				<MonthlyStandardSummary />
-				<IncomeByCategoryDonut />
+				<RecurringCard />
+				<ExpensesByCategoryBar />
 			</div>
 		</div>
 	)

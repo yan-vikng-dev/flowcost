@@ -9,6 +9,7 @@ import {
 import { useQuery } from "@tanstack/react-query"
 import { SquareIcon, TrashIcon } from "lucide-react"
 import * as React from "react"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { getCategoryIcon } from "@/config/categories"
 import { getUserPreferences } from "@/core/functions/preferences"
@@ -37,7 +38,7 @@ export function RecurringTemplateItem({
 	const isStopped =
 		template.endDate !== null && template.endDate < monthStartIso
 	const canStop = template.endDate === null || template.endDate > todayIso
-	const categoryIcon = getCategoryIcon(template.category)
+	const CategoryIcon = getCategoryIcon(template.category)
 	const currencySymbol =
 		currencyData[template.currency]?.symbol ?? template.currency
 
@@ -63,10 +64,13 @@ export function RecurringTemplateItem({
 			<div className="flex flex-1 items-center gap-3">
 				<div className="min-w-0 flex-1">
 					<div className="flex items-center gap-2">
-						<span className="inline-flex w-5 shrink-0 justify-center leading-none sm:w-6">
-							{React.createElement(categoryIcon, { className: "size-4" })}
-						</span>
-						<span className="font-medium">{template.category}</span>
+						<Badge variant="secondary">
+							<span className="mr-1 inline-flex w-4 justify-center">
+								<CategoryIcon className="size-3.5" />
+							</span>
+							{template.category}
+						</Badge>
+						<span className="text-sm">{signedAmount}</span>
 						{template.description && (
 							<span className="text-muted-foreground text-sm">
 								{template.description}
@@ -74,7 +78,7 @@ export function RecurringTemplateItem({
 						)}
 					</div>
 					<div className="text-muted-foreground text-sm">
-						{signedAmount} · {rruleDescription}
+						{rruleDescription}
 						{isStopped && (
 							<span className="ml-2 text-muted-foreground">(Stopped)</span>
 						)}
