@@ -42,7 +42,11 @@ export const makeGetEntriesTool = (context: MessageContext, db: DrizzleDb) =>
 				category: e.category,
 				entryType: e.entryType,
 				description: e.description,
-				executedAt: e.executedAt.toISOString(),
+				executedAt: e.executedAt
+					? new Date(e.executedAt).toISOString()
+					: DateTime.fromISO(e.executedDate, { zone: context.userTimezone })
+							.toJSDate()
+							.toISOString(),
 				convertedAmount: e.convertedAmount,
 			}))
 

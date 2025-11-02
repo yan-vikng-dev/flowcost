@@ -29,7 +29,8 @@ export const entries = sqliteTable(
 		userId: text()
 			.notNull()
 			.references(() => auth_users.id, { onDelete: "cascade" }),
-		executedAt: integer({ mode: "timestamp_ms" }).notNull(),
+		executedAt: integer({ mode: "timestamp_ms" }),
+		executedDate: text().notNull(),
 
 		// Recurring linkage & flags
 		recurringTemplateId: text().references(() => recurring_entry_templates.id, {
@@ -41,9 +42,10 @@ export const entries = sqliteTable(
 	},
 	(table) => [
 		index("entries_by_recurring_template_idx").on(table.recurringTemplateId),
-		uniqueIndex("entries_recurring_unique_by_executed_at_idx").on(
+		index("entries_by_executed_date_idx").on(table.executedDate),
+		uniqueIndex("entries_recurring_unique_by_executed_date_idx").on(
 			table.recurringTemplateId,
-			table.executedAt,
+			table.executedDate,
 		),
 	],
 )

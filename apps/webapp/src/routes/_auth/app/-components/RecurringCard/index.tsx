@@ -81,6 +81,7 @@ export function RecurringCard() {
 
 	const [createOpen, setCreateOpen] = React.useState(false)
 	const [deleteId, setDeleteId] = React.useState<null | string>(null)
+	const [stopId, setStopId] = React.useState<null | string>(null)
 	const [isEditMode, setIsEditMode] = React.useState(false)
 
 	const defaultCurrency: Currency =
@@ -134,7 +135,7 @@ export function RecurringCard() {
 								{index > 0 && <Separator />}
 								<RecurringTemplateItem
 									onDelete={(id) => setDeleteId(id)}
-									onStop={(id) => stopMut.mutate(id)}
+									onStop={(id) => setStopId(id)}
 									showActions={isEditMode}
 									template={template}
 								/>
@@ -180,7 +181,9 @@ export function RecurringCard() {
 				/>
 
 				<AlertDialog
-					onOpenChange={(isOpen) => setDeleteId(isOpen ? deleteId : null)}
+					onOpenChange={(isOpen) => {
+						if (!isOpen) setDeleteId(null)
+					}}
 					open={!!deleteId}
 				>
 					<AlertDialogContent>
@@ -204,6 +207,39 @@ export function RecurringCard() {
 								}}
 							>
 								Delete
+							</AlertDialogAction>
+						</AlertDialogFooter>
+					</AlertDialogContent>
+				</AlertDialog>
+
+				<AlertDialog
+					onOpenChange={(isOpen) => {
+						if (!isOpen) setStopId(null)
+					}}
+					open={!!stopId}
+				>
+					<AlertDialogContent>
+						<AlertDialogHeader>
+							<AlertDialogTitle>Stop this recurring entry?</AlertDialogTitle>
+							<AlertDialogDescription>
+								This will stop the recurrence today. All future entries
+								(starting from tomorrow) will be deleted. Past entries and
+								today's entry will remain unchanged.
+							</AlertDialogDescription>
+						</AlertDialogHeader>
+						<AlertDialogFooter>
+							<AlertDialogCancel onClick={() => setStopId(null)}>
+								Cancel
+							</AlertDialogCancel>
+							<AlertDialogAction
+								onClick={() => {
+									if (stopId) {
+										stopMut.mutate(stopId)
+									}
+									setStopId(null)
+								}}
+							>
+								Stop
 							</AlertDialogAction>
 						</AlertDialogFooter>
 					</AlertDialogContent>

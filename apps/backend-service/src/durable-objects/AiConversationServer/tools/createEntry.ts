@@ -1,6 +1,12 @@
 import type { DrizzleDb } from "@repo/data-ops/database/setup"
 import { entries, type InsertEntry } from "@repo/data-ops/drizzle/schemas/index"
-import { type Currency, categories, currencies } from "@repo/shared-lib"
+import {
+	type Currency,
+	categories,
+	currencies,
+	isoDateToUtcMidnight,
+	toIsoDateInTimezone,
+} from "@repo/shared-lib"
 import { tool } from "ai"
 import { DateTime } from "luxon"
 import { z } from "zod"
@@ -36,16 +42,18 @@ export const makeCreateEntryTool = (context: MessageContext, db: DrizzleDb) =>
 		description: "Create a financial entry",
 		inputSchema: createEntrySchema,
 		execute: async (input) => {
-			const executedAt = input.executionDate
-				? DateTime.fromISO(input.executionDate, {
-						zone: context.userTimezone,
-					}).toJSDate()
-				: new Date()
+			const executionDate = input.executionDate ?? DateTime.now().toISODate()
 			const currency = input.currency
 				? (input.currency as Currency)
 				: context.defaultEntryCurrency
 			if (!currencies.includes(currency))
 				throw new Error(`Unsupported currency: ${currency}`)
+			const executedDate = toIsoDateInTimezone(
+				DateTime.fromISO(executionDate, {
+					zone: context.userTimezone,
+				}).toJSDate(),
+				context.userTimezone,
+			)
 			const newEntry: InsertEntry = {
 				userId: context.userId,
 				amount: input.amount,
@@ -53,13 +61,16 @@ export const makeCreateEntryTool = (context: MessageContext, db: DrizzleDb) =>
 				category: input.category,
 				entryType: input.entryType,
 				description: input.description,
-				executedAt,
+				executedDate,
 			}
 			const [inserted] = await db.insert(entries).values(newEntry).returning()
 			if (!inserted) throw new Error("Failed to create entry")
+			const executedAt = inserted.executedAt
+				? new Date(inserted.executedAt).toISOString()
+				: isoDateToUtcMidnight(inserted.executedDate).toISOString()
 			const safe = {
 				...inserted,
-				executedAt: inserted.executedAt.toISOString(),
+				executedAt,
 				createdAt: inserted.createdAt.toISOString(),
 				updatedAt: inserted.updatedAt.toISOString(),
 			}

@@ -3,7 +3,8 @@ import type { SelectRecurringEntryTemplate } from "@repo/data-ops/drizzle/schema
 import {
 	currencyData,
 	getCurrentMonthRange,
-	getStartOfDayInTimezone,
+	isoDateToUtcMidnight,
+	toIsoDateInTimezone,
 } from "@repo/shared-lib"
 import { useQuery } from "@tanstack/react-query"
 import { SquareIcon, TrashIcon } from "lucide-react"
@@ -31,27 +32,28 @@ export function RecurringTemplateItem({
 
 	const timezone = prefsQuery.data?.timezone || "UTC"
 	const { start: monthStart } = getCurrentMonthRange(timezone)
-	const today = getStartOfDayInTimezone(new Date(), timezone)
-	const isStopped = template.endAt !== null && template.endAt < monthStart
-	const canStop = template.endAt === null || template.endAt >= today
+	const monthStartIso = toIsoDateInTimezone(monthStart, timezone)
+	const todayIso = toIsoDateInTimezone(new Date(), timezone)
+	const isStopped =
+		template.endDate !== null && template.endDate < monthStartIso
+	const canStop = template.endDate === null || template.endDate > todayIso
 	const categoryIcon = getCategoryIcon(template.category)
 	const currencySymbol =
 		currencyData[template.currency]?.symbol ?? template.currency
 
 	const rruleDescription = React.useMemo(() => {
 		try {
-			const rrule = parseRRULE(
-				template.rrule,
-				template.dtstart,
-				template.endAt ?? undefined,
-				timezone,
-			)
+			const dtstart = isoDateToUtcMidnight(template.dtstartDate)
+			const until = template.endDate
+				? isoDateToUtcMidnight(template.endDate)
+				: undefined
+			const rrule = parseRRULE(template.rrule, dtstart, until, timezone)
 			const text = rrule.toText()
 			return text.charAt(0).toUpperCase() + text.slice(1)
 		} catch {
 			return "Invalid recurrence"
 		}
-	}, [template.rrule, template.dtstart, template.endAt, timezone])
+	}, [template.rrule, template.dtstartDate, template.endDate, timezone])
 
 	const sign = template.entryType === "Income" ? "+" : "-"
 	const signedAmount = `${sign}${currencySymbol}${template.amount.toFixed(2)}`

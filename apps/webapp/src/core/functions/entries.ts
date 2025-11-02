@@ -13,7 +13,12 @@ import {
 	type InsertEntry,
 	type SelectEntry,
 } from "@repo/data-ops/drizzle/schemas/index"
-import { categories, currencies, getCurrentMonthRange } from "@repo/shared-lib"
+import {
+	categories,
+	currencies,
+	getCurrentMonthRange,
+	toIsoDateInTimezone,
+} from "@repo/shared-lib"
 import { createServerFn } from "@tanstack/react-start"
 import { and, eq, inArray } from "drizzle-orm"
 import { z } from "zod"
@@ -35,6 +40,11 @@ export const createEntry = createServerFn({ method: "POST" })
 	.inputValidator(createEntryInput)
 	.handler(async (ctx) => {
 		const db = getDb()
+		const { timezone } = await getUserTimezoneAndCurrency(
+			db,
+			ctx.context.userId,
+		)
+		const executedDate = toIsoDateInTimezone(ctx.data.executedAt, timezone)
 		const [result] = await db
 			.insert(entries)
 			.values({
@@ -43,7 +53,7 @@ export const createEntry = createServerFn({ method: "POST" })
 				category: ctx.data.category,
 				entryType: ctx.data.entryType,
 				description: ctx.data.description,
-				executedAt: ctx.data.executedAt,
+				executedDate,
 				userId: ctx.context.userId,
 			})
 			.returning({ id: entries.id })
@@ -77,6 +87,14 @@ export const updateEntry = createServerFn({ method: "POST" })
 		}
 
 		const patch: Partial<InsertEntry> = { ...updates }
+
+		if (updates.executedAt) {
+			const { timezone } = await getUserTimezoneAndCurrency(
+				db,
+				ctx.context.userId,
+			)
+			patch.executedDate = toIsoDateInTimezone(updates.executedAt, timezone)
+		}
 
 		if (row.recurringTemplateId) {
 			patch.isOverridden = true

@@ -92,17 +92,14 @@ export function aggregateCategoryTotals(
 }
 
 export function findTopSpendingDay(
-	entries: Array<{ executedAt: Date; convertedAmount: number | null }>,
+	entries: Array<{ executedDate: string; convertedAmount: number | null }>,
 	timeZone: string,
 ): { date: string; amount: number } | null {
 	const dayTotals = new Map<string, number>()
 
 	for (const entry of entries) {
 		if (entry.convertedAmount === null) continue
-		const isoDate = DateTime.fromJSDate(entry.executedAt, {
-			zone: timeZone,
-		}).toISODate()
-		const dateKey = isoDate || ""
+		const dateKey = entry.executedDate
 		if (!dateKey) continue
 		const current = dayTotals.get(dateKey) || 0
 		dayTotals.set(dateKey, current + entry.convertedAmount)

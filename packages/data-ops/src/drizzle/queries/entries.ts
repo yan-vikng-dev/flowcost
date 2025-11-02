@@ -1,7 +1,7 @@
 import type { Currency } from "@repo/shared-lib"
+import { toIsoDateInTimezone } from "@repo/shared-lib"
 import { convertCurrency } from "@repo/shared-lib/currency"
 import { and, asc, count, desc, eq, gte, inArray, lt } from "drizzle-orm"
-import { DateTime } from "luxon"
 import type { DrizzleDb } from "../../database/setup"
 import { type EntryType, entries, type SelectEntry } from "../schemas/index"
 import { fetchExchangeRatesForDates } from "./exchange-rates"
@@ -28,6 +28,35 @@ export type FetchConvertedEntriesOptions = {
 export type FetchConvertedEntriesResult = {
 	entries: ConvertedEntry[]
 	total?: number
+}
+
+function buildDateRangeWhere(start: Date, end: Date, timezone: string) {
+	const isoStart = toIsoDateInTimezone(start, timezone)
+	const isoEnd = toIsoDateInTimezone(end, timezone)
+
+	return and(
+		gte(entries.executedDate, isoStart),
+		lt(entries.executedDate, isoEnd),
+	)
+}
+
+function buildOrderBy(
+	sortBy: NonNullable<FetchConvertedEntriesOptions["sortBy"]>,
+	sortDir: NonNullable<FetchConvertedEntriesOptions["sortDir"]>,
+) {
+	const sortableColumns = {
+		executedAt: entries.executedDate,
+		amount: entries.amount,
+		category: entries.category,
+		entryType: entries.entryType,
+	} as const
+
+	const sortColumn = sortableColumns[sortBy] ?? entries.executedDate
+	return sortDir === "asc" ? asc(sortColumn) : desc(sortColumn)
+}
+
+function extractDateString(row: SelectEntry): string {
+	return row.executedDate
 }
 
 export async function fetchConvertedEntriesForRange(
@@ -60,44 +89,30 @@ export async function fetchConvertedEntriesForRange(
 
 	const baseWhere = and(
 		inArray(entries.userId, allowedUserIds),
-		gte(entries.executedAt, start),
-		lt(entries.executedAt, end),
+		buildDateRangeWhere(start, end, timezone),
 		entryType ? eq(entries.entryType, entryType) : undefined,
 	)
 
-	let total: number | undefined
-	if (limit !== undefined || offset !== undefined) {
-		const totalRows = await db
-			.select({ count: count() })
-			.from(entries)
-			.where(baseWhere)
-		total = totalRows[0]?.count ?? 0
-	}
+	const needsTotal = limit !== undefined || offset !== undefined
+	const total = needsTotal
+		? ((await db.select({ count: count() }).from(entries).where(baseWhere))[0]
+				?.count ?? 0)
+		: undefined
 
-	const sortableColumns = {
-		executedAt: entries.executedAt,
-		amount: entries.amount,
-		category: entries.category,
-		entryType: entries.entryType,
-	} as const
-
-	const sortColumn = sortableColumns[sortBy] ?? entries.executedAt
-	const orderExpr = sortDir === "asc" ? asc(sortColumn) : desc(sortColumn)
-
-	const baseQuery = db
+	let query = db
 		.select()
 		.from(entries)
 		.where(baseWhere)
-		.orderBy(orderExpr)
+		.orderBy(buildOrderBy(sortBy, sortDir) as any)
 
-	const rows =
-		limit !== undefined && offset !== undefined
-			? await baseQuery.limit(limit).offset(offset)
-			: limit !== undefined
-				? await baseQuery.limit(limit)
-				: offset !== undefined
-					? await baseQuery.offset(offset)
-					: await baseQuery
+	if (limit !== undefined) {
+		query = query.limit(limit) as typeof query
+	}
+	if (offset !== undefined) {
+		query = query.offset(offset) as typeof query
+	}
+
+	const rows = await query
 
 	if (rows.length === 0) {
 		return {
@@ -106,15 +121,7 @@ export async function fetchConvertedEntriesForRange(
 		}
 	}
 
-	const neededDates = Array.from(
-		new Set(
-			rows
-				.map((r) =>
-					DateTime.fromJSDate(r.executedAt, { zone: timezone }).toISODate(),
-				)
-				.filter((d): d is string => typeof d === "string"),
-		),
-	)
+	const neededDates = Array.from(new Set(rows.map((r) => extractDateString(r))))
 
 	const { ratesByDate, latest } = await fetchExchangeRatesForDates(
 		db,
@@ -122,9 +129,7 @@ export async function fetchConvertedEntriesForRange(
 	)
 
 	const convertedEntries: ConvertedEntry[] = rows.map((row) => {
-		const dateKey =
-			DateTime.fromJSDate(row.executedAt, { zone: timezone }).toISODate() ||
-			latest.date
+		const dateKey = extractDateString(row)
 		const rateMap = ratesByDate.get(dateKey) ?? latest.rates
 
 		const convertedAmount = convertCurrency(

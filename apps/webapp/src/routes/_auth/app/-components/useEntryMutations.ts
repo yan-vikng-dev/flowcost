@@ -1,6 +1,7 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import type { CreateEntryInput } from "@/core/functions/entries"
 import { createEntry } from "@/core/functions/entries"
+import { getUserPreferences } from "@/core/functions/preferences"
 import type { CreateRecurringTemplateInput } from "@/core/functions/recurring-templates"
 import { createRecurringTemplate } from "@/core/functions/recurring-templates"
 import type { EntryFormState } from "./EntryDialog"
@@ -33,6 +34,12 @@ function getAmount(state: EntryFormState): number {
 
 export function useEntryMutations() {
 	const queryClient = useQueryClient()
+	const prefsQuery = useQuery({
+		queryKey: ["userPreferences"],
+		queryFn: () => getUserPreferences(),
+		staleTime: 5 * 60 * 1000,
+	})
+	const timezone = prefsQuery.data?.timezone || "UTC"
 
 	const createMut = useMutation({
 		mutationFn: (input: CreateEntryInput) => createEntry({ data: input }),
@@ -74,7 +81,7 @@ export function useEntryMutations() {
 			category: state.category,
 			entryType: state.entryType,
 			description: state.description,
-			rrule: buildRRuleFromUi(state.executedAt, state.recurrence),
+			rrule: buildRRuleFromUi(state.executedAt, state.recurrence, timezone),
 			dtstart: state.executedAt,
 			endAt: state.endAt,
 		})

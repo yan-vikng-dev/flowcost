@@ -41,9 +41,9 @@ export function getDefaultRecurrence(): RecurrenceUi {
 }
 
 export function buildRRuleFromUi(
-    dtstart: Date,
-    ui: RecurrenceUi,
-    timezone?: string,
+	dtstart: Date,
+	ui: RecurrenceUi,
+	timezone?: string,
 ): string {
 	if (!ui || !ui.unit || !ui.every) {
 		throw new Error("Recurrence UI object is incomplete")

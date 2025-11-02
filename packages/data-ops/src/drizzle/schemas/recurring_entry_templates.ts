@@ -1,12 +1,6 @@
 import { categories, currencies } from "@repo/shared-lib"
 import { relations } from "drizzle-orm"
-import {
-	index,
-	integer,
-	real,
-	sqliteTable,
-	text,
-} from "drizzle-orm/sqlite-core"
+import { index, real, sqliteTable, text } from "drizzle-orm/sqlite-core"
 import { auth_users } from "./auth_users"
 import { entries } from "./entries"
 import { entryTypes, timestamps } from "./helpers"
@@ -30,11 +24,11 @@ export const recurring_entry_templates = sqliteTable(
 
 		// Recurrence configuration
 		rrule: text().notNull(), // stored without DTSTART/UNTIL/COUNT
-		dtstart: integer({ mode: "timestamp_ms" }).notNull(),
-		endAt: integer({ mode: "timestamp_ms" }),
+		dtstartDate: text().notNull(),
+		endDate: text(),
 
 		// Generation tracking
-		generationValidUntil: integer({ mode: "timestamp_ms" }).notNull(),
+		generationValidUntil: text().notNull(),
 
 		...timestamps,
 	},
@@ -43,7 +37,7 @@ export const recurring_entry_templates = sqliteTable(
 		index("recurring_entry_templates_by_valid_until_idx").on(
 			table.generationValidUntil,
 		),
-		index("recurring_entry_templates_by_end_at_idx").on(table.endAt),
+		// endAt index removed; date-only storage uses endDate string
 	],
 )
 

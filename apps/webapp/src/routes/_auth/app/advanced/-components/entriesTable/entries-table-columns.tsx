@@ -51,7 +51,7 @@ export function entriesTableColumns(
 			},
 		},
 		{
-			accessorKey: "executedAt",
+			accessorKey: "executedDate",
 			header: ({ column }) => {
 				const sorted = column.getIsSorted()
 				return (
@@ -71,15 +71,16 @@ export function entriesTableColumns(
 				)
 			},
 			cell: ({ row }) => {
-				const dt = row.original.executedAt
-				return new Date(dt).toLocaleDateString(undefined, {
+				const dateStr = row.original.executedDate
+				const dt = new Date(`${dateStr}T00:00:00`)
+				return dt.toLocaleDateString(undefined, {
 					year: "numeric",
 					month: "short",
 					day: "2-digit",
 				})
 			},
 			sortingFn: (a, b) =>
-				a.original.executedAt.getTime() - b.original.executedAt.getTime(),
+				a.original.executedDate.localeCompare(b.original.executedDate),
 		},
 		{
 			accessorKey: "entryType",

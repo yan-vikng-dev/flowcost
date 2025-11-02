@@ -1,4 +1,9 @@
-import { getCurrentMonthRange, toUtcMidnight } from "@repo/shared-lib"
+import {
+	getCurrentMonthRange,
+	isoDateToUtcMidnight,
+	toIsoDateInTimezone,
+	toUtcMidnight,
+} from "@repo/shared-lib"
 import { and, desc, eq, gte, inArray, isNull, or } from "drizzle-orm"
 import { DateTime } from "luxon"
 import { RRule } from "rrule"
@@ -10,6 +15,30 @@ import {
 	type SelectRecurringEntryTemplate,
 } from "../schemas/index"
 
+function normalizeDateForRRule(date: Date, tzid?: string): Date {
+	if (!tzid) return date
+	const zoned = DateTime.fromJSDate(date, { zone: tzid })
+	return new Date(
+		Date.UTC(
+			zoned.year,
+			zoned.month - 1,
+			zoned.day,
+			zoned.hour,
+			zoned.minute,
+			zoned.second,
+			zoned.millisecond,
+		),
+	)
+}
+
+function normalizeUntilForRRule(until: Date, tzid?: string): Date {
+	if (!tzid) return until
+	const untilInTz = DateTime.fromJSDate(until, { zone: tzid })
+	return new Date(
+		Date.UTC(untilInTz.year, untilInTz.month - 1, untilInTz.day, 0, 0, 0, 0),
+	)
+}
+
 export function parseRRULE(
 	rruleString: string,
 	dtstart: Date,
@@ -17,35 +46,9 @@ export function parseRRULE(
 	tzid?: string,
 ): RRule {
 	const options = RRule.parseString(`RRULE:${rruleString}`)
-
-	// RRule expects UTC-floating dates (JS offsets ignored). When tzid is provided,
-	// reconstruct dtstart as a UTC date using the calendar components in that tz.
-	if (tzid) {
-		const startInTz = DateTime.fromJSDate(dtstart, { zone: tzid })
-		options.dtstart = new Date(
-			Date.UTC(
-				startInTz.year,
-				startInTz.month - 1,
-				startInTz.day,
-				startInTz.hour,
-				startInTz.minute,
-				startInTz.second,
-				startInTz.millisecond,
-			),
-		)
-	} else {
-		options.dtstart = dtstart
-	}
+	options.dtstart = normalizeDateForRRule(dtstart, tzid)
 	if (until) {
-		if (tzid) {
-			// Use the calendar day in tzid, then make a UTC-floating midnight
-			const untilInTz = DateTime.fromJSDate(until, { zone: tzid })
-			options.until = new Date(
-				Date.UTC(untilInTz.year, untilInTz.month - 1, untilInTz.day, 0, 0, 0, 0),
-			)
-		} else {
-			options.until = until
-		}
+		options.until = normalizeUntilForRRule(until, tzid)
 	}
 	if (tzid) {
 		options.tzid = tzid
@@ -69,6 +72,9 @@ export async function ensureRecurringEntriesMaterialized(
 	timezone: string,
 ): Promise<void> {
 	const { start: monthStart } = getCurrentMonthRange(timezone)
+	const monthStartIso = DateTime.fromJSDate(monthStart, {
+		zone: timezone,
+	}).toISODate() as string
 	const templates = await db
 		.select()
 		.from(recurring_entry_templates)
@@ -76,8 +82,8 @@ export async function ensureRecurringEntriesMaterialized(
 			and(
 				eq(recurring_entry_templates.userId, userId),
 				or(
-					isNull(recurring_entry_templates.endAt),
-					gte(recurring_entry_templates.endAt, monthStart),
+					isNull(recurring_entry_templates.endDate),
+					gte(recurring_entry_templates.endDate, monthStartIso),
 				),
 			),
 		)
@@ -85,10 +91,11 @@ export async function ensureRecurringEntriesMaterialized(
 	const targetHorizon = DateTime.fromJSDate(end, { zone: timezone })
 		.endOf("month")
 		.toJSDate()
+	const targetHorizonIso = toIsoDateInTimezone(targetHorizon, timezone)
 
 	for (const template of templates) {
-		const validUntil = template.generationValidUntil
-		if (validUntil < targetHorizon) {
+		const validUntilDate = template.generationValidUntil
+		if (validUntilDate < targetHorizonIso) {
 			await materializeTemplateEntries(
 				db,
 				template,
@@ -100,6 +107,64 @@ export async function ensureRecurringEntriesMaterialized(
 	}
 }
 
+function toIsoDateString(date: Date, timezone: string): string {
+	return DateTime.fromJSDate(date, { zone: timezone }).toISODate() as string
+}
+
+function computeGenerationHorizon(queryEnd: Date, timezone: string): Date {
+	return DateTime.fromJSDate(queryEnd, { zone: timezone })
+		.endOf("month")
+		.toJSDate()
+}
+
+function computeQueryBounds(
+	queryStart: Date,
+	queryEnd: Date,
+	template: SelectRecurringEntryTemplate,
+): { start: Date; end: Date } {
+	const normalizedStart = toUtcMidnight(queryStart)
+	const normalizedEnd = toUtcMidnight(queryEnd)
+
+	if (!template.endDate) {
+		return { start: normalizedStart, end: normalizedEnd }
+	}
+
+	const cappedUntil = isoDateToUtcMidnight(template.endDate)
+	const finalEnd = new Date(
+		Math.min(cappedUntil.getTime(), normalizedEnd.getTime()),
+	)
+	return { start: normalizedStart, end: finalEnd }
+}
+
+function getTemplateDateBounds(template: SelectRecurringEntryTemplate): {
+	start: Date
+	until?: Date
+} {
+	const anchorStart = isoDateToUtcMidnight(template.dtstartDate)
+	const untilDate = template.endDate
+		? isoDateToUtcMidnight(template.endDate)
+		: undefined
+	return { start: anchorStart, until: untilDate }
+}
+
+function buildEntryFromTemplate(
+	template: SelectRecurringEntryTemplate,
+	_date: Date,
+	dateStr: string,
+): InsertEntry {
+	return {
+		amount: template.amount,
+		currency: template.currency,
+		category: template.category,
+		entryType: template.entryType,
+		description: template.description,
+		executedDate: dateStr,
+		recurringTemplateId: template.id,
+		userId: template.userId,
+		isOverridden: false,
+	}
+}
+
 export async function materializeTemplateEntries(
 	db: DrizzleDb,
 	template: SelectRecurringEntryTemplate,
@@ -107,71 +172,72 @@ export async function materializeTemplateEntries(
 	queryEnd: Date,
 	timezone: string,
 ): Promise<void> {
-	const generateUntil = DateTime.fromJSDate(queryEnd, { zone: timezone })
-		.endOf("month")
-		.toJSDate()
-
-	const normalizedQueryStart = toUtcMidnight(queryStart)
-	const normalizedQueryEnd = toUtcMidnight(generateUntil)
-	const normalizedCappedUntil = template.endAt
-		? toUtcMidnight(template.endAt)
-		: normalizedQueryEnd
-	const finalCappedUntil = template.endAt
-		? new Date(
-				Math.min(normalizedCappedUntil.getTime(), normalizedQueryEnd.getTime()),
-			)
-		: normalizedQueryEnd
-
-	const rrule = parseRRULE(template.rrule, template.dtstart, undefined)
-
-	const dates = generateDatesFromRRULE(
-		rrule,
-		normalizedQueryStart,
-		finalCappedUntil,
+	const generateUntil = computeGenerationHorizon(queryEnd, timezone)
+	const { start: normalizedStart, end: finalCappedUntil } = computeQueryBounds(
+		queryStart,
+		generateUntil,
+		template,
 	)
+	const { start: anchorStart, until: untilDate } =
+		getTemplateDateBounds(template)
+
+	const rrule = parseRRULE(template.rrule, anchorStart, untilDate, timezone)
+	const dates = generateDatesFromRRULE(rrule, normalizedStart, finalCappedUntil)
 
 	if (dates.length === 0) {
+		const generateUntilIso = toIsoDateInTimezone(generateUntil, timezone)
 		await db
 			.update(recurring_entry_templates)
-			.set({ generationValidUntil: generateUntil })
+			.set({ generationValidUntil: generateUntilIso })
 			.where(eq(recurring_entry_templates.id, template.id))
 		return
 	}
 
-	const existingEntries = await db.query.entries.findMany({
+	const desiredDateStrings = dates.map((d) => toIsoDateString(d, timezone))
+	const existingByDate = await db.query.entries.findMany({
 		where: and(
 			eq(entries.recurringTemplateId, template.id),
-			inArray(entries.executedAt, dates),
+			inArray(entries.executedDate, desiredDateStrings),
 		),
-		columns: { executedAt: true },
+		columns: { executedDate: true },
 	})
-
-	const existingDates = new Set(
-		existingEntries.map((e) => e.executedAt.getTime()),
+	const existingDateStrings = new Set(
+		existingByDate.map((e) => e.executedDate as string),
 	)
 
 	const newRows: InsertEntry[] = dates
-		.filter((date) => !existingDates.has(date.getTime()))
 		.map((date) => ({
-			amount: template.amount,
-			currency: template.currency,
-			category: template.category,
-			entryType: template.entryType,
-			description: template.description,
-			executedAt: date,
-			recurringTemplateId: template.id,
-			userId: template.userId,
-			isOverridden: false,
+			date,
+			dateStr: toIsoDateString(date, timezone),
 		}))
+		.filter(({ dateStr }) => !existingDateStrings.has(dateStr))
+		.map(({ date, dateStr }) => buildEntryFromTemplate(template, date, dateStr))
 
 	if (newRows.length > 0) {
 		await db.insert(entries).values(newRows)
 	}
 
+	const generateUntilIso = toIsoDateInTimezone(generateUntil, timezone)
 	await db
 		.update(recurring_entry_templates)
-		.set({ generationValidUntil: generateUntil })
+		.set({ generationValidUntil: generateUntilIso })
 		.where(eq(recurring_entry_templates.id, template.id))
+}
+
+function buildActiveTemplatesWhere(userId: string, timezone: string) {
+	const baseWhere = eq(recurring_entry_templates.userId, userId)
+	const { start: monthStart } = getCurrentMonthRange(timezone)
+	const monthStartIso = DateTime.fromJSDate(monthStart, {
+		zone: timezone,
+	}).toISODate() as string
+
+	return and(
+		baseWhere,
+		or(
+			isNull(recurring_entry_templates.endDate),
+			gte(recurring_entry_templates.endDate, monthStartIso),
+		),
+	)
 }
 
 export async function getRecurringTemplates(
@@ -181,27 +247,13 @@ export async function getRecurringTemplates(
 	timezone: string,
 ): Promise<SelectRecurringEntryTemplate[]> {
 	const baseWhere = eq(recurring_entry_templates.userId, userId)
+	const where = includeInactive
+		? baseWhere
+		: buildActiveTemplatesWhere(userId, timezone)
 
-	if (includeInactive) {
-		return db
-			.select()
-			.from(recurring_entry_templates)
-			.where(baseWhere)
-			.orderBy(desc(recurring_entry_templates.createdAt))
-	}
-
-	const { start: monthStart } = getCurrentMonthRange(timezone)
 	return db
 		.select()
 		.from(recurring_entry_templates)
-		.where(
-			and(
-				baseWhere,
-				or(
-					isNull(recurring_entry_templates.endAt),
-					gte(recurring_entry_templates.endAt, monthStart),
-				),
-			),
-		)
+		.where(where)
 		.orderBy(desc(recurring_entry_templates.createdAt))
 }

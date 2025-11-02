@@ -13,6 +13,7 @@ import {
 	categories,
 	currencies,
 	getStartOfDayInTimezone,
+	toIsoDateInTimezone,
 	toUtcMidnightInTimezone,
 } from "@repo/shared-lib"
 import { createServerFn } from "@tanstack/react-start"
@@ -38,6 +39,36 @@ export type CreateRecurringTemplateInput = z.infer<
 	typeof createRecurringTemplateInput
 >
 
+function normalizeTemplateDates(
+	dtstart: Date,
+	endAt: Date | undefined,
+	timezone: string,
+) {
+	return {
+		normalizedDtstart: toUtcMidnightInTimezone(dtstart, timezone),
+		normalizedEndAt: endAt
+			? toUtcMidnightInTimezone(endAt, timezone)
+			: undefined,
+		dtstartDate: toIsoDateInTimezone(dtstart, timezone),
+		endDate: endAt ? toIsoDateInTimezone(endAt, timezone) : undefined,
+	}
+}
+
+function validateRRule(
+	rrule: string,
+	dtstart: Date,
+	endAt: Date | undefined,
+	timezone: string,
+) {
+	try {
+		parseRRULE(rrule, dtstart, endAt, timezone)
+	} catch (error) {
+		throw new Error(
+			`Invalid RRULE: ${error instanceof Error ? error.message : String(error)}`,
+		)
+	}
+}
+
 export const createRecurringTemplate = createServerFn({ method: "POST" })
 	.middleware([protectedFunctionMiddleware])
 	.inputValidator(createRecurringTemplateInput)
@@ -50,32 +81,26 @@ export const createRecurringTemplate = createServerFn({ method: "POST" })
 			ctx.context.userId,
 		)
 
-		// Normalize start/end using the user's timezone calendar day,
-		// then convert to UTC-floating (midnight) to align with RRule expectations.
-		const normalizedDtstart = toUtcMidnightInTimezone(dtstart, timezone)
-		const normalizedEndAt = endAt
-			? toUtcMidnightInTimezone(endAt, timezone)
-			: undefined
+		const { normalizedDtstart, normalizedEndAt, dtstartDate, endDate } =
+			normalizeTemplateDates(dtstart, endAt, timezone)
 
-		try {
-			parseRRULE(rrule, normalizedDtstart, normalizedEndAt, timezone)
-		} catch (error) {
-			throw new Error(
-				`Invalid RRULE: ${error instanceof Error ? error.message : String(error)}`,
-			)
-		}
-		const generationValidUntil = getStartOfDayInTimezone(new Date(), timezone)
+		validateRRule(rrule, normalizedDtstart, normalizedEndAt, timezone)
+
+		const generationValidUntilDate = toIsoDateInTimezone(
+			getStartOfDayInTimezone(new Date(), timezone),
+			timezone,
+		)
 
 		const [result] = await db
 			.insert(recurring_entry_templates)
-				.values({
-					...entryFields,
-					rrule,
-					dtstart: normalizedDtstart,
-					endAt: normalizedEndAt,
-					generationValidUntil,
-					userId: ctx.context.userId,
-				})
+			.values({
+				...entryFields,
+				rrule,
+				dtstartDate,
+				endDate,
+				generationValidUntil: generationValidUntilDate,
+				userId: ctx.context.userId,
+			})
 			.returning({ id: recurring_entry_templates.id })
 
 		return { id: result?.id }
@@ -89,6 +114,19 @@ export type DeleteRecurringTemplateInput = z.infer<
 	typeof deleteRecurringTemplateInput
 >
 
+function findTemplateForUser(
+	db: ReturnType<typeof getDb>,
+	templateId: string,
+	userId: string,
+) {
+	return db.query.recurring_entry_templates.findFirst({
+		where: and(
+			eq(recurring_entry_templates.id, templateId),
+			eq(recurring_entry_templates.userId, userId),
+		),
+	})
+}
+
 export const deleteRecurringTemplate = createServerFn({ method: "POST" })
 	.middleware([protectedFunctionMiddleware])
 	.inputValidator(deleteRecurringTemplateInput)
@@ -96,13 +134,7 @@ export const deleteRecurringTemplate = createServerFn({ method: "POST" })
 		const db = getDb()
 		const { id } = ctx.data
 
-		const template = await db.query.recurring_entry_templates.findFirst({
-			where: and(
-				eq(recurring_entry_templates.id, id),
-				eq(recurring_entry_templates.userId, ctx.context.userId),
-			),
-		})
-
+		const template = await findTemplateForUser(db, id, ctx.context.userId)
 		if (!template) {
 			throw new Error("Template not found")
 		}
@@ -155,13 +187,7 @@ export const stopRecurringTemplate = createServerFn({ method: "POST" })
 		const db = getDb()
 		const { id } = ctx.data
 
-		const template = await db.query.recurring_entry_templates.findFirst({
-			where: and(
-				eq(recurring_entry_templates.id, id),
-				eq(recurring_entry_templates.userId, ctx.context.userId),
-			),
-		})
-
+		const template = await findTemplateForUser(db, id, ctx.context.userId)
 		if (!template) {
 			throw new Error("Template not found")
 		}
@@ -171,12 +197,15 @@ export const stopRecurringTemplate = createServerFn({ method: "POST" })
 			ctx.context.userId,
 		)
 		const now = DateTime.now().setZone(timezone)
-		const today = now.startOf("day").toJSDate()
-		const tomorrow = now.plus({ days: 1 }).startOf("day").toJSDate()
+		const todayIso = now.startOf("day").toISODate() as string
+		const tomorrowIso = now
+			.plus({ days: 1 })
+			.startOf("day")
+			.toISODate() as string
 
 		await db
 			.update(recurring_entry_templates)
-			.set({ endAt: today })
+			.set({ endDate: todayIso })
 			.where(eq(recurring_entry_templates.id, id))
 
 		await db
@@ -184,7 +213,7 @@ export const stopRecurringTemplate = createServerFn({ method: "POST" })
 			.where(
 				and(
 					eq(entries.recurringTemplateId, id),
-					gte(entries.executedAt, tomorrow),
+					gte(entries.executedDate, tomorrowIso),
 				),
 			)
 
