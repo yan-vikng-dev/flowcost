@@ -5,7 +5,7 @@
 	"scripts": {
 		"build": "turbo run build",
 		"test": "turbo run test",
-		"dep": "turbo run deploy",
+		"ship": "turbo run deploy",
 		"dev": "pnpm run --filter webapp dev",
 		"studio": "pnpm run --filter data-ops drizzle:studio",
 		"check": "pnpm exec biome check --write --max-diagnostics 10 --unsafe && turbo typecheck",
