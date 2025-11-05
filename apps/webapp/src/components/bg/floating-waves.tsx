@@ -153,12 +153,15 @@ export function FloatingWaves({
 			ctx.strokeStyle = lineColor
 			ctx.lineWidth = 1.5
 			linesRef.current.forEach((points) => {
+				if (points.length === 0) return
+				// biome-ignore lint/style/noNonNullAssertion: Array is guaranteed to have elements from initialization
 				let p1 = moved(points[0]!, false)
 				ctx.moveTo(p1.x, p1.y)
 				points.forEach((p, idx) => {
 					const isLast = idx === points.length - 1
 					p1 = moved(p, !isLast)
 					const p2 = moved(
+						// biome-ignore lint/style/noNonNullAssertion: Array is guaranteed to have elements from initialization
 						points[idx + 1] || points[points.length - 1]!,
 						!isLast,
 					)

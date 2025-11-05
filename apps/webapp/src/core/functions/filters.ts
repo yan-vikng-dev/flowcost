@@ -1,12 +1,17 @@
 import type { FilterFn } from "@tanstack/react-table"
+import type { MonthlyEntry } from "./entries"
 
 // Date range filter for executedDate column
-export const dateRangeFilter: FilterFn<any> = (row, columnId, filterValue) => {
+export const dateRangeFilter: FilterFn<MonthlyEntry> = (
+	row,
+	columnId,
+	filterValue,
+) => {
 	const rowValue = row.getValue(columnId) as string
 	if (!rowValue) return false
 
 	const rowDate = new Date(`${rowValue}T00:00:00`)
-	const { from, to } = filterValue as { from?: Date; to?: Date }
+	const { from, to } = filterValue as DateRangeFilter
 
 	if (from && rowDate < from) return false
 	if (to && rowDate > to) return false
@@ -15,26 +20,26 @@ export const dateRangeFilter: FilterFn<any> = (row, columnId, filterValue) => {
 }
 
 // Multi-select enum filter for entryType and category columns
-export const enumMultiSelectFilter: FilterFn<any> = (
+export const enumMultiSelectFilter: FilterFn<MonthlyEntry> = (
 	row,
 	columnId,
 	filterValue,
 ) => {
 	const rowValue = row.getValue(columnId) as string
-	const selectedValues = filterValue as string[]
+	const selectedValues = filterValue as EnumMultiSelectFilter
 
 	if (!selectedValues || selectedValues.length === 0) return true
 	return selectedValues.includes(rowValue)
 }
 
 // Number range filter for amount and amountIls columns
-export const numberRangeFilter: FilterFn<any> = (
+export const numberRangeFilter: FilterFn<MonthlyEntry> = (
 	row,
 	columnId,
 	filterValue,
 ) => {
 	const rowValue = row.getValue(columnId) as number | null
-	const { min, max } = filterValue as { min?: number; max?: number }
+	const { min, max } = filterValue as NumberRangeFilter
 
 	// If row value is null/undefined, only include if no filters are set
 	if (rowValue == null) {
@@ -48,9 +53,13 @@ export const numberRangeFilter: FilterFn<any> = (
 }
 
 // Text search filter for description column
-export const textFilter: FilterFn<any> = (row, columnId, filterValue) => {
+export const textFilter: FilterFn<MonthlyEntry> = (
+	row,
+	columnId,
+	filterValue,
+) => {
 	const rowValue = row.getValue(columnId) as string
-	const searchValue = filterValue as string
+	const searchValue = filterValue as TextFilter
 
 	if (!searchValue) return true
 	if (!rowValue) return false
@@ -59,17 +68,25 @@ export const textFilter: FilterFn<any> = (row, columnId, filterValue) => {
 }
 
 // Boolean filter for recurring column
-export const booleanFilter: FilterFn<any> = (row, columnId, filterValue) => {
+export const booleanFilter: FilterFn<MonthlyEntry> = (
+	row,
+	columnId,
+	filterValue,
+) => {
 	const rowValue = row.getValue(columnId) as boolean
-	const filterValueBool = filterValue as boolean
+	const filterValueBool = filterValue as BooleanFilter
 
 	if (filterValue === undefined || filterValue === null) return true
 	return rowValue === filterValueBool
 }
 
 // Fulltext search filter for global search across entire entry object
-export const fulltextFilter: FilterFn<any> = (row, _columnId, filterValue) => {
-	const searchValue = filterValue as string
+export const fulltextFilter: FilterFn<MonthlyEntry> = (
+	row,
+	_columnId,
+	filterValue,
+) => {
+	const searchValue = filterValue as FulltextFilter
 
 	if (!searchValue) return true
 	if (!searchValue.trim()) return true

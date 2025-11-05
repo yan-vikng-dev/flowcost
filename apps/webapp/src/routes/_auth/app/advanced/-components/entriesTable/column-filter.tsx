@@ -1,11 +1,11 @@
 import { entryTypes } from "@repo/data-ops/drizzle/schemas/helpers"
+import type { Category } from "@repo/shared-lib"
 import type { Column } from "@tanstack/react-table"
 import { FilterIcon } from "lucide-react"
 import * as React from "react"
 import { CategoryMultiCombobox } from "@/components/combobox/CategoryMultiCombobox"
 import { NumericRangeSlider } from "@/components/table-filters"
 import { Button } from "@/components/ui/button"
-import { Calendar } from "@/components/ui/calendar"
 import {
 	DropdownMenu,
 	DropdownMenuCheckboxItem,
@@ -17,6 +17,7 @@ import {
 	PopoverContent,
 	PopoverTrigger,
 } from "@/components/ui/popover"
+import type { MonthlyEntry } from "@/core/functions/entries"
 import type {
 	BooleanFilter,
 	DateRangeFilter,
@@ -24,16 +25,16 @@ import type {
 	NumberRangeFilter,
 } from "@/core/functions/filters"
 import { cn } from "@/lib/utils"
+import { DateRangeFilterComponent } from "./components"
 
 interface ColumnFilterProps {
-	column: Column<any>
+	column: Column<MonthlyEntry, unknown>
 	displayCurrency?: string
 	monthStart?: Date
-	monthEnd?: Date
 }
 
 // Helper function to get the maximum value from a numeric column
-function getColumnMaxValue(column: Column<any>): number {
+function getColumnMaxValue(column: Column<MonthlyEntry, unknown>): number {
 	// Get all rows for this column
 	const rows = column.getFacetedRowModel().rows
 
@@ -49,11 +50,7 @@ function getColumnMaxValue(column: Column<any>): number {
 	return Math.max(1, Math.ceil(maxValue * 1.1)) // Add 10% buffer
 }
 
-export function ColumnFilter({
-	column,
-	monthStart,
-	monthEnd,
-}: ColumnFilterProps) {
+export function ColumnFilter({ column, monthStart }: ColumnFilterProps) {
 	const columnId = column.id
 	const filterValue = column.getFilterValue()
 	const hasFilter = column.getIsFiltered()
@@ -74,24 +71,12 @@ export function ColumnFilter({
 	const getFilterComponent = () => {
 		switch (columnId) {
 			case "executedDate": {
-				// For date filter, render Calendar directly without intermediate trigger
 				const dateValue = filterValue as DateRangeFilter
 				return (
-					<Calendar
-						defaultMonth={monthStart}
-						fromDate={monthStart}
-						hideNavigation
-						mode="range"
-						numberOfMonths={1}
-						onSelect={(range) => {
-							column.setFilterValue(range)
-						}}
-						selected={{
-							from: dateValue?.from,
-							to: dateValue?.to,
-						}}
-						showOutsideDays={false}
-						toDate={monthEnd}
+					<DateRangeFilterComponent
+						monthStart={monthStart}
+						onChange={(range) => column.setFilterValue(range)}
+						value={dateValue}
 					/>
 				)
 			}
@@ -133,7 +118,7 @@ export function ColumnFilter({
 			}
 
 			case "category": {
-				const selectedCategories = Array.from(categorySelected) as any[]
+				const selectedCategories = Array.from(categorySelected) as Category[]
 
 				return (
 					<CategoryMultiCombobox
@@ -217,7 +202,7 @@ export function ColumnFilter({
 								onCheckedChange={toggleRecurring}
 								onSelect={(event) => event.preventDefault()}
 							>
-								Recurring only
+								Recurring
 							</DropdownMenuCheckboxItem>
 							<DropdownMenuCheckboxItem
 								checked={isOneTimeSelected}
@@ -225,7 +210,7 @@ export function ColumnFilter({
 								onCheckedChange={toggleOneTime}
 								onSelect={(event) => event.preventDefault()}
 							>
-								One-time only
+								One-time
 							</DropdownMenuCheckboxItem>
 						</div>
 					</div>
@@ -287,7 +272,7 @@ export function ColumnFilter({
 
 	// Category uses the filter button as the combobox trigger directly
 	if (columnId === "category") {
-		const selectedCategories = Array.from(categorySelected) as any[]
+		const selectedCategories = Array.from(categorySelected) as Category[]
 		return (
 			<CategoryMultiCombobox
 				contentWidthClass="w-auto"

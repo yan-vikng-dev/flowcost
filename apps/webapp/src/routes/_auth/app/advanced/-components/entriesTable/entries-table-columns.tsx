@@ -1,4 +1,5 @@
 import type { EntryType } from "@repo/data-ops/drizzle/schemas/index"
+import { type Currency, formatCurrency } from "@repo/shared-lib"
 import type { ColumnDef } from "@tanstack/react-table"
 import {
 	ArrowDownIcon,
@@ -19,29 +20,16 @@ import {
 import { cn } from "@/lib/utils"
 import { ColumnFilter } from "./column-filter"
 
-function formatCurrency(amount: number, currency: string, locale = "en-US") {
-	try {
-		return new Intl.NumberFormat(locale, {
-			style: "currency",
-			currency,
-		}).format(amount)
-	} catch {
-		return `${currency} ${amount.toFixed(2)}`
-	}
-}
-
 interface EntriesTableColumnsOptions {
 	displayCurrency: string
 	showFilters?: boolean
 	monthStart?: Date
-	monthEnd?: Date
 }
 
 export function entriesTableColumns({
 	displayCurrency,
 	showFilters = true,
 	monthStart,
-	monthEnd,
 }: EntriesTableColumnsOptions): ColumnDef<MonthlyEntry>[] {
 	return [
 		{
@@ -144,7 +132,6 @@ export function entriesTableColumns({
 							<ColumnFilter
 								column={column}
 								displayCurrency={displayCurrency}
-								monthEnd={monthEnd}
 								monthStart={monthStart}
 							/>
 						)}
@@ -327,7 +314,7 @@ export function entriesTableColumns({
 				const currency: string = row.original.currency
 				return (
 					<div className="text-right font-medium">
-						{formatCurrency(amount, currency)}
+						{formatCurrency(amount, currency as Currency)}
 					</div>
 				)
 			},
@@ -378,7 +365,7 @@ export function entriesTableColumns({
 				return (
 					<div className="text-right">
 						{typeof val === "number"
-							? formatCurrency(val, displayCurrency)
+							? formatCurrency(val, displayCurrency as Currency)
 							: "-"}
 					</div>
 				)
