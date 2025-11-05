@@ -10,6 +10,14 @@ import { Button } from "@/components/ui/button"
 import { getCategoryIcon } from "@/config/categories"
 import { getEntryTypeIcon } from "@/config/entryTypes"
 import type { MonthlyEntry } from "@/core/functions/entries"
+import {
+	booleanFilter,
+	dateRangeFilter,
+	enumMultiSelectFilter,
+	numberRangeFilter,
+} from "@/core/functions/filters"
+import { cn } from "@/lib/utils"
+import { ColumnFilter } from "./column-filter"
 
 function formatCurrency(amount: number, currency: string, locale = "en-US") {
 	try {
@@ -22,52 +30,125 @@ function formatCurrency(amount: number, currency: string, locale = "en-US") {
 	}
 }
 
-export function entriesTableColumns(
-	displayCurrency: string,
-): ColumnDef<MonthlyEntry>[] {
+interface EntriesTableColumnsOptions {
+	displayCurrency: string
+	showFilters?: boolean
+	monthStart?: Date
+	monthEnd?: Date
+}
+
+export function entriesTableColumns({
+	displayCurrency,
+	showFilters = true,
+	monthStart,
+	monthEnd,
+}: EntriesTableColumnsOptions): ColumnDef<MonthlyEntry>[] {
 	return [
 		{
-			accessorKey: "recurringTemplateId",
-			enableSorting: false,
-			header: () => <div className="w-8" />,
+			accessorKey: "recurring",
+			filterFn: booleanFilter,
+			meta: { align: "center" },
+			header: ({ column }) => {
+				const sorted = column.getIsSorted()
+				const hasSort = sorted !== false
+				return (
+					<div className="flex items-center gap-1">
+						<span>Recurring</span>
+						<Button
+							className={cn(
+								"h-6 w-6 shrink-0",
+								hasSort && "bg-primary/10 text-primary hover:bg-primary/20",
+							)}
+							onClick={() => {
+								if (sorted === "asc") {
+									column.toggleSorting(true) // to desc
+								} else if (sorted === "desc") {
+									column.clearSorting() // to off
+								} else {
+									column.toggleSorting(false) // to asc
+								}
+							}}
+							size="icon-sm"
+							variant={hasSort ? "secondary" : "ghost"}
+						>
+							{sorted === "asc" ? (
+								<ArrowUpIcon className="h-4 w-4" />
+							) : sorted === "desc" ? (
+								<ArrowDownIcon className="h-4 w-4" />
+							) : (
+								<ArrowUpDownIcon className="h-4 w-4 text-muted-foreground" />
+							)}
+						</Button>
+						{showFilters && (
+							<ColumnFilter column={column} displayCurrency={displayCurrency} />
+						)}
+					</div>
+				)
+			},
 			cell: ({ row }) => {
 				const entry = row.original
-				if (entry.recurringTemplateId) {
-					return (
-						<div
-							className="relative flex items-center justify-center"
-							title={
-								entry.isOverridden ? "Recurring (overridden)" : "Recurring"
-							}
-						>
-							<RepeatIcon className="h-4 w-4 text-muted-foreground" />
-							{entry.isOverridden && (
-								<span className="-right-1 -top-1 absolute h-1.5 w-1.5 rounded-full bg-foreground" />
-							)}
-						</div>
-					)
-				}
-				return null
+				const isRecurring = Boolean(entry.recurringTemplateId)
+				if (!isRecurring) return null
+				return (
+					<div className="flex items-center justify-center gap-1">
+						<RepeatIcon className="h-4 w-4 text-muted-foreground" />
+						{entry.isOverridden && (
+							<span className="text-muted-foreground text-xs">
+								(overridden)
+							</span>
+						)}
+					</div>
+				)
+			},
+			sortingFn: (a, b) => {
+				const aRecurring = Boolean(a.original.recurringTemplateId)
+				const bRecurring = Boolean(b.original.recurringTemplateId)
+				return Number(aRecurring) - Number(bRecurring)
 			},
 		},
 		{
 			accessorKey: "executedDate",
+			filterFn: dateRangeFilter,
 			header: ({ column }) => {
 				const sorted = column.getIsSorted()
+				const hasSort = sorted !== false
 				return (
-					<Button
-						onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-						variant="ghost"
-					>
-						Date
-						{sorted === "asc" ? (
-							<ArrowUpIcon className="ml-2 h-4 w-4" />
-						) : sorted === "desc" ? (
-							<ArrowDownIcon className="ml-2 h-4 w-4" />
-						) : (
-							<ArrowUpDownIcon className="ml-2 h-4 w-4 text-muted-foreground" />
+					<div className="flex items-center gap-1">
+						<span>Date</span>
+						<Button
+							className={cn(
+								"h-6 w-6 shrink-0",
+								hasSort && "bg-primary/10 text-primary hover:bg-primary/20",
+							)}
+							onClick={() => {
+								if (sorted === "asc") {
+									column.toggleSorting(true) // to desc
+								} else if (sorted === "desc") {
+									column.clearSorting() // to off
+								} else {
+									column.toggleSorting(false) // to asc
+								}
+							}}
+							size="icon-sm"
+							variant={hasSort ? "secondary" : "ghost"}
+						>
+							{sorted === "asc" ? (
+								<ArrowUpIcon className="h-4 w-4" />
+							) : sorted === "desc" ? (
+								<ArrowDownIcon className="h-4 w-4" />
+							) : (
+								<ArrowUpDownIcon className="h-4 w-4 text-muted-foreground" />
+							)}
+						</Button>
+						{showFilters && (
+							<ColumnFilter
+								column={column}
+								displayCurrency={displayCurrency}
+								monthEnd={monthEnd}
+								monthStart={monthStart}
+							/>
 						)}
-					</Button>
+					</div>
 				)
 			},
 			cell: ({ row }) => {
@@ -84,22 +165,42 @@ export function entriesTableColumns(
 		},
 		{
 			accessorKey: "entryType",
+			filterFn: enumMultiSelectFilter,
 			header: ({ column }) => {
 				const sorted = column.getIsSorted()
+				const hasSort = sorted !== false
 				return (
-					<Button
-						onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-						variant="ghost"
-					>
-						Type
-						{sorted === "asc" ? (
-							<ArrowUpIcon className="ml-2 h-4 w-4" />
-						) : sorted === "desc" ? (
-							<ArrowDownIcon className="ml-2 h-4 w-4" />
-						) : (
-							<ArrowUpDownIcon className="ml-2 h-4 w-4 text-muted-foreground" />
+					<div className="flex items-center gap-1">
+						<span>Type</span>
+						<Button
+							className={cn(
+								"h-6 w-6 shrink-0",
+								hasSort && "bg-primary/10 text-primary hover:bg-primary/20",
+							)}
+							onClick={() => {
+								if (sorted === "asc") {
+									column.toggleSorting(true) // to desc
+								} else if (sorted === "desc") {
+									column.clearSorting() // to off
+								} else {
+									column.toggleSorting(false) // to asc
+								}
+							}}
+							size="icon-sm"
+							variant={hasSort ? "secondary" : "ghost"}
+						>
+							{sorted === "asc" ? (
+								<ArrowUpIcon className="h-4 w-4" />
+							) : sorted === "desc" ? (
+								<ArrowDownIcon className="h-4 w-4" />
+							) : (
+								<ArrowUpDownIcon className="h-4 w-4 text-muted-foreground" />
+							)}
+						</Button>
+						{showFilters && (
+							<ColumnFilter column={column} displayCurrency={displayCurrency} />
 						)}
-					</Button>
+					</div>
 				)
 			},
 			cell: ({ row }) => {
@@ -120,22 +221,42 @@ export function entriesTableColumns(
 		},
 		{
 			accessorKey: "category",
+			filterFn: enumMultiSelectFilter,
 			header: ({ column }) => {
 				const sorted = column.getIsSorted()
+				const hasSort = sorted !== false
 				return (
-					<Button
-						onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-						variant="ghost"
-					>
-						Category
-						{sorted === "asc" ? (
-							<ArrowUpIcon className="ml-2 h-4 w-4" />
-						) : sorted === "desc" ? (
-							<ArrowDownIcon className="ml-2 h-4 w-4" />
-						) : (
-							<ArrowUpDownIcon className="ml-2 h-4 w-4 text-muted-foreground" />
+					<div className="flex items-center gap-1">
+						<span>Category</span>
+						<Button
+							className={cn(
+								"h-6 w-6 shrink-0",
+								hasSort && "bg-primary/10 text-primary hover:bg-primary/20",
+							)}
+							onClick={() => {
+								if (sorted === "asc") {
+									column.toggleSorting(true) // to desc
+								} else if (sorted === "desc") {
+									column.clearSorting() // to off
+								} else {
+									column.toggleSorting(false) // to asc
+								}
+							}}
+							size="icon-sm"
+							variant={hasSort ? "secondary" : "ghost"}
+						>
+							{sorted === "asc" ? (
+								<ArrowUpIcon className="h-4 w-4" />
+							) : sorted === "desc" ? (
+								<ArrowDownIcon className="h-4 w-4" />
+							) : (
+								<ArrowUpDownIcon className="h-4 w-4 text-muted-foreground" />
+							)}
+						</Button>
+						{showFilters && (
+							<ColumnFilter column={column} displayCurrency={displayCurrency} />
 						)}
-					</Button>
+					</div>
 				)
 			},
 			cell: ({ row }) => {
@@ -162,24 +283,43 @@ export function entriesTableColumns(
 		},
 		{
 			accessorKey: "amount",
+			filterFn: numberRangeFilter,
 			meta: { align: "right" },
 			header: ({ column }) => {
 				const sorted = column.getIsSorted()
+				const hasSort = sorted !== false
 				return (
-					<Button
-						className="ml-auto"
-						onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-						variant="ghost"
-					>
-						Amount
-						{sorted === "asc" ? (
-							<ArrowUpIcon className="ml-2 h-4 w-4" />
-						) : sorted === "desc" ? (
-							<ArrowDownIcon className="ml-2 h-4 w-4" />
-						) : (
-							<ArrowUpDownIcon className="ml-2 h-4 w-4 text-muted-foreground" />
+					<div className="flex items-center justify-end gap-1">
+						<span>Amount</span>
+						<Button
+							className={cn(
+								"h-6 w-6 shrink-0",
+								hasSort && "bg-primary/10 text-primary hover:bg-primary/20",
+							)}
+							onClick={() => {
+								if (sorted === "asc") {
+									column.toggleSorting(true) // to desc
+								} else if (sorted === "desc") {
+									column.clearSorting() // to off
+								} else {
+									column.toggleSorting(false) // to asc
+								}
+							}}
+							size="icon-sm"
+							variant={hasSort ? "secondary" : "ghost"}
+						>
+							{sorted === "asc" ? (
+								<ArrowUpIcon className="h-4 w-4" />
+							) : sorted === "desc" ? (
+								<ArrowDownIcon className="h-4 w-4" />
+							) : (
+								<ArrowUpDownIcon className="h-4 w-4 text-muted-foreground" />
+							)}
+						</Button>
+						{showFilters && (
+							<ColumnFilter column={column} displayCurrency={displayCurrency} />
 						)}
-					</Button>
+					</div>
 				)
 			},
 			cell: ({ row }) => {
@@ -194,24 +334,43 @@ export function entriesTableColumns(
 		},
 		{
 			accessorKey: "amountIls",
+			filterFn: numberRangeFilter,
 			meta: { align: "right" },
 			header: ({ column }) => {
 				const sorted = column.getIsSorted()
+				const hasSort = sorted !== false
 				return (
-					<Button
-						className="ml-auto"
-						onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-						variant="ghost"
-					>
-						Converted
-						{sorted === "asc" ? (
-							<ArrowUpIcon className="ml-2 h-4 w-4" />
-						) : sorted === "desc" ? (
-							<ArrowDownIcon className="ml-2 h-4 w-4" />
-						) : (
-							<ArrowUpDownIcon className="ml-2 h-4 w-4 text-muted-foreground" />
+					<div className="flex items-center justify-end gap-1">
+						<span>Converted</span>
+						<Button
+							className={cn(
+								"h-6 w-6 shrink-0",
+								hasSort && "bg-primary/10 text-primary hover:bg-primary/20",
+							)}
+							onClick={() => {
+								if (sorted === "asc") {
+									column.toggleSorting(true) // to desc
+								} else if (sorted === "desc") {
+									column.clearSorting() // to off
+								} else {
+									column.toggleSorting(false) // to asc
+								}
+							}}
+							size="icon-sm"
+							variant={hasSort ? "secondary" : "ghost"}
+						>
+							{sorted === "asc" ? (
+								<ArrowUpIcon className="h-4 w-4" />
+							) : sorted === "desc" ? (
+								<ArrowDownIcon className="h-4 w-4" />
+							) : (
+								<ArrowUpDownIcon className="h-4 w-4 text-muted-foreground" />
+							)}
+						</Button>
+						{showFilters && (
+							<ColumnFilter column={column} displayCurrency={displayCurrency} />
 						)}
-					</Button>
+					</div>
 				)
 			},
 			cell: ({ row }) => {

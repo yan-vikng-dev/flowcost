@@ -19,11 +19,13 @@ import {
 	ChevronRight,
 	Copy,
 	MoreHorizontal,
+	SearchIcon,
 	Trash,
 } from "lucide-react"
 import * as React from "react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
 import {
 	Dialog,
 	DialogContent,
@@ -39,6 +41,7 @@ import {
 	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { Input } from "@/components/ui/input"
 import {
 	Select,
 	SelectContent,
@@ -55,6 +58,8 @@ import {
 	TableRow,
 } from "@/components/ui/table"
 import { deleteEntries } from "@/core/functions/entries"
+import { fulltextFilter } from "@/core/functions/filters"
+import { useIsDesktop } from "@/hooks/use-is-desktop"
 import { cn } from "@/lib/utils"
 
 type RowWithId = { id?: string }
@@ -87,6 +92,7 @@ export function DataTable<TData extends RowWithId, TValue>({
 	isLoading = false,
 	isFetching = false,
 }: DataTableProps<TData, TValue>) {
+	const isDesktop = useIsDesktop()
 	const [uncontrolledSorting, setUncontrolledSorting] =
 		React.useState<SortingState>([])
 	const sorting = controlledSorting ?? uncontrolledSorting
@@ -94,8 +100,54 @@ export function DataTable<TData extends RowWithId, TValue>({
 		[],
 	)
 	const [rowSelection, setRowSelection] = React.useState({})
+	const getDefaultColumnVisibility = (): VisibilityState => {
+		if (isDesktop) {
+			// Desktop: hide description by default
+			return {
+				description: false,
+			}
+		} else {
+			// Mobile: show only date, type, category, converted
+			return {
+				recurring: false,
+				description: false,
+				amount: false,
+				amountIls: true, // converted
+				executedDate: true, // date
+				entryType: true, // type
+				category: true, // category
+				globalFilter: false,
+				actions: false,
+			}
+		}
+	}
+
 	const [columnVisibility, setColumnVisibility] =
-		React.useState<VisibilityState>({})
+		React.useState<VisibilityState>(getDefaultColumnVisibility)
+	const [globalFilter, setGlobalFilter] = React.useState("")
+
+	// Update column visibility when screen size changes
+	React.useEffect(() => {
+		setColumnVisibility(
+			isDesktop
+				? {
+						// Desktop: hide description by default
+						description: false,
+					}
+				: {
+						// Mobile: show only date, type, category, converted
+						recurring: false,
+						description: false,
+						amount: false,
+						amountIls: true, // converted
+						executedDate: true, // date
+						entryType: true, // type
+						category: true, // category
+						globalFilter: false,
+						actions: false,
+					},
+		)
+	}, [isDesktop])
 
 	const queryClient = useQueryClient()
 	const deleteMut = useMutation({
@@ -118,21 +170,22 @@ export function DataTable<TData extends RowWithId, TValue>({
 				const isAllSelected = table.getIsAllPageRowsSelected()
 				const isSomeSelected = table.getIsSomePageRowsSelected()
 				return (
-					<IndeterminateCheckbox
+					<Checkbox
 						aria-label="Select all"
-						checked={isAllSelected}
-						indeterminate={!isAllSelected && isSomeSelected}
-						onChange={(e) =>
-							table.toggleAllPageRowsSelected(e.currentTarget.checked)
+						checked={
+							isAllSelected ? true : isSomeSelected ? "indeterminate" : false
+						}
+						onCheckedChange={(checked) =>
+							table.toggleAllPageRowsSelected(checked === true)
 						}
 					/>
 				)
 			},
 			cell: ({ row }) => (
-				<IndeterminateCheckbox
+				<Checkbox
 					aria-label="Select row"
 					checked={row.getIsSelected()}
-					onChange={(e) => row.toggleSelected(e.currentTarget.checked)}
+					onCheckedChange={(checked) => row.toggleSelected(checked === true)}
 				/>
 			),
 			enableSorting: false,
@@ -146,6 +199,7 @@ export function DataTable<TData extends RowWithId, TValue>({
 		(): ColumnDef<TData> => ({
 			id: "actions",
 			enableHiding: false,
+			header: "",
 			cell: ({ row }) => {
 				const id: string | undefined = row.original.id
 				return (
@@ -185,9 +239,19 @@ export function DataTable<TData extends RowWithId, TValue>({
 		[],
 	)
 
+	const globalFilterColumn = React.useMemo<ColumnDef<TData>>(
+		(): ColumnDef<TData> => ({
+			id: "globalFilter",
+			filterFn: fulltextFilter,
+			enableHiding: true,
+			enableSorting: false,
+		}),
+		[],
+	)
+
 	const enhancedColumns = React.useMemo<ColumnDef<TData, TValue>[]>(() => {
-		return [selectionColumn, ...columns, actionsColumn]
-	}, [columns, selectionColumn, actionsColumn])
+		return [selectionColumn, ...columns, actionsColumn, globalFilterColumn]
+	}, [columns, selectionColumn, actionsColumn, globalFilterColumn])
 
 	const table = useReactTable({
 		data,
@@ -204,11 +268,14 @@ export function DataTable<TData extends RowWithId, TValue>({
 		manualSorting,
 		pageCount,
 		onPaginationChange,
+		onGlobalFilterChange: setGlobalFilter,
+		globalFilterFn: fulltextFilter,
 		state: {
 			sorting,
 			columnFilters,
 			columnVisibility,
 			rowSelection,
+			globalFilter,
 			...(pagination ? { pagination } : {}),
 		},
 	})
@@ -311,9 +378,19 @@ export function DataTable<TData extends RowWithId, TValue>({
 					</>
 				)}
 
+				<div className="relative max-w-sm flex-1">
+					<SearchIcon className="-translate-y-1/2 absolute top-1/2 right-3 h-4 w-4 text-muted-foreground" />
+					<Input
+						className="h-8 pr-9"
+						onChange={(e) => setGlobalFilter(e.target.value)}
+						placeholder="Search entries..."
+						value={globalFilter ?? ""}
+					/>
+				</div>
+
 				<DropdownMenu>
 					<DropdownMenuTrigger asChild>
-						<Button className="ml-auto" variant="outline">
+						<Button size="sm" variant="outline">
 							Columns <ChevronDown className="ml-2 h-4 w-4" />
 						</Button>
 					</DropdownMenuTrigger>
@@ -327,12 +404,26 @@ export function DataTable<TData extends RowWithId, TValue>({
 									className="capitalize"
 									key={column.id}
 									onCheckedChange={(value) => column.toggleVisibility(!!value)}
+									onSelect={(event) => event.preventDefault()}
 								>
 									{column.id}
 								</DropdownMenuCheckboxItem>
 							))}
 					</DropdownMenuContent>
 				</DropdownMenu>
+
+				{(table.getState().columnFilters.length > 0 || globalFilter) && (
+					<Button
+						onClick={() => {
+							table.resetColumnFilters()
+							setGlobalFilter("")
+						}}
+						size="sm"
+						variant="outline"
+					>
+						Clear all filters
+					</Button>
+				)}
 			</div>
 
 			<div className="w-full overflow-x-auto overscroll-x-contain rounded-md border">
@@ -548,28 +639,5 @@ export function DataTable<TData extends RowWithId, TValue>({
 				</DialogContent>
 			</Dialog>
 		</div>
-	)
-}
-
-// Minimal indeterminate checkbox without Radix dependency
-function IndeterminateCheckbox(
-	props: Omit<React.InputHTMLAttributes<HTMLInputElement>, "type"> & {
-		indeterminate?: boolean
-	},
-) {
-	const { indeterminate, className, ...rest } = props
-	const ref = React.useRef<HTMLInputElement>(null)
-	React.useEffect(() => {
-		if (ref.current) {
-			ref.current.indeterminate = Boolean(indeterminate)
-		}
-	}, [indeterminate])
-	return (
-		<input
-			className={`h-4 w-4 cursor-pointer ${className ?? ""}`}
-			ref={ref}
-			type="checkbox"
-			{...rest}
-		/>
 	)
 }

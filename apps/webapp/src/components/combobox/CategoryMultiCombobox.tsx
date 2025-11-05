@@ -31,6 +31,10 @@ export function CategoryMultiCombobox({
 	contentWidthClass = "w-[280px]",
 	maxVisibleChips = 3,
 	disabledValues = [],
+	// New optional props to allow external trigger/control
+	trigger,
+	open: openProp,
+	onOpenChange,
 }: {
 	value: Category[]
 	onChange: (next: Category[]) => void
@@ -41,8 +45,16 @@ export function CategoryMultiCombobox({
 	contentWidthClass?: string
 	maxVisibleChips?: number
 	disabledValues?: Category[]
+	trigger?: React.ReactNode
+	open?: boolean
+	onOpenChange?: (open: boolean) => void
 }) {
-	const [open, setOpen] = React.useState(false)
+	const [internalOpen, setInternalOpen] = React.useState(false)
+	const open = openProp ?? internalOpen
+	const setOpen = (next: boolean) => {
+		setInternalOpen(next)
+		onOpenChange?.(next)
+	}
 	const isDesktop = useIsDesktop()
 	const listRef = React.useRef<HTMLDivElement | null>(null)
 	const selected = React.useMemo(() => new Set(value), [value])
@@ -139,19 +151,24 @@ export function CategoryMultiCombobox({
 		return (
 			<Popover onOpenChange={setOpen} open={open}>
 				<PopoverTrigger asChild>
-					<Button
-						aria-expanded={open}
-						aria-invalid={invalid || undefined}
-						className={triggerClass}
-						data-placeholder={value.length ? undefined : true}
-						id={id}
-						type="button"
-						variant="input"
-					>
-						{triggerLabel}
-						<ChevronsUpDownIcon className="size-4 opacity-50" />
-						{ClearButton}
-					</Button>
+					{trigger ? (
+						// Use external trigger directly
+						trigger
+					) : (
+						<Button
+							aria-expanded={open}
+							aria-invalid={invalid || undefined}
+							className={triggerClass}
+							data-placeholder={value.length ? undefined : true}
+							id={id}
+							type="button"
+							variant="input"
+						>
+							{triggerLabel}
+							<ChevronsUpDownIcon className="size-4 opacity-50" />
+							{ClearButton}
+						</Button>
+					)}
 				</PopoverTrigger>
 				<PopoverContent
 					align="start"
@@ -166,18 +183,22 @@ export function CategoryMultiCombobox({
 	return (
 		<Drawer onOpenChange={setOpen} open={open}>
 			<DrawerTrigger asChild>
-				<Button
-					aria-expanded={open}
-					aria-invalid={invalid || undefined}
-					className={triggerClass}
-					id={id}
-					type="button"
-					variant="input"
-				>
-					{triggerLabel}
-					<ChevronsUpDownIcon className="size-4 opacity-50" />
-					{ClearButton}
-				</Button>
+				{trigger ? (
+					trigger
+				) : (
+					<Button
+						aria-expanded={open}
+						aria-invalid={invalid || undefined}
+						className={triggerClass}
+						id={id}
+						type="button"
+						variant="input"
+					>
+						{triggerLabel}
+						<ChevronsUpDownIcon className="size-4 opacity-50" />
+						{ClearButton}
+					</Button>
+				)}
 			</DrawerTrigger>
 			<DrawerContent>
 				<div className="mt-2 border-t">{list}</div>

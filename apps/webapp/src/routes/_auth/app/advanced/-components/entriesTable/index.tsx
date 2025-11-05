@@ -1,3 +1,4 @@
+import { getCurrentMonthRange } from "@repo/shared-lib"
 import { useQuery } from "@tanstack/react-query"
 import type { PaginationState, SortingState } from "@tanstack/react-table"
 import * as React from "react"
@@ -34,6 +35,8 @@ export function MonthlyEntriesTable({
 	})
 
 	const displayCurrency = data?.displayCurrency ?? "USD"
+	const timezone = data?.timezone ?? "UTC"
+	const { start: monthStart, end: monthEnd } = getCurrentMonthRange(timezone)
 
 	const sortedAndPaginated = React.useMemo(() => {
 		if (!data) return { items: [], total: 0 }
@@ -78,7 +81,11 @@ export function MonthlyEntriesTable({
 					<div className="text-red-500 text-sm">Failed to load entries.</div>
 				) : (
 					<DataTable
-						columns={entriesTableColumns(displayCurrency)}
+						columns={entriesTableColumns({
+							displayCurrency,
+							monthStart,
+							monthEnd,
+						})}
 						data={sortedAndPaginated.items}
 						isFetching={false}
 						isLoading={isLoading}
