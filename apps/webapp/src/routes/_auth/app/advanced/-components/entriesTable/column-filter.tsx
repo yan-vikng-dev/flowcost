@@ -3,6 +3,7 @@ import type { Column } from "@tanstack/react-table"
 import { FilterIcon } from "lucide-react"
 import * as React from "react"
 import { CategoryMultiCombobox } from "@/components/combobox/CategoryMultiCombobox"
+import { NumericRangeSlider } from "@/components/table-filters"
 import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
 import {
@@ -11,8 +12,6 @@ import {
 	DropdownMenuContent,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import {
 	Popover,
 	PopoverContent,
@@ -33,6 +32,23 @@ interface ColumnFilterProps {
 	monthEnd?: Date
 }
 
+// Helper function to get the maximum value from a numeric column
+function getColumnMaxValue(column: Column<any>): number {
+	// Get all rows for this column
+	const rows = column.getFacetedRowModel().rows
+
+	let maxValue = 0
+	for (const row of rows) {
+		const value = row.getValue(column.id)
+		if (typeof value === "number" && value > maxValue) {
+			maxValue = value
+		}
+	}
+
+	// Return at least 1 to avoid division by zero, and round up to a nice number
+	return Math.max(1, Math.ceil(maxValue * 1.1)) // Add 10% buffer
+}
+
 export function ColumnFilter({
 	column,
 	monthStart,
@@ -41,12 +57,6 @@ export function ColumnFilter({
 	const columnId = column.id
 	const filterValue = column.getFilterValue()
 	const hasFilter = column.getIsFiltered()
-
-	// State for all filter types (hooks must be called unconditionally)
-	const [minAmount, setMinAmount] = React.useState("")
-	const [maxAmount, setMaxAmount] = React.useState("")
-	const [minConverted, setMinConverted] = React.useState("")
-	const [maxConverted, setMaxConverted] = React.useState("")
 
 	// Computed values for enum filters
 	const entryTypeSelected = React.useMemo(() => {
@@ -60,25 +70,6 @@ export function ColumnFilter({
 			columnId === "category" ? (filterValue as EnumMultiSelectFilter) : []
 		return new Set(enumValue)
 	}, [columnId, filterValue])
-
-	// Update state when filter values change
-	React.useEffect(() => {
-		const currentFilterValue = column.getFilterValue()
-		switch (columnId) {
-			case "amount": {
-				const amountValue = currentFilterValue as NumberRangeFilter
-				setMinAmount(amountValue?.min?.toString() ?? "")
-				setMaxAmount(amountValue?.max?.toString() ?? "")
-				break
-			}
-			case "amountIls": {
-				const convertedValue = currentFilterValue as NumberRangeFilter
-				setMinConverted(convertedValue?.min?.toString() ?? "")
-				setMaxConverted(convertedValue?.max?.toString() ?? "")
-				break
-			}
-		}
-	}, [column, columnId])
 
 	const getFilterComponent = () => {
 		switch (columnId) {
@@ -158,145 +149,85 @@ export function ColumnFilter({
 			}
 
 			case "amount": {
-				// Direct number range component
-				const handleApply = () => {
-					const min = minAmount ? parseFloat(minAmount) : undefined
-					const max = maxAmount ? parseFloat(maxAmount) : undefined
-
-					if (min !== undefined || max !== undefined) {
-						column.setFilterValue({ min, max })
-					} else {
-						column.setFilterValue(undefined)
-					}
-				}
-
-				const handleClear = () => {
-					setMinAmount("")
-					setMaxAmount("")
-					column.setFilterValue(undefined)
-				}
+				const maxValue = getColumnMaxValue(column)
+				const amountValue = filterValue as NumberRangeFilter
 
 				return (
-					<div className="space-y-2">
-						<div className="grid grid-cols-2 gap-2">
-							<div className="space-y-2">
-								<Label htmlFor="min-amount">Min amount</Label>
-								<Input
-									id="min-amount"
-									onChange={(e) => setMinAmount(e.target.value)}
-									placeholder="Min amount"
-									type="number"
-									value={minAmount}
-								/>
-							</div>
-							<div className="space-y-2">
-								<Label htmlFor="max-amount">Max amount</Label>
-								<Input
-									id="max-amount"
-									onChange={(e) => setMaxAmount(e.target.value)}
-									placeholder="Max amount"
-									type="number"
-									value={maxAmount}
-								/>
-							</div>
-						</div>
-						<div className="flex justify-end gap-2">
-							<Button onClick={handleClear} size="sm" variant="outline">
-								Clear
-							</Button>
-							<Button onClick={handleApply} size="sm">
-								Apply
-							</Button>
-						</div>
-					</div>
+					<NumericRangeSlider
+						max={maxValue}
+						maxLabel="Max amount"
+						min={0}
+						minLabel="Min amount"
+						onChange={(value) => column.setFilterValue(value)}
+						step={1}
+						value={amountValue}
+					/>
 				)
 			}
 
 			case "amountIls": {
-				// Direct number range component
-				const handleApply = () => {
-					const min = minConverted ? parseFloat(minConverted) : undefined
-					const max = maxConverted ? parseFloat(maxConverted) : undefined
-
-					if (min !== undefined || max !== undefined) {
-						column.setFilterValue({ min, max })
-					} else {
-						column.setFilterValue(undefined)
-					}
-				}
-
-				const handleClear = () => {
-					setMinConverted("")
-					setMaxConverted("")
-					column.setFilterValue(undefined)
-				}
+				const maxValue = getColumnMaxValue(column)
+				const convertedValue = filterValue as NumberRangeFilter
 
 				return (
-					<div className="space-y-2">
-						<div className="grid grid-cols-2 gap-2">
-							<div className="space-y-2">
-								<Label htmlFor="min-converted">Min converted</Label>
-								<Input
-									id="min-converted"
-									onChange={(e) => setMinConverted(e.target.value)}
-									placeholder="Min converted"
-									type="number"
-									value={minConverted}
-								/>
-							</div>
-							<div className="space-y-2">
-								<Label htmlFor="max-converted">Max converted</Label>
-								<Input
-									id="max-converted"
-									onChange={(e) => setMaxConverted(e.target.value)}
-									placeholder="Max converted"
-									type="number"
-									value={maxConverted}
-								/>
-							</div>
-						</div>
-						<div className="flex justify-end gap-2">
-							<Button onClick={handleClear} size="sm" variant="outline">
-								Clear
-							</Button>
-							<Button onClick={handleApply} size="sm">
-								Apply
-							</Button>
-						</div>
-					</div>
+					<NumericRangeSlider
+						max={maxValue}
+						maxLabel="Max converted"
+						min={0}
+						minLabel="Min converted"
+						onChange={(value) => column.setFilterValue(value)}
+						step={1}
+						value={convertedValue}
+					/>
 				)
 			}
 
 			case "recurring": {
-				// Boolean filter for recurring entries
+				// Boolean filter for recurring entries - using checkboxes like entryType
 				const currentValue = filterValue as BooleanFilter
+				const isRecurringSelected = currentValue === true
+				const isOneTimeSelected = currentValue === false
+
+				const toggleRecurring = () => {
+					if (isRecurringSelected) {
+						// If recurring is selected, deselect it (go to "All")
+						column.setFilterValue(undefined)
+					} else {
+						// Select recurring only
+						column.setFilterValue(true)
+					}
+				}
+
+				const toggleOneTime = () => {
+					if (isOneTimeSelected) {
+						// If one-time is selected, deselect it (go to "All")
+						column.setFilterValue(undefined)
+					} else {
+						// Select one-time only
+						column.setFilterValue(false)
+					}
+				}
 
 				return (
-					<div className="space-y-2">
-						<Button
-							className="w-full"
-							onClick={() => column.setFilterValue(undefined)}
-							size="sm"
-							variant={currentValue === undefined ? "secondary" : "outline"}
-						>
-							All
-						</Button>
-						<Button
-							className="w-full"
-							onClick={() => column.setFilterValue(true)}
-							size="sm"
-							variant={currentValue === true ? "secondary" : "outline"}
-						>
-							Recurring only
-						</Button>
-						<Button
-							className="w-full"
-							onClick={() => column.setFilterValue(false)}
-							size="sm"
-							variant={currentValue === false ? "secondary" : "outline"}
-						>
-							One-time only
-						</Button>
+					<div className="p-2">
+						<div className="space-y-1">
+							<DropdownMenuCheckboxItem
+								checked={isRecurringSelected}
+								className="cursor-pointer"
+								onCheckedChange={toggleRecurring}
+								onSelect={(event) => event.preventDefault()}
+							>
+								Recurring only
+							</DropdownMenuCheckboxItem>
+							<DropdownMenuCheckboxItem
+								checked={isOneTimeSelected}
+								className="cursor-pointer"
+								onCheckedChange={toggleOneTime}
+								onSelect={(event) => event.preventDefault()}
+							>
+								One-time only
+							</DropdownMenuCheckboxItem>
+						</div>
 					</div>
 				)
 			}
