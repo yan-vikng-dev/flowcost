@@ -108,8 +108,8 @@ export function FloatingWaves({
 					if (dist < l) {
 						const s = 1 - dist / l
 						const f = Math.cos(dist * 0.001) * s
-						p.cursor.vx += Math.cos(mouse.a) * f * l * mouse.vs * 0.00065
-						p.cursor.vy += Math.sin(mouse.a) * f * l * mouse.vs * 0.00065
+						p.cursor.vx += Math.cos(mouse.a) * f * l * mouse.vs * 0.00015
+						p.cursor.vy += Math.sin(mouse.a) * f * l * mouse.vs * 0.00015
 					}
 
 					p.cursor.vx += (0 - p.cursor.x) * 0.005
@@ -153,15 +153,14 @@ export function FloatingWaves({
 			ctx.strokeStyle = lineColor
 			ctx.lineWidth = 1.5
 			linesRef.current.forEach((points) => {
-				if (points.length === 0) return
-				// biome-ignore lint/style/noNonNullAssertion: Array is guaranteed to have elements from initialization
-				let p1 = moved(points[0]!, false)
+				const [point] = points
+				if (!point) return
+				let p1 = moved(point, false)
 				ctx.moveTo(p1.x, p1.y)
 				points.forEach((p, idx) => {
 					const isLast = idx === points.length - 1
 					p1 = moved(p, !isLast)
 					const p2 = moved(
-						// biome-ignore lint/style/noNonNullAssertion: Array is guaranteed to have elements from initialization
 						points[idx + 1] || points[points.length - 1]!,
 						!isLast,
 					)
@@ -205,15 +204,38 @@ export function FloatingWaves({
 			mouse.y = e.pageY - top
 		}
 
+		function onTouchMove(e: TouchEvent) {
+			// Only handle single finger touch
+			if (e.touches.length === 1) {
+				const { left, top } = boundingRef.current
+				const mouse = mouseRef.current
+				const touch = e.touches[0]
+				if (!touch) return
+				mouse.x = touch.pageX - left
+				mouse.y = touch.pageY - top
+			}
+		}
+
+		function onTouchEnd() {
+			// Reset mouse position when touch ends to stop wave interaction
+			const mouse = mouseRef.current
+			mouse.x = -10 // Same as initial value
+			mouse.y = 0
+		}
+
 		setSize()
 		setLines()
 		animationFrameRef.current = requestAnimationFrame(tick)
 		window.addEventListener("resize", onResize)
 		window.addEventListener("mousemove", onMouseMove)
+		window.addEventListener("touchmove", onTouchMove)
+		window.addEventListener("touchend", onTouchEnd)
 
 		return () => {
 			window.removeEventListener("resize", onResize)
 			window.removeEventListener("mousemove", onMouseMove)
+			window.removeEventListener("touchmove", onTouchMove)
+			window.removeEventListener("touchend", onTouchEnd)
 			if (animationFrameRef.current) {
 				cancelAnimationFrame(animationFrameRef.current)
 			}
