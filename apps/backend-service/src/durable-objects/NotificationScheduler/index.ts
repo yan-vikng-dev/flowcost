@@ -10,7 +10,7 @@ import {
 	whatsapp_links,
 } from "@repo/data-ops/drizzle/schemas/index"
 import type { Currency } from "@repo/shared-lib"
-import { formatCurrency } from "@repo/shared-lib"
+import { formatCurrency, getCurrentMonthRange } from "@repo/shared-lib"
 import { eq } from "drizzle-orm"
 import { DateTime } from "luxon"
 import { sendWhatsAppText } from "@/handlers/whatsapp/helpers"
@@ -176,9 +176,23 @@ export class NotificationScheduler extends DurableObject {
 		const { latest } = await fetchExchangeRatesForDates(db, [])
 		const budgetsList = await fetchBudgetsForUser(db, userId)
 		const categoryTotals = aggregateCategoryTotals(entriesResult.entries)
+
+		const { start: monthStart, end: monthEnd } = getCurrentMonthRange(timeZone)
+		const monthlyEntriesResult = await fetchConvertedEntriesForRange(
+			db,
+			userId,
+			{
+				start: monthStart,
+				end: monthEnd,
+				timezone: timeZone,
+				displayCurrency,
+				entryType: "Expense",
+			},
+		)
+
 		const budgetProgressList = calculateBudgetProgressForBudgets(
 			budgetsList,
-			entriesResult.entries,
+			monthlyEntriesResult.entries,
 			latest.rates,
 			displayCurrency,
 		)

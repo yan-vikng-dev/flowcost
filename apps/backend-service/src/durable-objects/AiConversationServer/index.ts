@@ -8,7 +8,9 @@ import { PostHog } from "posthog-node"
 import { getSystemMessage } from "./config"
 import {
 	makeCreateEntryTool,
+	makeDeleteEntryTool,
 	makeGetEntriesTool,
+	makeUpdateEntryTool,
 	makeUpdatePreferencesTool,
 } from "./tools"
 
@@ -76,6 +78,8 @@ export class AiConversationServer extends DurableObject {
 			create_entry: makeCreateEntryTool(messageContext, db),
 			get_entries: makeGetEntriesTool(messageContext, db),
 			update_preferences: makeUpdatePreferencesTool(messageContext, db),
+			update_entry: makeUpdateEntryTool(messageContext, db),
+			delete_entry: makeDeleteEntryTool(messageContext, db),
 		}
 		const result = await generateText({
 			model,

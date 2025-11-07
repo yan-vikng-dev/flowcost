@@ -1,10 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router"
-import { listBudgetsWithProgress } from "@/core/functions/budgets"
 import { getUserPreferences } from "@/core/functions/preferences"
 import { BudgetsCard } from "./-components/BudgetsCard"
 import { ExpensesByCategoryBar } from "./-components/ExpensesByCategoryBar"
 import { MonthlyStandardSummary } from "./-components/MonthlyStandardSummary"
 import { RecurringCard } from "./-components/RecurringCard"
+import {
+	getMonthlyBudgets,
+	MONTHLY_BUDGETS_KEY,
+} from "./-functions/monthlyBudgets"
 import {
 	getMonthlyEntries,
 	MONTHLY_ENTRIES_KEY,
@@ -25,8 +28,8 @@ export const Route = createFileRoute("/_auth/app/")({
 
 		// Prefetch budgets list
 		await context.queryClient.ensureQueryData({
-			queryKey: ["budgets:list"],
-			queryFn: () => listBudgetsWithProgress(),
+			queryKey: MONTHLY_BUDGETS_KEY,
+			queryFn: () => getMonthlyBudgets(),
 		})
 
 		// Prefetch connection state (for partner labeling)

@@ -1,3 +1,5 @@
 export * from "./createEntry"
+export * from "./deleteEntry"
 export * from "./getEntries"
+export * from "./updateEntry"
 export * from "./updatePreferences"

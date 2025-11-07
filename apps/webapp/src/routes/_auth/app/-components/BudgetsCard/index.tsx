@@ -22,16 +22,19 @@ import {
 	CardTitle,
 } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
+import type { BudgetWithProgress } from "@/core/functions/budgets"
 import {
-	type BudgetWithProgress,
 	type CreateBudgetInput,
 	createBudget,
 	deleteBudget,
-	listBudgetsWithProgress,
 	updateBudget,
 } from "@/core/functions/budgets"
 import { getUserPreferences } from "@/core/functions/preferences"
 import { authClient } from "@/lib/auth-client"
+import {
+	getMonthlyBudgets,
+	MONTHLY_BUDGETS_KEY,
+} from "../../-functions/monthlyBudgets"
 import {
 	getMonthlyEntries,
 	MONTHLY_ENTRIES_KEY,
@@ -50,9 +53,9 @@ export function BudgetsCard() {
 		staleTime: 5 * 60 * 1000,
 	})
 
-	const budgetsQuery = useQuery({
-		queryKey: ["budgets:list"],
-		queryFn: () => listBudgetsWithProgress(),
+	const budgetsQuery = useQuery<BudgetWithProgress[]>({
+		queryKey: MONTHLY_BUDGETS_KEY,
+		queryFn: () => getMonthlyBudgets(),
 	})
 
 	const monthlyQuery = useQuery({
@@ -63,18 +66,18 @@ export function BudgetsCard() {
 	const createMut = useMutation({
 		mutationFn: (input: CreateBudgetInput) => createBudget({ data: input }),
 		onSuccess: () =>
-			queryClient.invalidateQueries({ queryKey: ["budgets:list"] }),
+			queryClient.invalidateQueries({ queryKey: MONTHLY_BUDGETS_KEY }),
 	})
 	const updateMut = useMutation({
 		mutationFn: (vars: { id: string } & Partial<CreateBudgetInput>) =>
 			updateBudget({ data: vars }),
 		onSuccess: () =>
-			queryClient.invalidateQueries({ queryKey: ["budgets:list"] }),
+			queryClient.invalidateQueries({ queryKey: MONTHLY_BUDGETS_KEY }),
 	})
 	const deleteMut = useMutation({
 		mutationFn: (id: string) => deleteBudget({ data: { id } }),
 		onSuccess: () =>
-			queryClient.invalidateQueries({ queryKey: ["budgets:list"] }),
+			queryClient.invalidateQueries({ queryKey: MONTHLY_BUDGETS_KEY }),
 	})
 
 	const [createOpen, setCreateOpen] = React.useState(false)
@@ -176,7 +179,7 @@ export function BudgetsCard() {
 		}
 	}, [monthlyQuery.data, budgetsQuery.data, prefsQuery.data])
 
-	const realBudgets: BudgetWithProgress[] = budgetsQuery.data ?? []
+	const realBudgets = budgetsQuery.data ?? []
 
 	// month progress is provided by virtualBudgetsData
 
