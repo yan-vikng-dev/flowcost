@@ -1,5 +1,6 @@
 import { createFileRoute, Outlet } from "@tanstack/react-router"
 import { GoogleLogin } from "@/components/auth/google-login"
+import { FloatingWaves } from "@/components/bg/floating-waves"
 import { authClient } from "@/lib/auth-client"
 import { AppHeader } from "./-components/app-header"
 
@@ -21,9 +22,17 @@ function RouteComponent() {
 	}
 
 	return (
-		<div className="flex-col">
+		<div className="relative min-h-screen flex-col">
+			<FloatingWaves
+				className="-z-10"
+				lineColor="rgba(59, 130, 246, 0.1)"
+				waveAmpX={35}
+				waveAmpY={18}
+				waveSpeedX={0.012}
+				waveSpeedY={0.006}
+			/>
 			<AppHeader />
-			<main className="p-4 pt-16 sm:p-6 lg:p-8">
+			<main className="relative z-10 p-4 pt-16 sm:p-6 lg:p-8">
 				<Outlet />
 			</main>
 		</div>
