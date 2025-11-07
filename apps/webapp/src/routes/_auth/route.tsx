@@ -1,7 +1,7 @@
 import { createFileRoute, Outlet } from "@tanstack/react-router"
 import { GoogleLogin } from "@/components/auth/google-login"
 import { authClient } from "@/lib/auth-client"
-import { Header } from "./-components/header"
+import { AppHeader } from "./-components/app-header"
 
 export const Route = createFileRoute("/_auth")({
 	component: RouteComponent,
@@ -22,8 +22,8 @@ function RouteComponent() {
 
 	return (
 		<div className="flex-col">
-			<Header />
-			<main className="p-8">
+			<AppHeader />
+			<main className="p-4 pt-16 sm:p-6 lg:p-8">
 				<Outlet />
 			</main>
 		</div>

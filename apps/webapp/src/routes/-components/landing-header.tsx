@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { authClient } from "@/lib/auth-client"
 import { cn } from "@/lib/utils"
 
-export function NavigationBar() {
+export function LandingHeader() {
 	const [isScrolled, setIsScrolled] = React.useState(false)
 
 	const handleGoogleSignIn = async () => {
@@ -35,7 +35,7 @@ export function NavigationBar() {
 			)}
 		>
 			<div className="container mx-auto px-4 sm:px-6 lg:px-8">
-				<div className="flex h-16 items-center justify-between lg:h-20">
+				<div className="flex h-16 items-center justify-between">
 					<Link to="/">
 						<div className="flex items-center gap-2">
 							<img alt="Flowcost" className="size-12" src="/logo/logo192.png" />

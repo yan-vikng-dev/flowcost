@@ -59,7 +59,7 @@ export function ExpensesByCategoryBar() {
 			category: item.category,
 			amount: item.amount,
 			formattedAmount: formatCurrency(item.amount, displayCurrency),
-			fill: `var(--chart-${(i % 5) + 1})`,
+			fill: `var(--color-chart-${(i % 5) + 1})`,
 		}))
 		const total = chartData.reduce((acc, s) => acc + s.amount, 0)
 		return { chartData, total }
@@ -67,8 +67,8 @@ export function ExpensesByCategoryBar() {
 
 	const chartConfig = React.useMemo(() => {
 		const cfg: ChartConfig = {
-			amount: { label: "Amount", color: "var(--chart-1)" },
-			label: { color: "var(--background)" },
+			amount: { label: "Amount", color: "var(--color-chart-1)" },
+			label: { color: "var(--color-background)" },
 		}
 		return cfg
 	}, [])
@@ -116,7 +116,7 @@ export function ExpensesByCategoryBar() {
 						<YAxis
 							axisLine={false}
 							dataKey="category"
-							tick={{ fontSize: 12, fill: "var(--muted-foreground)" }}
+							tick={{ fontSize: 12, fill: "var(--color-muted-foreground)" }}
 							tickLine={false}
 							type="category"
 							width={60}

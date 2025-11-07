@@ -2,7 +2,7 @@ import { createFileRoute, redirect } from "@tanstack/react-router"
 import { FloatingWaves } from "@/components/bg/floating-waves"
 import { checkAuthSession } from "@/server/check-auth-session"
 import { HeroSection } from "./-components/hero-section"
-import { NavigationBar } from "./-components/navigation-bar"
+import { LandingHeader } from "./-components/landing-header"
 
 export const Route = createFileRoute("/")({
 	beforeLoad: async () => {
@@ -25,7 +25,7 @@ function LandingPage() {
 				waveSpeedX={0.012}
 				waveSpeedY={0.006}
 			/>
-			<NavigationBar />
+			<LandingHeader />
 			<main className="relative z-10">
 				<HeroSection />
 			</main>

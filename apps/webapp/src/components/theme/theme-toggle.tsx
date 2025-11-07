@@ -48,19 +48,16 @@ export function ThemeToggle() {
 			value: "light",
 			label: "Light",
 			icon: Sun,
-			description: "Use light theme",
 		},
 		{
 			value: "dark",
 			label: "Dark",
 			icon: Moon,
-			description: "Use dark theme",
 		},
 		{
 			value: "system",
 			label: "System",
 			icon: Monitor,
-			description: "Use system theme",
 		},
 	] as const
 
@@ -114,16 +111,13 @@ export function ThemeToggle() {
 									/>
 								</div>
 
-								<div className="flex min-w-0 flex-1 flex-col">
+								<div className="flex min-w-0 flex-1 items-center">
 									<span
-										className={`font-medium text-sm leading-none ${
+										className={`font-medium text-sm ${
 											isSelected ? "text-accent-foreground" : "text-foreground"
 										}`}
 									>
 										{option.label}
-									</span>
-									<span className="mt-0.5 text-muted-foreground text-xs leading-none">
-										{option.description}
 									</span>
 								</div>
 
@@ -134,18 +128,6 @@ export function ThemeToggle() {
 						)
 					})}
 				</div>
-
-				{resolvedTheme && (
-					<div className="mt-2 border-border/50 border-t pt-2">
-						<div className="flex items-center gap-2 px-3 py-1.5 text-muted-foreground text-xs">
-							<div
-								className={`h-2 w-2 rounded-full transition-colors duration-200 ${resolvedTheme === "dark" ? "bg-blue-500" : "bg-amber-500"}
-              `}
-							/>
-							Currently using {resolvedTheme} theme
-						</div>
-					</div>
-				)}
 			</DropdownMenuContent>
 		</DropdownMenu>
 	)
