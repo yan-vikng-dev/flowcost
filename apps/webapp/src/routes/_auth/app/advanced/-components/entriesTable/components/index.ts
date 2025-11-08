@@ -1,6 +1,6 @@
 export { BooleanFilterComponent } from "./BooleanFilter"
 export { DataTable } from "./DataTable"
-export { DateRangeFilterComponent } from "./DateRangeFilter"
+export { DateRangePicker } from "./DateRangePicker"
 export { DeleteConfirmationDialog } from "./DeleteConfirmationDialog"
 export { EnumMultiSelectFilterComponent } from "./EnumMultiSelectFilter"
 export { NumberRangeFilterComponent } from "./NumberRangeFilter"

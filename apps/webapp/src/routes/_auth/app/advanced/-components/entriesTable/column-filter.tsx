@@ -4,7 +4,6 @@ import type { Column } from "@tanstack/react-table"
 import { FilterIcon } from "lucide-react"
 import * as React from "react"
 import { CategoryMultiCombobox } from "@/components/combobox/CategoryMultiCombobox"
-import { NumericRangeSlider } from "@/components/table-filters"
 import { Button } from "@/components/ui/button"
 import {
 	DropdownMenu,
@@ -12,45 +11,18 @@ import {
 	DropdownMenuContent,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import {
-	Popover,
-	PopoverContent,
-	PopoverTrigger,
-} from "@/components/ui/popover"
 import type { MonthlyEntry } from "@/core/functions/entries"
 import type {
 	BooleanFilter,
-	DateRangeFilter,
 	EnumMultiSelectFilter,
-	NumberRangeFilter,
 } from "@/core/functions/filters"
 import { cn } from "@/lib/utils"
-import { DateRangeFilterComponent } from "./components"
 
 interface ColumnFilterProps {
 	column: Column<MonthlyEntry, unknown>
-	displayCurrency?: string
-	monthStart?: Date
 }
 
-// Helper function to get the maximum value from a numeric column
-function getColumnMaxValue(column: Column<MonthlyEntry, unknown>): number {
-	// Get all rows for this column
-	const rows = column.getFacetedRowModel().rows
-
-	let maxValue = 0
-	for (const row of rows) {
-		const value = row.getValue(column.id)
-		if (typeof value === "number" && value > maxValue) {
-			maxValue = value
-		}
-	}
-
-	// Return at least 1 to avoid division by zero, and round up to a nice number
-	return Math.max(1, Math.ceil(maxValue * 1.1)) // Add 10% buffer
-}
-
-export function ColumnFilter({ column, monthStart }: ColumnFilterProps) {
+export function ColumnFilter({ column }: ColumnFilterProps) {
 	const columnId = column.id
 	const filterValue = column.getFilterValue()
 	const hasFilter = column.getIsFiltered()
@@ -70,17 +42,6 @@ export function ColumnFilter({ column, monthStart }: ColumnFilterProps) {
 
 	const getFilterComponent = () => {
 		switch (columnId) {
-			case "executedDate": {
-				const dateValue = filterValue as DateRangeFilter
-				return (
-					<DateRangeFilterComponent
-						monthStart={monthStart}
-						onChange={(range) => column.setFilterValue(range)}
-						value={dateValue}
-					/>
-				)
-			}
-
 			case "entryType": {
 				// Direct Command component for enum multi-select
 				const toggleOption = (optionValue: string) => {
@@ -129,40 +90,6 @@ export function ColumnFilter({ column, monthStart }: ColumnFilterProps) {
 						}}
 						placeholder="Filter categories..."
 						value={selectedCategories}
-					/>
-				)
-			}
-
-			case "amount": {
-				const maxValue = getColumnMaxValue(column)
-				const amountValue = filterValue as NumberRangeFilter
-
-				return (
-					<NumericRangeSlider
-						max={maxValue}
-						maxLabel="Max amount"
-						min={0}
-						minLabel="Min amount"
-						onChange={(value) => column.setFilterValue(value)}
-						step={1}
-						value={amountValue}
-					/>
-				)
-			}
-
-			case "amountIls": {
-				const maxValue = getColumnMaxValue(column)
-				const convertedValue = filterValue as NumberRangeFilter
-
-				return (
-					<NumericRangeSlider
-						max={maxValue}
-						maxLabel="Max converted"
-						min={0}
-						minLabel="Min converted"
-						onChange={(value) => column.setFilterValue(value)}
-						step={1}
-						value={convertedValue}
 					/>
 				)
 			}
@@ -299,37 +226,5 @@ export function ColumnFilter({ column, monthStart }: ColumnFilterProps) {
 		)
 	}
 
-	// For other filters, use Popover as before
-	return (
-		<Popover>
-			<PopoverTrigger asChild>
-				<Button
-					className={cn(
-						"ml-1 h-6 w-6 shrink-0",
-						hasFilter && "bg-primary/10 text-primary hover:bg-primary/20",
-					)}
-					size="icon-sm"
-					variant={hasFilter ? "secondary" : "ghost"}
-				>
-					<FilterIcon className="h-3 w-3" />
-					<span className="sr-only">Filter {columnId}</span>
-				</Button>
-			</PopoverTrigger>
-			<PopoverContent
-				align="start"
-				className={cn("w-auto", columnId === "executedDate" ? "p-0" : "p-4")}
-			>
-				{columnId === "executedDate" ? (
-					getFilterComponent()
-				) : (
-					<div className="space-y-2">
-						<h4 className="font-medium text-sm">
-							Filter by {columnId === "amountIls" ? "converted" : columnId}
-						</h4>
-						<div className="min-w-80">{getFilterComponent()}</div>
-					</div>
-				)}
-			</PopoverContent>
-		</Popover>
-	)
+	return null
 }

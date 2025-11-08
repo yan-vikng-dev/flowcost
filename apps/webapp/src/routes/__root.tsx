@@ -72,12 +72,7 @@ export const Route = createRootRouteWithContext<{
 function RootComponent() {
 	return (
 		<RootDocument>
-			<ThemeProvider
-				attribute="class"
-				defaultTheme="system"
-				disableTransitionOnChange={false}
-				enableSystem
-			>
+			<ThemeProvider>
 				<Outlet />
 			</ThemeProvider>
 		</RootDocument>

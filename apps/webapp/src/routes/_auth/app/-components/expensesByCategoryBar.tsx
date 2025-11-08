@@ -59,7 +59,7 @@ export function ExpensesByCategoryBar() {
 			category: item.category,
 			amount: item.amount,
 			formattedAmount: formatCurrency(item.amount, displayCurrency),
-			fill: `var(--color-chart-${(i % 5) + 1})`,
+			fill: `var(--chart-${(i % 5) + 1})`,
 		}))
 		const total = chartData.reduce((acc, s) => acc + s.amount, 0)
 		return { chartData, total }
@@ -102,7 +102,7 @@ export function ExpensesByCategoryBar() {
 			</CardHeader>
 			<CardContent className="min-w-0 flex-1 pb-0">
 				<ChartContainer
-					className="w-full min-w-0 overflow-visible"
+					className="aspect-auto w-full min-w-0 overflow-visible"
 					config={chartConfig}
 					style={{ height: chartHeight }}
 				>
@@ -136,7 +136,6 @@ export function ExpensesByCategoryBar() {
 						<Bar
 							barSize={BAR_SIZE}
 							dataKey="amount"
-							fill="var(--color-amount)"
 							radius={4}
 						>
 							{chartData.map((item) => (

@@ -8,6 +8,7 @@ export function FloatingWaves({
 	waveAmpY = 25,
 	backgroundColor = "transparent",
 	lineColor = "rgba(255, 255, 255, 0.3)",
+	disableInteraction = false,
 	style = {},
 }) {
 	const containerRef = useRef<HTMLDivElement | null>(null)
@@ -198,6 +199,7 @@ export function FloatingWaves({
 		}
 
 		function onMouseMove(e: MouseEvent) {
+			if (disableInteraction) return
 			const { left, top } = boundingRef.current
 			const mouse = mouseRef.current
 			mouse.x = e.pageX - left
@@ -205,6 +207,7 @@ export function FloatingWaves({
 		}
 
 		function onTouchMove(e: TouchEvent) {
+			if (disableInteraction) return
 			// Only handle single finger touch
 			if (e.touches.length === 1) {
 				const { left, top } = boundingRef.current
@@ -240,7 +243,14 @@ export function FloatingWaves({
 				cancelAnimationFrame(animationFrameRef.current)
 			}
 		}
-	}, [waveSpeedX, waveSpeedY, waveAmpX, waveAmpY, lineColor])
+	}, [
+		waveSpeedX,
+		waveSpeedY,
+		waveAmpX,
+		waveAmpY,
+		lineColor,
+		disableInteraction,
+	])
 
 	return (
 		<div

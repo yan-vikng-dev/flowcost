@@ -25,11 +25,12 @@ function RouteComponent() {
 		<div className="relative min-h-screen flex-col">
 			<FloatingWaves
 				className="-z-10"
+				disableInteraction
 				lineColor="rgba(59, 130, 246, 0.1)"
 				waveAmpX={35}
 				waveAmpY={18}
-				waveSpeedX={0.012}
-				waveSpeedY={0.006}
+				waveSpeedX={0.006}
+				waveSpeedY={0.003}
 			/>
 			<AppHeader />
 			<main className="relative z-10 p-4 pt-16 sm:p-6 lg:p-8">

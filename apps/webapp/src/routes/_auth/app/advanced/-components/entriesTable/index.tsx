@@ -68,7 +68,9 @@ export function MonthlyEntriesTable({
 
 	const displayCurrency = data?.displayCurrency ?? "USD"
 	const timezone = data?.timezone ?? "UTC"
-	const { start: monthStart } = getCurrentMonthRange(timezone)
+	const monthStart = React.useMemo(() => {
+		return getCurrentMonthRange(timezone).start
+	}, [timezone])
 
 	const sortedAndPaginated = React.useMemo(() => {
 		if (!data) return { items: [], total: 0 }

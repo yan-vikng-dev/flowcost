@@ -5,12 +5,23 @@ import {
 	ArrowDownIcon,
 	ArrowUpDownIcon,
 	ArrowUpIcon,
+	FilterIcon,
 	RepeatIcon,
 } from "lucide-react"
+import { NumericRangeSlider } from "@/components/table-filters"
 import { Button } from "@/components/ui/button"
+import {
+	Popover,
+	PopoverContent,
+	PopoverTrigger,
+} from "@/components/ui/popover"
 import { getCategoryIcon } from "@/config/categories"
 import { getEntryTypeIcon } from "@/config/entryTypes"
 import type { MonthlyEntry } from "@/core/functions/entries"
+import type {
+	DateRangeFilter,
+	NumberRangeFilter,
+} from "@/core/functions/filters"
 import {
 	booleanFilter,
 	dateRangeFilter,
@@ -19,11 +30,29 @@ import {
 } from "@/core/functions/filters"
 import { cn } from "@/lib/utils"
 import { ColumnFilter } from "./column-filter"
+import { DateRangePicker } from "./components"
 
 interface EntriesTableColumnsOptions {
 	displayCurrency: string
 	showFilters?: boolean
 	monthStart?: Date
+}
+
+function getColumnMaxValue(
+	column: {
+		getFacetedRowModel: () => { rows: { getValue: (id: string) => unknown }[] }
+	},
+	columnId: string,
+): number {
+	const rows = column.getFacetedRowModel().rows
+	let maxValue = 0
+	for (const row of rows) {
+		const value = row.getValue(columnId)
+		if (typeof value === "number" && value > maxValue) {
+			maxValue = value
+		}
+	}
+	return Math.max(1, Math.ceil(maxValue * 1.1))
 }
 
 export function entriesTableColumns({
@@ -67,9 +96,7 @@ export function entriesTableColumns({
 								<ArrowUpDownIcon className="h-4 w-4 text-muted-foreground" />
 							)}
 						</Button>
-						{showFilters && (
-							<ColumnFilter column={column} displayCurrency={displayCurrency} />
-						)}
+						{showFilters && <ColumnFilter column={column} />}
 					</div>
 				)
 			},
@@ -100,6 +127,11 @@ export function entriesTableColumns({
 			header: ({ column }) => {
 				const sorted = column.getIsSorted()
 				const hasSort = sorted !== false
+				const hasFilter = column.getIsFiltered()
+				const filterValue = column.getFilterValue() as
+					| DateRangeFilter
+					| undefined
+
 				return (
 					<div className="flex items-center gap-1">
 						<span>Date</span>
@@ -129,11 +161,31 @@ export function entriesTableColumns({
 							)}
 						</Button>
 						{showFilters && (
-							<ColumnFilter
-								column={column}
-								displayCurrency={displayCurrency}
-								monthStart={monthStart}
-							/>
+							<Popover>
+								<PopoverTrigger asChild>
+									<Button
+										className={cn(
+											"ml-1 h-6 w-6 shrink-0",
+											hasFilter &&
+												"bg-primary/10 text-primary hover:bg-primary/20",
+										)}
+										size="icon-sm"
+										variant={hasFilter ? "secondary" : "ghost"}
+									>
+										<FilterIcon className="h-3 w-3" />
+										<span className="sr-only">Filter executedDate</span>
+									</Button>
+								</PopoverTrigger>
+								<PopoverContent align="start" className="w-auto p-0">
+									<DateRangePicker
+										monthStart={monthStart}
+										onChange={(range: DateRangeFilter | undefined) =>
+											column.setFilterValue(range)
+										}
+										value={filterValue}
+									/>
+								</PopoverContent>
+							</Popover>
 						)}
 					</div>
 				)
@@ -184,9 +236,7 @@ export function entriesTableColumns({
 								<ArrowUpDownIcon className="h-4 w-4 text-muted-foreground" />
 							)}
 						</Button>
-						{showFilters && (
-							<ColumnFilter column={column} displayCurrency={displayCurrency} />
-						)}
+						{showFilters && <ColumnFilter column={column} />}
 					</div>
 				)
 			},
@@ -240,9 +290,7 @@ export function entriesTableColumns({
 								<ArrowUpDownIcon className="h-4 w-4 text-muted-foreground" />
 							)}
 						</Button>
-						{showFilters && (
-							<ColumnFilter column={column} displayCurrency={displayCurrency} />
-						)}
+						{showFilters && <ColumnFilter column={column} />}
 					</div>
 				)
 			},
@@ -275,6 +323,12 @@ export function entriesTableColumns({
 			header: ({ column }) => {
 				const sorted = column.getIsSorted()
 				const hasSort = sorted !== false
+				const hasFilter = column.getIsFiltered()
+				const filterValue = column.getFilterValue() as
+					| NumberRangeFilter
+					| undefined
+				const maxValue = getColumnMaxValue(column, "amount")
+
 				return (
 					<div className="flex items-center justify-end gap-1">
 						<span>Amount</span>
@@ -304,7 +358,40 @@ export function entriesTableColumns({
 							)}
 						</Button>
 						{showFilters && (
-							<ColumnFilter column={column} displayCurrency={displayCurrency} />
+							<Popover>
+								<PopoverTrigger asChild>
+									<Button
+										className={cn(
+											"ml-1 h-6 w-6 shrink-0",
+											hasFilter &&
+												"bg-primary/10 text-primary hover:bg-primary/20",
+										)}
+										size="icon-sm"
+										variant={hasFilter ? "secondary" : "ghost"}
+									>
+										<FilterIcon className="h-3 w-3" />
+										<span className="sr-only">Filter amount</span>
+									</Button>
+								</PopoverTrigger>
+								<PopoverContent align="start" className="w-auto p-4">
+									<div className="space-y-2">
+										<h4 className="font-medium text-sm">Filter by amount</h4>
+										<div className="min-w-80">
+											<NumericRangeSlider
+												max={maxValue}
+												maxLabel="Max amount"
+												min={0}
+												minLabel="Min amount"
+												onChange={(value: NumberRangeFilter | undefined) =>
+													column.setFilterValue(value)
+												}
+												step={1}
+												value={filterValue}
+											/>
+										</div>
+									</div>
+								</PopoverContent>
+							</Popover>
 						)}
 					</div>
 				)
@@ -326,6 +413,12 @@ export function entriesTableColumns({
 			header: ({ column }) => {
 				const sorted = column.getIsSorted()
 				const hasSort = sorted !== false
+				const hasFilter = column.getIsFiltered()
+				const filterValue = column.getFilterValue() as
+					| NumberRangeFilter
+					| undefined
+				const maxValue = getColumnMaxValue(column, "amountIls")
+
 				return (
 					<div className="flex items-center justify-end gap-1">
 						<span>Converted</span>
@@ -355,7 +448,40 @@ export function entriesTableColumns({
 							)}
 						</Button>
 						{showFilters && (
-							<ColumnFilter column={column} displayCurrency={displayCurrency} />
+							<Popover>
+								<PopoverTrigger asChild>
+									<Button
+										className={cn(
+											"ml-1 h-6 w-6 shrink-0",
+											hasFilter &&
+												"bg-primary/10 text-primary hover:bg-primary/20",
+										)}
+										size="icon-sm"
+										variant={hasFilter ? "secondary" : "ghost"}
+									>
+										<FilterIcon className="h-3 w-3" />
+										<span className="sr-only">Filter converted</span>
+									</Button>
+								</PopoverTrigger>
+								<PopoverContent align="start" className="w-auto p-4">
+									<div className="space-y-2">
+										<h4 className="font-medium text-sm">Filter by converted</h4>
+										<div className="min-w-80">
+											<NumericRangeSlider
+												max={maxValue}
+												maxLabel="Max converted"
+												min={0}
+												minLabel="Min converted"
+												onChange={(value: NumberRangeFilter | undefined) =>
+													column.setFilterValue(value)
+												}
+												step={1}
+												value={filterValue}
+											/>
+										</div>
+									</div>
+								</PopoverContent>
+							</Popover>
 						)}
 					</div>
 				)
