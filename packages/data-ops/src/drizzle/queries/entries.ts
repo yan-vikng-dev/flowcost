@@ -1,11 +1,12 @@
 import type { Currency } from "@repo/shared-lib"
 import { toIsoDateInTimezone } from "@repo/shared-lib"
 import { convertCurrency } from "@repo/shared-lib/currency"
-import { and, asc, count, desc, eq, gte, inArray, lt } from "drizzle-orm"
+import { and, asc, desc, eq, gte, inArray, lt } from "drizzle-orm"
 import type { DrizzleDb } from "../../database/setup"
 import { type EntryType, entries, type SelectEntry } from "../schemas/index"
 import { fetchExchangeRatesForDates } from "./exchange-rates"
 import { getAllowedUserIds, getUserTimezoneAndCurrency } from "./helpers"
+import { createPerformanceMeasurer } from "./performance"
 import { ensureRecurringEntriesMaterialized } from "./recurring-entries"
 
 export type ConvertedEntry = SelectEntry & {
@@ -21,13 +22,13 @@ export type FetchConvertedEntriesOptions = {
 	entryType?: EntryType
 	sortBy?: "executedAt" | "amount" | "category" | "entryType"
 	sortDir?: "asc" | "desc"
-	limit?: number
-	offset?: number
+	allowedUserIds?: string[]
+	partnerId?: string | null
+	caller?: string
 }
 
 export type FetchConvertedEntriesResult = {
 	entries: ConvertedEntry[]
-	total?: number
 }
 
 const SORTABLE_COLUMNS = {
@@ -55,13 +56,6 @@ function buildOrderBy(
 	return sortDir === "asc" ? asc(sortColumn) : desc(sortColumn)
 }
 
-function withConditionalTotal(
-	result: { entries: ConvertedEntry[] },
-	total: number | undefined,
-): FetchConvertedEntriesResult {
-	return { ...result, ...(total !== undefined && { total }) }
-}
-
 function convertEntryToCurrency(
 	entry: SelectEntry,
 	displayCurrency: Currency,
@@ -71,7 +65,7 @@ function convertEntryToCurrency(
 	const rateMap = ratesByDate.get(entry.executedDate) ?? fallbackRates
 	const convertedAmount = convertCurrency(
 		entry.amount,
-		entry.currency as Currency,
+		entry.currency,
 		displayCurrency,
 		rateMap,
 	)
@@ -95,20 +89,27 @@ async function resolveDisplayCurrency(
 	userId: string,
 	providedCurrency?: Currency,
 ): Promise<Currency> {
-	if (providedCurrency) return providedCurrency
-	const prefs = await getUserTimezoneAndCurrency(db, userId)
-	return prefs.displayCurrency
+	return (
+		providedCurrency ??
+		(await getUserTimezoneAndCurrency(db, userId)).displayCurrency
+	)
 }
 
-async function fetchTotalCount(
+function buildEntriesQuery(
 	db: DrizzleDb,
 	whereClause: ReturnType<typeof and>,
-): Promise<number> {
-	const result = await db
-		.select({ count: count() })
-		.from(entries)
-		.where(whereClause)
-	return result[0]?.count ?? 0
+	sortBy?: FetchConvertedEntriesOptions["sortBy"],
+	sortDir?: FetchConvertedEntriesOptions["sortDir"],
+) {
+	let query = db.select().from(entries).where(whereClause)
+
+	if (sortBy) {
+		query = query.orderBy(
+			buildOrderBy(sortBy, sortDir ?? "desc"),
+		) as typeof query
+	}
+
+	return query
 }
 
 export async function fetchConvertedEntriesForRange(
@@ -116,6 +117,7 @@ export async function fetchConvertedEntriesForRange(
 	userId: string,
 	options: FetchConvertedEntriesOptions,
 ): Promise<FetchConvertedEntriesResult> {
+	const perf = createPerformanceMeasurer()
 	const {
 		start,
 		end,
@@ -123,68 +125,89 @@ export async function fetchConvertedEntriesForRange(
 		displayCurrency: providedDisplayCurrency,
 		includePartner = true,
 		entryType,
-		sortBy = "executedAt",
+		sortBy,
 		sortDir = "desc",
-		limit,
-		offset,
+		allowedUserIds: providedAllowedUserIds,
+		partnerId,
+		caller,
 	} = options
 
-	const allowedUserIds = await getAllowedUserIds(db, userId, includePartner)
-	await materializeRecurringEntriesForUsers(
-		db,
-		allowedUserIds,
-		start,
-		end,
-		timezone,
-	)
+	let rowCount = 0
 
-	const displayCurrency = await resolveDisplayCurrency(
-		db,
-		userId,
-		providedDisplayCurrency,
-	)
+	try {
+		const allowedUserIds =
+			providedAllowedUserIds ??
+			(await perf.measure("allowedUserIds", () =>
+				getAllowedUserIds(db, userId, includePartner, partnerId),
+			))
 
-	const baseWhere = and(
-		inArray(entries.userId, allowedUserIds),
-		buildDateRangeWhere(start, end, timezone),
-		entryType ? eq(entries.entryType, entryType) : undefined,
-	)
+		await perf.measure("materializeRecurring", () =>
+			materializeRecurringEntriesForUsers(
+				db,
+				allowedUserIds,
+				start,
+				end,
+				timezone,
+			),
+		)
 
-	const needsPagination = limit !== undefined || offset !== undefined
-	const total = needsPagination
-		? await fetchTotalCount(db, baseWhere)
-		: undefined
+		const displayCurrency = await perf.measure("resolveDisplayCurrency", () =>
+			resolveDisplayCurrency(db, userId, providedDisplayCurrency),
+		)
 
-	let query = db
-		.select()
-		.from(entries)
-		.where(baseWhere)
-		.orderBy(buildOrderBy(sortBy, sortDir))
+		const baseWhere = and(
+			inArray(entries.userId, allowedUserIds),
+			buildDateRangeWhere(start, end, timezone),
+			entryType ? eq(entries.entryType, entryType) : undefined,
+		)
 
-	if (limit !== undefined) {
-		query = query.limit(limit) as typeof query
+		const rows = await perf.measure("fetchEntries", () =>
+			buildEntriesQuery(db, baseWhere, sortBy, sortDir),
+		)
+
+		rowCount = rows.length
+
+		if (rows.length === 0) {
+			return { entries: [] }
+		}
+
+		const uniqueDates = Array.from(new Set(rows.map((r) => r.executedDate)))
+		const { ratesByDate, latest } = await perf.measure(
+			"fetchExchangeRates",
+			() =>
+				fetchExchangeRatesForDates(
+					db,
+					uniqueDates,
+					caller ?? "fetchConvertedEntriesForRange",
+				),
+		)
+
+		const convertedEntries = rows.map((entry) =>
+			convertEntryToCurrency(entry, displayCurrency, ratesByDate, latest.rates),
+		)
+
+		return { entries: convertedEntries }
+	} finally {
+		const totalMs = perf.getTotalMs()
+		const timings = perf.getTimings()
+		const durationDays = Math.max(
+			1,
+			Math.ceil((end.getTime() - start.getTime()) / 86_400_000),
+		)
+		// eslint-disable-next-line no-console
+		console.info("[perf] fetchConvertedEntriesForRange", {
+			caller: caller ?? "unknown",
+			totalMs,
+			rowCount,
+			durationDays,
+			entryType: entryType ?? "all",
+			sortBy: sortBy ?? null,
+			sortDir: sortBy ? sortDir : null,
+			userId,
+			timezone,
+			timings,
+		})
 	}
-	if (offset !== undefined) {
-		query = query.offset(offset) as typeof query
-	}
-
-	const rows = await query
-
-	if (rows.length === 0) {
-		return withConditionalTotal({ entries: [] }, total)
-	}
-
-	const uniqueDates = Array.from(new Set(rows.map((r) => r.executedDate)))
-	const { ratesByDate, latest } = await fetchExchangeRatesForDates(
-		db,
-		uniqueDates,
-	)
-
-	const convertedEntries = rows.map((entry) =>
-		convertEntryToCurrency(entry, displayCurrency, ratesByDate, latest.rates),
-	)
-
-	return withConditionalTotal({ entries: convertedEntries }, total)
 }
 
 export async function getEntryForUser(
@@ -192,8 +215,14 @@ export async function getEntryForUser(
 	entryId: string,
 	userId: string,
 	includePartner = true,
+	partnerId?: string | null,
 ) {
-	const allowedUserIds = await getAllowedUserIds(db, userId, includePartner)
+	const allowedUserIds = await getAllowedUserIds(
+		db,
+		userId,
+		includePartner,
+		partnerId,
+	)
 	return db.query.entries.findFirst({
 		where: and(
 			eq(entries.id, entryId),

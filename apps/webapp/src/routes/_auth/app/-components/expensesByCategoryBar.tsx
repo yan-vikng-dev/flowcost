@@ -1,5 +1,6 @@
 import { formatCurrency } from "@repo/shared-lib"
-import { useQuery } from "@tanstack/react-query"
+import { useSuspenseQuery } from "@tanstack/react-query"
+import { DateTime } from "luxon"
 import * as React from "react"
 import { Bar, BarChart, Cell, LabelList, XAxis, YAxis } from "recharts"
 import {
@@ -15,6 +16,7 @@ import {
 	ChartTooltip,
 	ChartTooltipContent,
 } from "@/components/ui/chart"
+import { Skeleton } from "@/components/ui/skeleton"
 import {
 	getMonthlyEntries,
 	MONTHLY_ENTRIES_KEY,
@@ -28,15 +30,15 @@ type ChartSlice = {
 	fill: string
 }
 
-export function ExpensesByCategoryBar() {
-	const { data } = useQuery<MonthlyEntriesResult>({
+function ExpensesChart() {
+	const { data } = useSuspenseQuery<MonthlyEntriesResult>({
 		queryKey: MONTHLY_ENTRIES_KEY,
 		queryFn: () => getMonthlyEntries(),
 	})
 
 	const { chartData, total } = React.useMemo(() => {
-		const displayCurrency = data?.displayCurrency ?? "USD"
-		const expenses = (data?.entries ?? []).filter(
+		const displayCurrency = data.displayCurrency ?? "USD"
+		const expenses = (data.entries ?? []).filter(
 			(e) => e.entryType === "Expense",
 		)
 		const aggregated = expenses.reduce((acc: Record<string, number>, e) => {
@@ -95,58 +97,96 @@ export function ExpensesByCategoryBar() {
 	if (isEmpty) return null
 
 	return (
+		<ChartContainer
+			className="aspect-auto w-full min-w-0 overflow-visible"
+			config={chartConfig}
+			style={{ height: chartHeight }}
+		>
+			<BarChart
+				accessibilityLayer
+				data={chartData}
+				layout="vertical"
+				margin={CHART_MARGIN}
+			>
+				<XAxis dataKey="amount" hide type="number" />
+				<YAxis
+					axisLine={false}
+					dataKey="category"
+					tick={{ fontSize: 12, fill: "var(--color-muted-foreground)" }}
+					tickLine={false}
+					type="category"
+					width={60}
+				/>
+				<ChartTooltip
+					content={
+						<ChartTooltipContent
+							formatter={(_value, _name, item) => {
+								const entry = item.payload as ChartSlice
+								return entry.formattedAmount
+							}}
+							hideLabel
+						/>
+					}
+					cursor={false}
+				/>
+				<Bar barSize={BAR_SIZE} dataKey="amount" radius={4}>
+					{chartData.map((item) => (
+						<Cell fill={item.fill} key={`cell-${item.category}`} />
+					))}
+					<LabelList
+						className="fill-foreground"
+						dataKey="formattedAmount"
+						fontSize={12}
+						offset={4}
+						position="right"
+					/>
+				</Bar>
+			</BarChart>
+		</ChartContainer>
+	)
+}
+
+export function ExpensesByCategoryBar() {
+	const monthLabel = React.useMemo(() => {
+		return DateTime.now().toFormat("LLLL yyyy")
+	}, [])
+
+	return (
 		<Card>
 			<CardHeader className="items-center pb-0">
 				<CardTitle>Expenses</CardTitle>
-				<CardDescription>{data?.monthLabel ?? "This month"}</CardDescription>
+				<CardDescription>{monthLabel}</CardDescription>
 			</CardHeader>
 			<CardContent className="min-w-0 flex-1 pb-0">
-				<ChartContainer
-					className="aspect-auto w-full min-w-0 overflow-visible"
-					config={chartConfig}
-					style={{ height: chartHeight }}
-				>
-					<BarChart
-						accessibilityLayer
-						data={chartData}
-						layout="vertical"
-						margin={CHART_MARGIN}
-					>
-						<XAxis dataKey="amount" hide type="number" />
-						<YAxis
-							axisLine={false}
-							dataKey="category"
-							tick={{ fontSize: 12, fill: "var(--color-muted-foreground)" }}
-							tickLine={false}
-							type="category"
-							width={60}
-						/>
-						<ChartTooltip
-							content={
-								<ChartTooltipContent
-									formatter={(_value, _name, item) => {
-										const entry = item.payload as ChartSlice
-										return entry.formattedAmount
-									}}
-									hideLabel
-								/>
-							}
-							cursor={false}
-						/>
-						<Bar barSize={BAR_SIZE} dataKey="amount" radius={4}>
-							{chartData.map((item) => (
-								<Cell fill={item.fill} key={`cell-${item.category}`} />
+				<React.Suspense
+					fallback={
+						<div className="space-y-2 pt-6">
+							{[
+								{ key: "skeleton-bar-1", barWidth: "85%" },
+								{ key: "skeleton-bar-2", barWidth: "45%" },
+								{ key: "skeleton-bar-3", barWidth: "30%" },
+								{ key: "skeleton-bar-4", barWidth: "60%" },
+							].map(({ key, barWidth }) => (
+								<div
+									className="flex items-center gap-4"
+									key={key}
+									style={{ height: 32 }}
+								>
+									<Skeleton className="h-4 w-24" />
+									<div className="flex-1">
+										<Skeleton
+											className="h-8 rounded-lg"
+											style={{ width: barWidth }}
+										/>
+									</div>
+									<Skeleton className="h-4 w-16" />
+								</div>
 							))}
-							<LabelList
-								className="fill-foreground"
-								dataKey="formattedAmount"
-								fontSize={12}
-								offset={4}
-								position="right"
-							/>
-						</Bar>
-					</BarChart>
-				</ChartContainer>
+						</div>
+					}
+				>
+					<ExpensesChart />
+				</React.Suspense>
 			</CardContent>
 		</Card>
 	)

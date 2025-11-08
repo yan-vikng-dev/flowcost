@@ -17,6 +17,7 @@ export async function generateDailyReport(
 		timezone: timeZone,
 		displayCurrency,
 		entryType: "Expense",
+		caller: "generateDailyReport",
 	})
 
 	if (entriesResult.entries.length === 0) {

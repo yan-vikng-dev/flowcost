@@ -33,7 +33,7 @@ export function BudgetItem({
 							<Button
 								aria-label="Edit budget"
 								onClick={() => onEdit(budget.id)}
-								size="icon-xs"
+								size="icon-sm"
 								variant="secondary"
 							>
 								<PencilIcon />
@@ -41,7 +41,7 @@ export function BudgetItem({
 							<Button
 								aria-label="Delete budget"
 								onClick={() => onDelete(budget.id)}
-								size="icon-xs"
+								size="icon-sm"
 								variant="secondary"
 							>
 								<Trash2Icon />

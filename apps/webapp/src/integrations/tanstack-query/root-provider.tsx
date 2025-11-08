@@ -1,7 +1,15 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 
 export function getContext() {
-	const queryClient = new QueryClient()
+	const queryClient = new QueryClient({
+		defaultOptions: {
+			queries: {
+				refetchOnMount: false,
+				refetchOnWindowFocus: false,
+				staleTime: 5 * 60 * 1000,
+			},
+		},
+	})
 	return {
 		queryClient,
 	}

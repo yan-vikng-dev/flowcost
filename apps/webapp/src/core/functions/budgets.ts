@@ -2,9 +2,13 @@ import { getDb } from "@repo/data-ops/database/setup"
 import {
 	fetchBudgetsForUser,
 	fetchConvertedEntriesForRange,
-	fetchExchangeRatesForDates,
+	getLatestExchangeRates,
 } from "@repo/data-ops/drizzle/queries"
-import { budgets, user_preferences } from "@repo/data-ops/drizzle/schemas/index"
+import {
+	getAllowedUserIds,
+	getUserTimezoneAndCurrency,
+} from "@repo/data-ops/drizzle/queries/helpers"
+import { budgets } from "@repo/data-ops/drizzle/schemas/index"
 import {
 	type Category,
 	type Currency,
@@ -13,9 +17,10 @@ import {
 	getCurrentMonthRange,
 } from "@repo/shared-lib"
 import { createServerFn } from "@tanstack/react-start"
-import { eq } from "drizzle-orm"
+import { and, eq, inArray } from "drizzle-orm"
 import { z } from "zod"
 import { protectedFunctionMiddleware } from "@/core/middleware/auth"
+import { calculateBudgetsWithProgress } from "./budget-helpers"
 
 export const createBudgetInput = z.object({
 	amount: z.number().gt(0),
@@ -60,9 +65,20 @@ export const updateBudget = createServerFn({ method: "POST" })
 	.inputValidator(updateBudgetInput)
 	.handler(async (ctx) => {
 		const db = getDb()
-		const budgetsList = await fetchBudgetsForUser(db, ctx.context.userId)
+		const allowedUserIds = await getAllowedUserIds(
+			db,
+			ctx.context.userId,
+			true,
+			ctx.context.partnerUserId,
+		)
 
-		const existing = budgetsList.find((b) => b.id === ctx.data.id)
+		const existing = await db.query.budgets.findFirst({
+			where: and(
+				eq(budgets.id, ctx.data.id),
+				inArray(budgets.userId, allowedUserIds),
+			),
+		})
+
 		if (!existing) {
 			throw new Error("Not found or not authorized")
 		}
@@ -84,9 +100,20 @@ export const deleteBudget = createServerFn({ method: "POST" })
 	.inputValidator(deleteBudgetInput)
 	.handler(async (ctx) => {
 		const db = getDb()
-		const budgetsList = await fetchBudgetsForUser(db, ctx.context.userId)
+		const allowedUserIds = await getAllowedUserIds(
+			db,
+			ctx.context.userId,
+			true,
+			ctx.context.partnerUserId,
+		)
 
-		const existing = budgetsList.find((b) => b.id === ctx.data.id)
+		const existing = await db.query.budgets.findFirst({
+			where: and(
+				eq(budgets.id, ctx.data.id),
+				inArray(budgets.userId, allowedUserIds),
+			),
+		})
+
 		if (!existing) {
 			throw new Error("Not found or not authorized")
 		}
@@ -113,72 +140,47 @@ export const listBudgetsWithProgress = createServerFn()
 	.middleware([protectedFunctionMiddleware])
 	.handler(async (ctx) => {
 		const db = getDb()
+		const budgetsList = await fetchBudgetsForUser(db, ctx.context.userId)
+		if (budgetsList.length === 0) return [] as BudgetWithProgress[]
 
-		const bs = await fetchBudgetsForUser(db, ctx.context.userId)
-
-		if (bs.length === 0) return [] as BudgetWithProgress[]
-
-		// Determine timezone and display currency from user preferences; default to UTC/USD
-		const prefs = await db.query.user_preferences.findFirst({
-			where: eq(user_preferences.userId, ctx.context.userId),
-		})
-		const timeZone = prefs?.timezone || "UTC"
-		const displayCurrency: Currency =
-			(prefs?.displayCurrency as Currency) ?? "USD"
-		const { start, end } = getCurrentMonthRange(timeZone)
-
-		const entriesResult = await fetchConvertedEntriesForRange(
+		const { timezone, displayCurrency } = await getUserTimezoneAndCurrency(
 			db,
 			ctx.context.userId,
-			{
+		)
+		const { start, end } = getCurrentMonthRange(timezone)
+
+		const [entriesResult, latest] = await Promise.all([
+			fetchConvertedEntriesForRange(db, ctx.context.userId, {
 				start,
 				end,
-				timezone: timeZone,
+				timezone,
 				displayCurrency,
 				entryType: "Expense",
-			},
+				allowedUserIds: ctx.context.allowedUserIds,
+				partnerId: ctx.context.partnerUserId,
+				caller: "listBudgetsWithProgress",
+			}),
+			getLatestExchangeRates(db, "listBudgetsWithProgress"),
+		])
+
+		return calculateBudgetsWithProgress(
+			budgetsList,
+			entriesResult.entries,
+			displayCurrency,
+			latest.rates,
 		)
+	})
 
-		const { latest } = await fetchExchangeRatesForDates(db, [])
+export const listBudgets = createServerFn()
+	.middleware([protectedFunctionMiddleware])
+	.handler(async (ctx) => {
+		const db = getDb()
+		return await fetchBudgetsForUser(db, ctx.context.userId)
+	})
 
-		const results: BudgetWithProgress[] = bs.map((b) => {
-			let spentDisplay = 0
-			for (const e of entriesResult.entries) {
-				if (!(b.categories as Category[]).includes(e.category as Category))
-					continue
-				if (e.convertedAmount !== null) {
-					spentDisplay += e.convertedAmount
-				}
-			}
-
-			const srcBudgetRate = latest.rates[b.currency as Currency]
-			const dstBudgetRate = latest.rates[displayCurrency]
-			const amountDisplay =
-				typeof srcBudgetRate === "number" &&
-				srcBudgetRate > 0 &&
-				typeof dstBudgetRate === "number"
-					? b.amount * (dstBudgetRate / srcBudgetRate)
-					: b.amount
-
-			const remainingDisplay = Math.max(0, amountDisplay - spentDisplay)
-			const utilizationPct =
-				amountDisplay > 0
-					? Math.min(100, (spentDisplay / amountDisplay) * 100)
-					: 0
-
-			return {
-				id: b.id,
-				userId: b.userId,
-				amount: b.amount,
-				currency: b.currency as Currency,
-				categories: b.categories as Category[],
-				displayCurrency,
-				amountDisplay,
-				spentDisplay,
-				remainingDisplay,
-				utilizationPct,
-			}
-		})
-
-		return results
+export const getExchangeRates = createServerFn()
+	.middleware([protectedFunctionMiddleware])
+	.handler(async () => {
+		const db = getDb()
+		return await getLatestExchangeRates(db, "getExchangeRates")
 	})

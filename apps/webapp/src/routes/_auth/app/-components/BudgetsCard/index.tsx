@@ -1,5 +1,10 @@
 import type { Category, Currency } from "@repo/shared-lib"
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import {
+	useMutation,
+	useQuery,
+	useQueryClient,
+	useSuspenseQuery,
+} from "@tanstack/react-query"
 import { EditIcon, PlusIcon } from "lucide-react"
 import { DateTime } from "luxon"
 import * as React from "react"
@@ -22,6 +27,8 @@ import {
 	CardTitle,
 } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
+import { Skeleton } from "@/components/ui/skeleton"
+import { calculateBudgetsWithProgressFromMonthlyEntries } from "@/core/functions/budget-helpers"
 import type { BudgetWithProgress } from "@/core/functions/budgets"
 import {
 	type CreateBudgetInput,
@@ -32,8 +39,9 @@ import {
 import { getUserPreferences } from "@/core/functions/preferences"
 import { authClient } from "@/lib/auth-client"
 import {
-	getMonthlyBudgets,
-	MONTHLY_BUDGETS_KEY,
+	EXCHANGE_RATES_KEY,
+	getBudgets,
+	getExchangeRatesForBudgets,
 } from "../../-functions/monthlyBudgets"
 import {
 	getMonthlyEntries,
@@ -44,89 +52,68 @@ import { BudgetItem } from "./BudgetItem"
 import { getMonthProgress } from "./utils"
 import { VirtualBudgetItem, type VirtualItemsMap } from "./VirtualBudgetItem"
 
-export function BudgetsCard() {
-	authClient.useSession()
-	const queryClient = useQueryClient()
-	const prefsQuery = useQuery({
+function BudgetsContent({
+	onDelete,
+	onEdit,
+	showActions,
+}: {
+	onDelete: (id: string) => void
+	onEdit: (id: string) => void
+	showActions: boolean
+}) {
+	const monthlyQuery = useSuspenseQuery({
+		queryKey: MONTHLY_ENTRIES_KEY,
+		queryFn: () => getMonthlyEntries(),
+	})
+
+	const budgetsQuery = useSuspenseQuery({
+		queryKey: ["budgets"],
+		queryFn: () => getBudgets(),
+	})
+
+	const exchangeRatesQuery = useSuspenseQuery({
+		queryKey: EXCHANGE_RATES_KEY,
+		queryFn: () => getExchangeRatesForBudgets(),
+	})
+
+	const prefsQuery = useSuspenseQuery({
 		queryKey: ["userPreferences"],
 		queryFn: () => getUserPreferences(),
 		staleTime: 5 * 60 * 1000,
 	})
 
-	const budgetsQuery = useQuery<BudgetWithProgress[]>({
-		queryKey: MONTHLY_BUDGETS_KEY,
-		queryFn: () => getMonthlyBudgets(),
-	})
+	const budgetsWithProgress = React.useMemo<BudgetWithProgress[]>(() => {
+		const budgets = budgetsQuery.data ?? []
+		if (budgets.length === 0) return []
 
-	const monthlyQuery = useQuery({
-		queryKey: MONTHLY_ENTRIES_KEY,
-		queryFn: () => getMonthlyEntries(),
-	})
-
-	const createMut = useMutation({
-		mutationFn: (input: CreateBudgetInput) => createBudget({ data: input }),
-		onSuccess: () =>
-			queryClient.invalidateQueries({ queryKey: MONTHLY_BUDGETS_KEY }),
-	})
-	const updateMut = useMutation({
-		mutationFn: (vars: { id: string } & Partial<CreateBudgetInput>) =>
-			updateBudget({ data: vars }),
-		onSuccess: () =>
-			queryClient.invalidateQueries({ queryKey: MONTHLY_BUDGETS_KEY }),
-	})
-	const deleteMut = useMutation({
-		mutationFn: (id: string) => deleteBudget({ data: { id } }),
-		onSuccess: () =>
-			queryClient.invalidateQueries({ queryKey: MONTHLY_BUDGETS_KEY }),
-	})
-
-	const [createOpen, setCreateOpen] = React.useState(false)
-	const [editOpen, setEditOpen] = React.useState<null | string>(null)
-	const [deleteId, setDeleteId] = React.useState<null | string>(null)
-	const [isEditMode, setIsEditMode] = React.useState(false)
-
-	const defaultCurrency: Currency =
-		(prefsQuery.data?.displayCurrency as Currency) ?? "USD"
-
-	const createInitial: FormState = {
-		amount: "",
-		currency: defaultCurrency,
-		categories: [],
-	}
-
-	const editingBudget =
-		budgetsQuery.data?.find((budget) => budget.id === editOpen) || null
-	const editInitial: FormState = editingBudget
-		? {
-				amount: editingBudget.amount,
-				currency: editingBudget.currency,
-				categories: editingBudget.categories,
-			}
-		: createInitial
-
-	const { disabledForCreate, disabledForEdit } = React.useMemo(() => {
-		const used = new Set<Category>()
-		for (const budget of budgetsQuery.data ?? [])
-			budget.categories.forEach((category) => {
-				used.add(category)
-			})
-		const all = Array.from(used)
-		if (!editingBudget) return { disabledForCreate: all, disabledForEdit: all }
-		const keep = new Set(editingBudget.categories)
-		return {
-			disabledForCreate: all,
-			disabledForEdit: all.filter((category) => !keep.has(category)),
-		}
-	}, [budgetsQuery.data, editingBudget])
-
-	const virtualItems: VirtualItemsMap = React.useMemo(() => {
-		const entries = monthlyQuery.data?.entries ?? []
-		const displayCurrency: Currency =
-			monthlyQuery.data?.displayCurrency ??
-			prefsQuery.data?.displayCurrency ??
+		const expenseEntries = (monthlyQuery.data.entries ?? []).filter(
+			(entry) => entry.entryType === "Expense",
+		)
+		const displayCurrency =
+			monthlyQuery.data.displayCurrency ??
+			prefsQuery.data.displayCurrency ??
 			"USD"
 
-		// month progress
+		return calculateBudgetsWithProgressFromMonthlyEntries(
+			budgets,
+			expenseEntries,
+			displayCurrency,
+			exchangeRatesQuery.data.rates,
+		)
+	}, [
+		budgetsQuery.data,
+		monthlyQuery.data,
+		exchangeRatesQuery.data,
+		prefsQuery.data,
+	])
+
+	const virtualItems: VirtualItemsMap = React.useMemo(() => {
+		const entries = monthlyQuery.data.entries ?? []
+		const displayCurrency: Currency =
+			monthlyQuery.data.displayCurrency ??
+			prefsQuery.data.displayCurrency ??
+			"USD"
+
 		const { percent, day, days } = getMonthProgress(DateTime.local())
 		const monthProgress = {
 			label: "Month progress",
@@ -134,11 +121,10 @@ export function BudgetsCard() {
 			rightLabel: `${day}/${days} days`,
 		}
 
-		// free budget
 		const incomeSum = entries
 			.filter((entry) => entry.entryType === "Income")
 			.reduce((sum, entry) => sum + (entry.amountIls ?? 0), 0)
-		const budgets = budgetsQuery.data ?? []
+		const budgets = budgetsWithProgress
 		const budgetedCats = new Set<Category>()
 		for (const budget of budgets)
 			for (const category of budget.categories) budgetedCats.add(category)
@@ -177,132 +163,302 @@ export function BudgetsCard() {
 			"virtual:month-progress": monthProgress,
 			"virtual:free-budget": freeBudget,
 		}
-	}, [monthlyQuery.data, budgetsQuery.data, prefsQuery.data])
+	}, [monthlyQuery.data, budgetsWithProgress, prefsQuery.data])
 
-	const realBudgets = budgetsQuery.data ?? []
+	const realBudgets = budgetsWithProgress
 
-	// month progress is provided by virtualBudgetsData
+	return (
+		<div>
+			{realBudgets.map((budget, index) => (
+				<div key={budget.id}>
+					{index > 0 && <Separator />}
+					<BudgetItem
+						budget={budget}
+						onDelete={onDelete}
+						onEdit={onEdit}
+						showActions={showActions}
+					/>
+				</div>
+			))}
+			{realBudgets.length > 0 && <Separator />}
+			<VirtualBudgetItem data={virtualItems["virtual:month-progress"]} />
+			{virtualItems["virtual:free-budget"] && (
+				<>
+					<Separator />
+					<VirtualBudgetItem data={virtualItems["virtual:free-budget"]} />
+				</>
+			)}
+		</div>
+	)
+}
+
+function BudgetsHeaderActions({
+	isEditMode,
+	setIsEditMode,
+	setCreateOpen,
+}: {
+	isEditMode: boolean
+	setIsEditMode: (mode: boolean) => void
+	setCreateOpen: (open: boolean) => void
+}) {
+	const budgetsQuery = useQuery({
+		queryKey: ["budgets"],
+		queryFn: () => getBudgets(),
+	})
+	const hasBudgets = (budgetsQuery.data?.length ?? 0) > 0
+
+	return (
+		<div className="flex items-center gap-2">
+			{hasBudgets && (
+				<Button
+					aria-label={isEditMode ? "Exit edit mode" : "Enter edit mode"}
+					onClick={() => setIsEditMode(!isEditMode)}
+					size="icon"
+					variant={isEditMode ? "default" : "secondary"}
+				>
+					<EditIcon />
+				</Button>
+			)}
+			<Button
+				aria-label="New Budget"
+				onClick={() => setCreateOpen(true)}
+				size="icon"
+				variant="default"
+			>
+				<PlusIcon />
+			</Button>
+		</div>
+	)
+}
+
+function BudgetsCardDialogs({
+	createOpen,
+	setCreateOpen,
+	editOpen,
+	setEditOpen,
+	deleteId,
+	setDeleteId,
+	createMut,
+	updateMut,
+	deleteMut,
+}: {
+	createOpen: boolean
+	setCreateOpen: (open: boolean) => void
+	editOpen: string | null
+	setEditOpen: (id: string | null) => void
+	deleteId: string | null
+	setDeleteId: (id: string | null) => void
+	createMut: {
+		mutate: (vars: CreateBudgetInput) => void
+		isPending: boolean
+	}
+	updateMut: {
+		mutate: (vars: { id: string } & Partial<CreateBudgetInput>) => void
+		isPending: boolean
+	}
+	deleteMut: {
+		mutate: (id: string) => void
+		isPending: boolean
+	}
+}) {
+	const prefsQuery = useSuspenseQuery({
+		queryKey: ["userPreferences"],
+		queryFn: () => getUserPreferences(),
+		staleTime: 5 * 60 * 1000,
+	})
+
+	const budgetsQuery = useSuspenseQuery({
+		queryKey: ["budgets"],
+		queryFn: () => getBudgets(),
+	})
+
+	const defaultCurrency: Currency =
+		(prefsQuery.data.displayCurrency as Currency) ?? "USD"
+
+	const createInitial: FormState = {
+		amount: "",
+		currency: defaultCurrency,
+		categories: [],
+	}
+
+	const editingBudget =
+		budgetsQuery.data.find((budget) => budget.id === editOpen) || null
+	const editInitial: FormState = editingBudget
+		? {
+				amount: editingBudget.amount,
+				currency: editingBudget.currency,
+				categories: editingBudget.categories,
+			}
+		: createInitial
+
+	const { disabledForCreate, disabledForEdit } = React.useMemo(() => {
+		const used = new Set<Category>()
+		for (const budget of budgetsQuery.data)
+			budget.categories.forEach((category) => {
+				used.add(category)
+			})
+		const all = Array.from(used)
+		if (!editingBudget) return { disabledForCreate: all, disabledForEdit: all }
+		const keep = new Set(editingBudget.categories)
+		return {
+			disabledForCreate: all,
+			disabledForEdit: all.filter((category) => !keep.has(category)),
+		}
+	}, [budgetsQuery.data, editingBudget])
+
+	return (
+		<>
+			<BudgetDialog
+				disabledValues={disabledForCreate}
+				initial={createInitial}
+				onOpenChange={setCreateOpen}
+				onSubmit={(state) => {
+					const amount = typeof state.amount === "number" ? state.amount : 0
+					createMut.mutate({
+						amount,
+						currency: state.currency,
+						categories: state.categories,
+					})
+					setCreateOpen(false)
+				}}
+				open={createOpen}
+				submitLabel={createMut.isPending ? "Creating..." : "Create"}
+				title="New Budget"
+			/>
+
+			<BudgetDialog
+				disabledValues={disabledForEdit}
+				initial={editInitial}
+				onOpenChange={(isOpen) => setEditOpen(isOpen ? editOpen : null)}
+				onSubmit={(state) => {
+					if (!editOpen) return
+					const amount = typeof state.amount === "number" ? state.amount : 0
+					updateMut.mutate({
+						id: editOpen,
+						amount,
+						currency: state.currency,
+						categories: state.categories,
+					})
+					setEditOpen(null)
+				}}
+				open={!!editOpen}
+				submitLabel={updateMut.isPending ? "Saving..." : "Save"}
+				title="Edit Budget"
+			/>
+
+			<AlertDialog
+				onOpenChange={(isOpen) => setDeleteId(isOpen ? deleteId : null)}
+				open={!!deleteId}
+			>
+				<AlertDialogContent>
+					<AlertDialogHeader>
+						<AlertDialogTitle>Delete this budget?</AlertDialogTitle>
+						<AlertDialogDescription>
+							This action cannot be undone.
+						</AlertDialogDescription>
+					</AlertDialogHeader>
+					<AlertDialogFooter>
+						<AlertDialogCancel onClick={() => setDeleteId(null)}>
+							Cancel
+						</AlertDialogCancel>
+						<AlertDialogAction
+							onClick={() => {
+								if (deleteId) {
+									deleteMut.mutate(deleteId)
+								}
+								setDeleteId(null)
+							}}
+						>
+							Delete
+						</AlertDialogAction>
+					</AlertDialogFooter>
+				</AlertDialogContent>
+			</AlertDialog>
+		</>
+	)
+}
+
+export function BudgetsCard() {
+	authClient.useSession()
+	const queryClient = useQueryClient()
+
+	const createMut = useMutation({
+		mutationFn: (input: CreateBudgetInput) => createBudget({ data: input }),
+		onSuccess: () => queryClient.invalidateQueries({ queryKey: ["budgets"] }),
+	})
+	const updateMut = useMutation({
+		mutationFn: (vars: { id: string } & Partial<CreateBudgetInput>) =>
+			updateBudget({ data: vars }),
+		onSuccess: () => queryClient.invalidateQueries({ queryKey: ["budgets"] }),
+	})
+	const deleteMut = useMutation({
+		mutationFn: (id: string) => deleteBudget({ data: { id } }),
+		onSuccess: () => queryClient.invalidateQueries({ queryKey: ["budgets"] }),
+	})
+
+	const [createOpen, setCreateOpen] = React.useState(false)
+	const [editOpen, setEditOpen] = React.useState<null | string>(null)
+	const [deleteId, setDeleteId] = React.useState<null | string>(null)
+	const [isEditMode, setIsEditMode] = React.useState(false)
 
 	return (
 		<Card>
 			<CardHeader>
 				<CardTitle>Budgets</CardTitle>
 				<CardAction>
-					<div className="flex items-center gap-2">
-						{realBudgets.length > 0 && (
-							<Button
-								aria-label={isEditMode ? "Exit edit mode" : "Enter edit mode"}
-								onClick={() => setIsEditMode(!isEditMode)}
-								size="icon"
-								variant={isEditMode ? "default" : "secondary"}
-							>
-								<EditIcon />
-							</Button>
-						)}
-						<Button
-							aria-label="New Budget"
-							onClick={() => setCreateOpen(true)}
-							size="icon"
-							variant="default"
-						>
-							<PlusIcon />
-						</Button>
-					</div>
+					<BudgetsHeaderActions
+						isEditMode={isEditMode}
+						setCreateOpen={setCreateOpen}
+						setIsEditMode={setIsEditMode}
+					/>
 				</CardAction>
 			</CardHeader>
 			<CardContent>
-				{budgetsQuery.isLoading || monthlyQuery.isLoading ? (
-					<div className="text-muted-foreground text-sm">Loading...</div>
-				) : (
-					<div>
-						{realBudgets.map((budget, index) => (
-							<div key={budget.id}>
-								{index > 0 && <Separator />}
-								<BudgetItem
-									budget={budget}
-									onDelete={(id) => setDeleteId(id)}
-									onEdit={(id) => setEditOpen(id)}
-									showActions={isEditMode}
-								/>
+				<React.Suspense
+					fallback={
+						<div className="space-y-0">
+							<div>
+								<div className="space-y-2 py-3">
+									<div className="flex items-center justify-between gap-2">
+										<Skeleton className="h-6 w-20 rounded-full" />
+										<Skeleton className="h-4 w-24" />
+									</div>
+									<Skeleton className="h-2 w-full rounded-full" />
+								</div>
 							</div>
-						))}
-						{realBudgets.length > 0 && <Separator />}
-						<VirtualBudgetItem data={virtualItems["virtual:month-progress"]} />
-						{virtualItems["virtual:free-budget"] && (
-							<>
-								<Separator />
-								<VirtualBudgetItem data={virtualItems["virtual:free-budget"]} />
-							</>
-						)}
-					</div>
-				)}
-
-				<BudgetDialog
-					disabledValues={disabledForCreate}
-					initial={createInitial}
-					onOpenChange={setCreateOpen}
-					onSubmit={(state) => {
-						const amount = typeof state.amount === "number" ? state.amount : 0
-						createMut.mutate({
-							amount,
-							currency: state.currency,
-							categories: state.categories,
-						})
-						setCreateOpen(false)
-					}}
-					open={createOpen}
-					submitLabel={createMut.isPending ? "Creating..." : "Create"}
-					title="New Budget"
-				/>
-
-				<BudgetDialog
-					disabledValues={disabledForEdit}
-					initial={editInitial}
-					onOpenChange={(isOpen) => setEditOpen(isOpen ? editOpen : null)}
-					onSubmit={(state) => {
-						if (!editOpen) return
-						const amount = typeof state.amount === "number" ? state.amount : 0
-						updateMut.mutate({
-							id: editOpen,
-							amount,
-							currency: state.currency,
-							categories: state.categories,
-						})
-						setEditOpen(null)
-					}}
-					open={!!editOpen}
-					submitLabel={updateMut.isPending ? "Saving..." : "Save"}
-					title="Edit Budget"
-				/>
-
-				<AlertDialog
-					onOpenChange={(isOpen) => setDeleteId(isOpen ? deleteId : null)}
-					open={!!deleteId}
+							<Separator className="my-2" />
+							<div>
+								<div className="space-y-2 py-3">
+									<div className="flex items-center justify-between gap-2">
+										<Skeleton className="h-6 w-20 rounded-full" />
+										<Skeleton className="h-4 w-24" />
+									</div>
+									<Skeleton className="h-2 w-full rounded-full" />
+								</div>
+							</div>
+						</div>
+					}
 				>
-					<AlertDialogContent>
-						<AlertDialogHeader>
-							<AlertDialogTitle>Delete this budget?</AlertDialogTitle>
-							<AlertDialogDescription>
-								This action cannot be undone.
-							</AlertDialogDescription>
-						</AlertDialogHeader>
-						<AlertDialogFooter>
-							<AlertDialogCancel onClick={() => setDeleteId(null)}>
-								Cancel
-							</AlertDialogCancel>
-							<AlertDialogAction
-								onClick={() => {
-									if (deleteId) {
-										deleteMut.mutate(deleteId)
-									}
-									setDeleteId(null)
-								}}
-							>
-								Delete
-							</AlertDialogAction>
-						</AlertDialogFooter>
-					</AlertDialogContent>
-				</AlertDialog>
+					<BudgetsContent
+						onDelete={(id) => setDeleteId(id)}
+						onEdit={(id) => setEditOpen(id)}
+						showActions={isEditMode}
+					/>
+				</React.Suspense>
+
+				<React.Suspense fallback={null}>
+					<BudgetsCardDialogs
+						createMut={createMut}
+						createOpen={createOpen}
+						deleteId={deleteId}
+						deleteMut={deleteMut}
+						editOpen={editOpen}
+						setCreateOpen={setCreateOpen}
+						setDeleteId={setDeleteId}
+						setEditOpen={setEditOpen}
+						updateMut={updateMut}
+					/>
+				</React.Suspense>
 			</CardContent>
 		</Card>
 	)

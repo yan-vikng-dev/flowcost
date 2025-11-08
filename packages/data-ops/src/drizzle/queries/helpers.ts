@@ -9,12 +9,16 @@ export async function getAllowedUserIds(
 	db: DrizzleDb,
 	userId: string,
 	includePartner = true,
+	partnerId?: string | null,
 ): Promise<string[]> {
 	if (!includePartner) {
 		return [userId]
 	}
-	const partnerId = await getPartnerUserId(db, userId)
-	return partnerId ? [userId, partnerId] : [userId]
+	if (partnerId !== undefined) {
+		return partnerId ? [userId, partnerId] : [userId]
+	}
+	const resolvedPartnerId = await getPartnerUserId(db, userId)
+	return resolvedPartnerId ? [userId, resolvedPartnerId] : [userId]
 }
 
 export async function getUserTimezoneAndCurrency(
@@ -26,7 +30,7 @@ export async function getUserTimezoneAndCurrency(
 	})
 	return {
 		timezone: prefs?.timezone || "UTC",
-		displayCurrency: (prefs?.displayCurrency ?? "USD") as Currency,
+		displayCurrency: prefs?.displayCurrency ?? "USD",
 	}
 }
 

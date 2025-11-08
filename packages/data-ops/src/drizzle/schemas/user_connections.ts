@@ -17,16 +17,14 @@ export const user_connections = sqliteTable(
 			.references(() => auth_users.id, { onDelete: "cascade" }),
 		...timestamps,
 	},
-	(table) => {
-		return {
-			pairUnique: uniqueIndex("user_connections_pair_unique").on(
-				table.userIdLow,
-				table.userIdHigh,
-			),
-			byUserLow: index("user_connections_user_low_idx").on(table.userIdLow),
-			byUserHigh: index("user_connections_user_high_idx").on(table.userIdHigh),
-		}
-	},
+	(table) => [
+		uniqueIndex("user_connections_pair_unique").on(
+			table.userIdLow,
+			table.userIdHigh,
+		),
+		index("user_connections_user_low_idx").on(table.userIdLow),
+		index("user_connections_user_high_idx").on(table.userIdHigh),
+	],
 )
 
 export const userConnectionsRelations = relations(

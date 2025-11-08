@@ -1,7 +1,7 @@
 import {
 	fetchBudgetsForUser,
 	fetchConvertedEntriesForRange,
-	fetchExchangeRatesForDates,
+	getLatestExchangeRates,
 } from "@repo/data-ops/drizzle/queries"
 import { formatCurrency, getCurrentMonthRange } from "@repo/shared-lib"
 import {
@@ -26,13 +26,14 @@ export async function generateWeeklyReport(
 		timezone: timeZone,
 		displayCurrency,
 		entryType: "Expense",
+		caller: "generateWeeklyReport",
 	})
 
 	if (entriesResult.entries.length === 0) {
 		return `${title}\n\nNo expenses recorded for this period.`
 	}
 
-	const { latest } = await fetchExchangeRatesForDates(db, [])
+	const latest = await getLatestExchangeRates(db, "generateWeeklyReport")
 	const budgetsList = await fetchBudgetsForUser(db, userId)
 	const categoryTotals = aggregateCategoryTotals(entriesResult.entries)
 
@@ -43,6 +44,7 @@ export async function generateWeeklyReport(
 		timezone: timeZone,
 		displayCurrency,
 		entryType: "Expense",
+		caller: "generateWeeklyReport",
 	})
 
 	const budgetProgressList = calculateBudgetProgressForBudgets(
@@ -94,6 +96,7 @@ export async function generateWeeklyReport(
 		timezone: timeZone,
 		displayCurrency,
 		entryType: "Expense",
+		caller: "generateWeeklyReport",
 	})
 
 	const previousWeekTotal = previousWeekResult.entries.reduce(

@@ -33,6 +33,7 @@ export const makeGetEntriesTool = (context: MessageContext, db: DrizzleDb) =>
 				displayCurrency: context.displayCurrency,
 				sortBy: "executedAt",
 				sortDir: "desc",
+				caller: "getEntriesTool",
 			})
 
 			const safeEntries = result.entries.map((e) => ({

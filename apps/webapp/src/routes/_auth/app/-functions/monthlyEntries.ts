@@ -32,8 +32,9 @@ export const getMonthlyEntries = createServerFn()
 			end,
 			timezone,
 			displayCurrency,
-			sortBy: "executedAt",
-			sortDir: "desc",
+			allowedUserIds: ctx.context.allowedUserIds,
+			partnerId: ctx.context.partnerUserId,
+			caller: "getMonthlyEntries",
 		})
 
 		const monthLabel = DateTime.fromJSDate(start, { zone: timezone }).toFormat(

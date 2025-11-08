@@ -1,12 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router"
 import { getUserPreferences } from "@/core/functions/preferences"
+import { listRecurringTemplates } from "@/core/functions/recurring-templates"
 import { BudgetsCard } from "./-components/BudgetsCard"
 import { ExpensesByCategoryBar } from "./-components/ExpensesByCategoryBar"
 import { MonthlyStandardSummary } from "./-components/MonthlyStandardSummary"
 import { RecurringCard } from "./-components/RecurringCard"
 import {
-	getMonthlyBudgets,
-	MONTHLY_BUDGETS_KEY,
+	EXCHANGE_RATES_KEY,
+	getBudgets,
+	getExchangeRatesForBudgets,
 } from "./-functions/monthlyBudgets"
 import {
 	getMonthlyEntries,
@@ -16,27 +18,39 @@ import {
 export const Route = createFileRoute("/_auth/app/")({
 	ssr: "data-only",
 	loader: async ({ context }) => {
-		await Promise.all([
-			context.queryClient.ensureQueryData({
-				queryKey: ["userPreferences"],
-				queryFn: () => getUserPreferences(),
-			}),
-			context.queryClient.ensureQueryData({
-				queryKey: MONTHLY_ENTRIES_KEY,
-				queryFn: () => getMonthlyEntries(),
-			}),
-			context.queryClient.ensureQueryData({
-				queryKey: MONTHLY_BUDGETS_KEY,
-				queryFn: () => getMonthlyBudgets(),
-			}),
-			context.queryClient.ensureQueryData({
-				queryKey: ["connectionState"],
-				queryFn: async () => {
-					const mod = await import("./settings/-functions/connections")
-					return mod.getConnectionState()
-				},
-			}),
-		])
+		context.queryClient.prefetchQuery({
+			queryKey: MONTHLY_ENTRIES_KEY,
+			queryFn: () => getMonthlyEntries(),
+		})
+
+		context.queryClient.prefetchQuery({
+			queryKey: ["budgets"],
+			queryFn: () => getBudgets(),
+		})
+
+		context.queryClient.prefetchQuery({
+			queryKey: EXCHANGE_RATES_KEY,
+			queryFn: () => getExchangeRatesForBudgets(),
+		})
+
+		context.queryClient.prefetchQuery({
+			queryKey: ["userPreferences"],
+			queryFn: () => getUserPreferences(),
+		})
+
+		context.queryClient.prefetchQuery({
+			queryKey: ["recurringTemplates"],
+			queryFn: () =>
+				listRecurringTemplates({ data: { includeInactive: false } }),
+		})
+
+		context.queryClient.prefetchQuery({
+			queryKey: ["connectionState"],
+			queryFn: async () => {
+				const mod = await import("./settings/-functions/connections")
+				return mod.getConnectionState()
+			},
+		})
 	},
 	component: RouteComponent,
 })
