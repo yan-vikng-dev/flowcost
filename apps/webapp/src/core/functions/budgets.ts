@@ -158,9 +158,8 @@ export const listBudgetsWithProgress = createServerFn()
 				entryType: "Expense",
 				allowedUserIds: ctx.context.allowedUserIds,
 				partnerId: ctx.context.partnerUserId,
-				caller: "listBudgetsWithProgress",
 			}),
-			getLatestExchangeRates(db, "listBudgetsWithProgress"),
+			getLatestExchangeRates(db),
 		])
 
 		return calculateBudgetsWithProgress(
@@ -182,5 +181,5 @@ export const getExchangeRates = createServerFn()
 	.middleware([protectedFunctionMiddleware])
 	.handler(async () => {
 		const db = getDb()
-		return await getLatestExchangeRates(db, "getExchangeRates")
+		return await getLatestExchangeRates(db)
 	})

@@ -43,10 +43,9 @@ export const getMonthlyDashboardData = createServerFn()
 				displayCurrency,
 				allowedUserIds: ctx.context.allowedUserIds,
 				partnerId: ctx.context.partnerUserId,
-				caller: "getMonthlyDashboardData",
 			}),
 			fetchBudgetsForUser(db, ctx.context.userId),
-			getLatestExchangeRates(db, "getMonthlyDashboardData"),
+			getLatestExchangeRates(db),
 		])
 
 		const entries: MonthlyEntriesResult = {

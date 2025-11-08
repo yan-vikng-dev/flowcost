@@ -6,7 +6,6 @@ import { exchange_rates, type SelectExchangeRate } from "../schemas/index"
 export async function fetchExchangeRatesForDates(
 	db: DrizzleDb,
 	dates: string[],
-	_caller: string,
 ): Promise<{
 	ratesByDate: Map<string, Record<Currency, number>>
 	latest: SelectExchangeRate
@@ -40,13 +39,7 @@ export async function fetchExchangeRatesForDates(
 
 export async function getLatestExchangeRates(
 	db: DrizzleDb,
-	caller: string,
 ): Promise<SelectExchangeRate> {
-	const startTime =
-		typeof performance !== "undefined" && typeof performance.now === "function"
-			? performance.now()
-			: Date.now()
-
 	const latest = await db.query.exchange_rates.findFirst({
 		orderBy: desc(exchange_rates.date),
 	})
@@ -54,17 +47,6 @@ export async function getLatestExchangeRates(
 	if (!latest) {
 		throw new Error("No exchange rates available")
 	}
-
-	const endTime =
-		typeof performance !== "undefined" && typeof performance.now === "function"
-			? performance.now()
-			: Date.now()
-	const durationMs = Number((endTime - startTime).toFixed(2))
-
-	console.info("[perf] getLatestExchangeRates", {
-		caller,
-		durationMs,
-	})
 
 	return latest
 }

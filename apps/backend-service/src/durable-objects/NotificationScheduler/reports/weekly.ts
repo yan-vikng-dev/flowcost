@@ -26,14 +26,13 @@ export async function generateWeeklyReport(
 		timezone: timeZone,
 		displayCurrency,
 		entryType: "Expense",
-		caller: "generateWeeklyReport",
 	})
 
 	if (entriesResult.entries.length === 0) {
 		return `${title}\n\nNo expenses recorded for this period.`
 	}
 
-	const latest = await getLatestExchangeRates(db, "generateWeeklyReport")
+	const latest = await getLatestExchangeRates(db)
 	const budgetsList = await fetchBudgetsForUser(db, userId)
 	const categoryTotals = aggregateCategoryTotals(entriesResult.entries)
 
@@ -44,7 +43,6 @@ export async function generateWeeklyReport(
 		timezone: timeZone,
 		displayCurrency,
 		entryType: "Expense",
-		caller: "generateWeeklyReport",
 	})
 
 	const budgetProgressList = calculateBudgetProgressForBudgets(
@@ -96,7 +94,6 @@ export async function generateWeeklyReport(
 		timezone: timeZone,
 		displayCurrency,
 		entryType: "Expense",
-		caller: "generateWeeklyReport",
 	})
 
 	const previousWeekTotal = previousWeekResult.entries.reduce(

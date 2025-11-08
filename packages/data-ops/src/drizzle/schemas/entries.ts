@@ -43,7 +43,10 @@ export const entries = sqliteTable(
 	(table) => [
 		index("entries_by_user_id_idx").on(table.userId),
 		index("entries_by_recurring_template_idx").on(table.recurringTemplateId),
-		index("entries_by_executed_date_idx").on(table.executedDate),
+		index("entries_by_user_id_executed_date_idx").on(
+			table.userId,
+			table.executedDate,
+		),
 		uniqueIndex("entries_recurring_unique_by_executed_date_idx").on(
 			table.recurringTemplateId,
 			table.executedDate,

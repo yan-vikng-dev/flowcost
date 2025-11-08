@@ -28,14 +28,13 @@ export async function generateMonthlyReport(
 		timezone: timeZone,
 		displayCurrency,
 		entryType: "Expense",
-		caller: "generateMonthlyReport",
 	})
 
 	if (entriesResult.entries.length === 0) {
 		return `${title}\n\nNo expenses recorded for this period.`
 	}
 
-	const latest = await getLatestExchangeRates(db, "generateMonthlyReport")
+	const latest = await getLatestExchangeRates(db)
 	const budgetsList = await fetchBudgetsForUser(db, userId)
 	const categoryTotals = aggregateCategoryTotals(entriesResult.entries)
 
@@ -46,7 +45,6 @@ export async function generateMonthlyReport(
 		timezone: timeZone,
 		displayCurrency,
 		entryType: "Expense",
-		caller: "generateMonthlyReport",
 	})
 
 	const budgetProgressList = calculateBudgetProgressForBudgets(

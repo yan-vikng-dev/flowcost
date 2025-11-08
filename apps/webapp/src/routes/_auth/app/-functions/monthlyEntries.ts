@@ -34,7 +34,6 @@ export const getMonthlyEntries = createServerFn()
 			displayCurrency,
 			allowedUserIds: ctx.context.allowedUserIds,
 			partnerId: ctx.context.partnerUserId,
-			caller: "getMonthlyEntries",
 		})
 
 		const monthLabel = DateTime.fromJSDate(start, { zone: timezone }).toFormat(
