@@ -37,7 +37,7 @@ function RouteComponent() {
 				waveSpeedY={0.003}
 			/>
 			<AppHeader />
-			<main className="relative z-10 p-4 pt-16 sm:p-6 lg:p-8">
+			<main className="relative z-10 p-4 sm:p-6 lg:p-8">
 				<Outlet />
 			</main>
 		</div>
