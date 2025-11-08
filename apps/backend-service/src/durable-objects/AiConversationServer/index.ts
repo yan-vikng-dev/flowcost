@@ -95,16 +95,15 @@ export class AiConversationServer extends DurableObject {
 			"seenMessageIds",
 			Array.from(this.seenMessageIds),
 		)
-		const finalMessage =
-			result.text || "Something went wrong. Please try again."
 		console.debug({
 			message: "generated text",
 			text: result.text,
-			finalMessage,
 			finishReason: result.finishReason,
 			stepCount: result.steps.length,
 		})
-		return finalMessage
+		if (!result.text || result.finishReason === "error")
+			throw new Error("Failed to generate text")
+		return result.text
 	}
 
 	async alarm() {

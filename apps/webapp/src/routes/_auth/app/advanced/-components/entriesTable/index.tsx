@@ -273,7 +273,7 @@ export function MonthlyEntriesTable({
 	return (
 		<Card>
 			<CardHeader>
-				<CardTitle>This Month&apos;s Entries</CardTitle>
+				<CardTitle>All monthly entries</CardTitle>
 				{headerAction ? <CardAction>{headerAction}</CardAction> : null}
 			</CardHeader>
 			<CardContent>

@@ -65,18 +65,14 @@ export function EntryDialog({
 	initial,
 	onSubmit,
 	onSubmitRecurring,
-	title,
-	submitLabel,
-	editing = false,
+	isPending = false,
 }: {
 	open: boolean
 	onOpenChange: (isOpen: boolean) => void
 	initial: EntryFormState
 	onSubmit: (state: EntryFormState) => void
 	onSubmitRecurring?: (state: EntryFormState) => void
-	title: string
-	submitLabel: string
-	editing?: boolean
+	isPending?: boolean
 }) {
 	const [state, setState] = React.useState<EntryFormState>(initial)
 	const executedAtId = React.useId()
@@ -146,9 +142,9 @@ export function EntryDialog({
 
 	return (
 		<Dialog onOpenChange={onOpenChange} open={open}>
-			<DialogContent className="max-w-2xl">
+			<DialogContent>
 				<DialogHeader>
-					<DialogTitle>{title}</DialogTitle>
+					<DialogTitle>New Entry</DialogTitle>
 				</DialogHeader>
 				<div className="space-y-6">
 					<FieldGroup>
@@ -271,30 +267,28 @@ export function EntryDialog({
 									</Popover>
 								</Field>
 
-								{!editing && (
-									<Field className="min-w-0" orientation="horizontal">
-										<Switch
-											checked={isRecurring}
-											id={recurringId}
-											onCheckedChange={(checked) => {
-												setState((prev) => ({
-													...prev,
-													isRecurring: checked,
-													recurrence: checked
-														? prev.recurrence?.unit && prev.recurrence?.every
-															? prev.recurrence
-															: getDefaultRecurrence()
-														: undefined,
-												}))
-											}}
-										/>
-										<FieldLabel htmlFor={recurringId}>Recurring</FieldLabel>
-									</Field>
-								)}
+								<Field className="min-w-0" orientation="horizontal">
+									<Switch
+										checked={isRecurring}
+										id={recurringId}
+										onCheckedChange={(checked) => {
+											setState((prev) => ({
+												...prev,
+												isRecurring: checked,
+												recurrence: checked
+													? prev.recurrence?.unit && prev.recurrence?.every
+														? prev.recurrence
+														: getDefaultRecurrence()
+													: undefined,
+											}))
+										}}
+									/>
+									<FieldLabel htmlFor={recurringId}>Recurring</FieldLabel>
+								</Field>
 							</div>
 						</FieldSet>
 
-						{!editing && isRecurring && (
+						{isRecurring && (
 							<>
 								<FieldSeparator />
 								<FieldSet>
@@ -477,7 +471,7 @@ export function EntryDialog({
 						Cancel
 					</Button>
 					<Button
-						disabled={!valid}
+						disabled={!valid || isPending}
 						onClick={() => {
 							if (!valid) return
 							const amount = state.amount === "" ? 0 : state.amount
@@ -494,7 +488,7 @@ export function EntryDialog({
 							}
 						}}
 					>
-						{submitLabel}
+						{isPending ? "Creating..." : "Create"}
 					</Button>
 				</DialogFooter>
 			</DialogContent>

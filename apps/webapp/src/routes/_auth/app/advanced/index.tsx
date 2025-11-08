@@ -8,6 +8,7 @@ import {
 	type CreateRecurringTemplateInput,
 	createRecurringTemplate,
 } from "@/core/functions/recurring-templates"
+import { useIsDesktop } from "@/hooks/use-is-desktop"
 import { EntryDialog, getDefaultEntryInitial } from "../-components/EntryDialog"
 import { buildRRuleFromUi } from "../-components/RecurringCard/utils"
 import {
@@ -56,6 +57,7 @@ function RouteComponent() {
 	})
 
 	const [open, setOpen] = React.useState(false)
+	const isDesktop = useIsDesktop()
 
 	const timezone = prefsQuery.data?.timezone || "UTC"
 
@@ -63,15 +65,18 @@ function RouteComponent() {
 		<div className="space-y-4">
 			<MonthlyEntriesTable
 				headerAction={
-					<Button onClick={() => setOpen(true)} size="sm" variant="default">
-						New Entry
-					</Button>
+					isDesktop ? (
+						<Button onClick={() => setOpen(true)} size="sm" variant="default">
+							New Entry
+						</Button>
+					) : undefined
 				}
 			/>
 			<EntryDialog
 				initial={getDefaultEntryInitial({
 					defaultCurrency: prefsQuery.data?.defaultEntryCurrency ?? "USD",
 				})}
+				isPending={createMut.isPending || createRecurringMut.isPending}
 				onOpenChange={setOpen}
 				onSubmit={(state) => {
 					const amount = typeof state.amount === "number" ? state.amount : 0
@@ -112,12 +117,6 @@ function RouteComponent() {
 					setOpen(false)
 				}}
 				open={open}
-				submitLabel={
-					createMut.isPending || createRecurringMut.isPending
-						? "Creating..."
-						: "Create"
-				}
-				title="New Entry"
 			/>
 		</div>
 	)

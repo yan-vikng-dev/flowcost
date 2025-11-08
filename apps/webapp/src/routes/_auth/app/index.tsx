@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router"
 import { getUserPreferences } from "@/core/functions/preferences"
 import { listRecurringTemplates } from "@/core/functions/recurring-templates"
 import { BudgetsCard } from "./-components/BudgetsCard"
-import { ExpensesByCategoryBar } from "./-components/ExpensesByCategoryBar"
+import { ExpensesByCategoryBar } from "./-components/expensesByCategoryBar"
 import { MonthlyStandardSummary } from "./-components/MonthlyStandardSummary"
 import { RecurringCard } from "./-components/RecurringCard"
 import {

@@ -34,6 +34,7 @@ import {
 	listRecurringTemplates,
 	stopRecurringTemplate,
 } from "@/core/functions/recurring-templates"
+import { useIsDesktop } from "@/hooks/use-is-desktop"
 import {
 	EntryDialog,
 	type EntryFormState,
@@ -55,6 +56,7 @@ function RecurringHeaderActions({
 		queryKey: ["recurringTemplates"],
 		queryFn: () => listRecurringTemplates({ data: { includeInactive: false } }),
 	})
+	const isDesktop = useIsDesktop()
 
 	return (
 		<div className="flex items-center gap-2">
@@ -68,14 +70,16 @@ function RecurringHeaderActions({
 					<EditIcon />
 				</Button>
 			)}
-			<Button
-				aria-label="New Recurring Entry"
-				onClick={() => setCreateOpen(true)}
-				size="icon"
-				variant="default"
-			>
-				<PlusIcon />
-			</Button>
+			{isDesktop && (
+				<Button
+					aria-label="New Recurring Entry"
+					onClick={() => setCreateOpen(true)}
+					size="icon"
+					variant="default"
+				>
+					<PlusIcon />
+				</Button>
+			)}
 		</div>
 	)
 }
@@ -168,8 +172,8 @@ function RecurringDialogs({
 	return (
 		<>
 			<EntryDialog
-				editing={false}
 				initial={createInitial}
+				isPending={createMut.isPending}
 				onOpenChange={setCreateOpen}
 				onSubmit={() => {}}
 				onSubmitRecurring={(state) => {
@@ -199,8 +203,6 @@ function RecurringDialogs({
 					setCreateOpen(false)
 				}}
 				open={createOpen}
-				submitLabel={createMut.isPending ? "Creating..." : "Create"}
-				title="New Recurring Entry"
 			/>
 
 			<AlertDialog

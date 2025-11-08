@@ -1,7 +1,6 @@
 import { useEffect, useRef } from "react"
 
 export function FloatingWaves({
-	className = "",
 	waveSpeedX = 0.015,
 	waveSpeedY = 0.008,
 	waveAmpX = 50,
@@ -10,6 +9,7 @@ export function FloatingWaves({
 	lineColor = "rgba(255, 255, 255, 0.3)",
 	disableInteraction = false,
 	style = {},
+	className = "",
 }) {
 	const containerRef = useRef<HTMLDivElement | null>(null)
 	const canvasRef = useRef<HTMLCanvasElement | null>(null)
@@ -66,10 +66,10 @@ export function FloatingWaves({
 			linesRef.current = []
 			const oWidth = width + 200,
 				oHeight = height + 30
-			const totalLines = Math.ceil(oWidth / 10)
-			const totalPoints = Math.ceil(oHeight / 10)
-			const xStart = (width - 10 * totalLines) / 2
-			const yStart = (height - 10 * totalPoints) / 2
+			const totalLines = Math.ceil(oHeight / 10)
+			const totalPoints = Math.ceil(oWidth / 10)
+			const xStart = (width - 10 * totalPoints) / 2
+			const yStart = (height - 10 * totalLines) / 2
 			for (let i = 0; i <= totalLines; i++) {
 				const pts: Array<{
 					x: number
@@ -79,8 +79,8 @@ export function FloatingWaves({
 				}> = []
 				for (let j = 0; j <= totalPoints; j++) {
 					pts.push({
-						x: xStart + 10 * i,
-						y: yStart + 10 * j,
+						x: xStart + 10 * j,
+						y: yStart + 10 * i,
 						wave: { x: 0, y: 0 },
 						cursor: { x: 0, y: 0, vx: 0, vy: 0 },
 					})
@@ -260,7 +260,7 @@ export function FloatingWaves({
 
 	return (
 		<div
-			className={`fixed top-0 left-0 h-screen w-full overflow-hidden ${className}`}
+			className={`-z-10 fixed top-0 left-0 h-screen w-full overflow-hidden ${className}`}
 			ref={containerRef}
 			style={{
 				backgroundColor: backgroundColor,
