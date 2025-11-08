@@ -105,7 +105,7 @@ export function RecurringCard() {
 								aria-label={isEditMode ? "Exit edit mode" : "Enter edit mode"}
 								onClick={() => setIsEditMode(!isEditMode)}
 								size="icon"
-								variant={isEditMode ? "primary" : "secondary"}
+								variant={isEditMode ? "default" : "secondary"}
 							>
 								<EditIcon />
 							</Button>
@@ -114,7 +114,7 @@ export function RecurringCard() {
 							aria-label="New Recurring Entry"
 							onClick={() => setCreateOpen(true)}
 							size="icon"
-							variant="primary"
+							variant="default"
 						>
 							<PlusIcon />
 						</Button>

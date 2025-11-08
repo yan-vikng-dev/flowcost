@@ -228,7 +228,7 @@ export function EntryDialog({
 											<Button
 												className="w-full"
 												id={executedAtId}
-												variant="input"
+												variant="outline"
 											>
 												{state.executedAt.toLocaleDateString()}
 											</Button>
@@ -382,7 +382,7 @@ export function EntryDialog({
 												open={endDatePopoverOpen}
 											>
 												<PopoverTrigger asChild>
-													<Button className="w-full" variant="input">
+													<Button className="w-full" variant="outline">
 														{state.endAt
 															? state.endAt.toLocaleDateString()
 															: "Unlimited"}
@@ -449,7 +449,7 @@ export function EntryDialog({
 															}}
 															size="sm"
 															type="button"
-															variant={isSelected ? "primary" : "outline"}
+															variant={isSelected ? "default" : "outline"}
 														>
 															{day}
 														</Button>

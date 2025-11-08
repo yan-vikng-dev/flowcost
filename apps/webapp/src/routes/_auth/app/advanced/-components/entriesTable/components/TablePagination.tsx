@@ -102,7 +102,7 @@ export function TablePagination({ table }: TablePaginationProps) {
 							key={page}
 							onClick={() => table.setPageIndex(page - 1)}
 							size="sm"
-							variant={isActive ? "primary" : "outline"}
+							variant={isActive ? "default" : "outline"}
 						>
 							{page}
 						</Button>

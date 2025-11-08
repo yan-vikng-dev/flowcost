@@ -133,11 +133,7 @@ export function ExpensesByCategoryBar() {
 							}
 							cursor={false}
 						/>
-						<Bar
-							barSize={BAR_SIZE}
-							dataKey="amount"
-							radius={4}
-						>
+						<Bar barSize={BAR_SIZE} dataKey="amount" radius={4}>
 							{chartData.map((item) => (
 								<Cell fill={item.fill} key={`cell-${item.category}`} />
 							))}

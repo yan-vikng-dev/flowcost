@@ -1,29 +1,20 @@
 import { DurableObject } from "cloudflare:workers"
 import { getDb, initDatabase } from "@repo/data-ops/database/setup"
 import {
-	fetchBudgetsForUser,
-	fetchConvertedEntriesForRange,
-	fetchExchangeRatesForDates,
-} from "@repo/data-ops/drizzle/queries"
-import {
 	user_preferences,
 	whatsapp_links,
 } from "@repo/data-ops/drizzle/schemas/index"
 import type { Currency } from "@repo/shared-lib"
-import { formatCurrency, getCurrentMonthRange } from "@repo/shared-lib"
 import { eq } from "drizzle-orm"
 import { DateTime } from "luxon"
 import { sendWhatsAppText } from "@/handlers/whatsapp/helpers"
 import {
-	aggregateCategoryTotals,
-	calculateBudgetProgressForBudgets,
 	determineReportType,
-	findMostUsedCategory,
-	findTopSpendingDay,
-	formatProgressBar,
-	getReportDateRange,
+	generateDailyReport,
+	generateMonthlyReport,
+	generateWeeklyReport,
 	type ReportType,
-} from "./report-helpers"
+} from "./reports"
 
 export class NotificationScheduler extends DurableObject {
 	userId: string | null = null
@@ -157,137 +148,15 @@ export class NotificationScheduler extends DurableObject {
 			displayCurrency: Currency
 		},
 	): Promise<string | null> {
-		const timeZone = prefs.timezone
-		const displayCurrency = prefs.displayCurrency
-
-		const { start, end, title } = getReportDateRange(type, now)
-		const entriesResult = await fetchConvertedEntriesForRange(db, userId, {
-			start: start.toJSDate(),
-			end: end.toJSDate(),
-			timezone: timeZone,
-			displayCurrency,
-			entryType: "Expense",
-		})
-
-		if (entriesResult.entries.length === 0) {
-			return `${title}\n\nNo expenses recorded for this period.`
+		const params = { db, userId, now, prefs }
+		switch (type) {
+			case "daily":
+				return generateDailyReport(params)
+			case "weekly":
+				return generateWeeklyReport(params)
+			case "monthly":
+				return generateMonthlyReport(params)
 		}
-
-		const { latest } = await fetchExchangeRatesForDates(db, [])
-		const budgetsList = await fetchBudgetsForUser(db, userId)
-		const categoryTotals = aggregateCategoryTotals(entriesResult.entries)
-
-		const { start: monthStart, end: monthEnd } = getCurrentMonthRange(timeZone)
-		const monthlyEntriesResult = await fetchConvertedEntriesForRange(
-			db,
-			userId,
-			{
-				start: monthStart,
-				end: monthEnd,
-				timezone: timeZone,
-				displayCurrency,
-				entryType: "Expense",
-			},
-		)
-
-		const budgetProgressList = calculateBudgetProgressForBudgets(
-			budgetsList,
-			monthlyEntriesResult.entries,
-			latest.rates,
-			displayCurrency,
-		)
-
-		const totalSpent = Array.from(categoryTotals.values()).reduce(
-			(sum, val) => sum + val,
-			0,
-		)
-
-		const lines: string[] = [title, ""]
-
-		if (type === "daily") {
-			lines.push("Today's spending:")
-		} else if (type === "weekly") {
-			lines.push("This week's spending:")
-		} else {
-			lines.push(
-				`Total spending: ${formatCurrency(totalSpent, displayCurrency)}`,
-			)
-			lines.push("")
-			lines.push("By category:")
-		}
-
-		const categoriesWithSpending = Array.from(categoryTotals.entries())
-			.sort((a, b) => b[1] - a[1])
-			.filter(([, amount]) => amount > 0)
-
-		for (const [category, amount] of categoriesWithSpending) {
-			lines.push(`• ${category}: ${formatCurrency(amount, displayCurrency)}`)
-		}
-
-		lines.push("━━━━━━━━━━━━━━━")
-		lines.push(`Total: ${formatCurrency(totalSpent, displayCurrency)}`)
-
-		if (budgetProgressList.length > 0) {
-			lines.push("")
-			lines.push("Budgets:")
-			for (const budget of budgetProgressList) {
-				const categoryNames = budget.categories.join(", ")
-				const bar = formatProgressBar(budget.utilizationPct)
-				lines.push(
-					`• ${categoryNames}: ${formatCurrency(budget.spentDisplay, displayCurrency)} / ${formatCurrency(budget.amountDisplay, displayCurrency)}`,
-				)
-				lines.push(`  ${bar} ${Math.round(budget.utilizationPct)}%`)
-				if (budget.utilizationPct >= 100) {
-					lines.push("  ⚠️ Over budget")
-				}
-			}
-		}
-
-		if (type === "weekly") {
-			const previousWeekStart = start.minus({ weeks: 1 })
-			const previousWeekEnd = start
-			const previousWeekResult = await fetchConvertedEntriesForRange(
-				db,
-				userId,
-				{
-					start: previousWeekStart.toJSDate(),
-					end: previousWeekEnd.toJSDate(),
-					timezone: timeZone,
-					displayCurrency,
-					entryType: "Expense",
-				},
-			)
-
-			const previousWeekTotal = previousWeekResult.entries.reduce(
-				(sum, entry) => sum + (entry.convertedAmount ?? 0),
-				0,
-			)
-
-			const diff = totalSpent - previousWeekTotal
-			const sign = diff >= 0 ? "+" : ""
-			lines.push(
-				`vs Last week: ${sign}${formatCurrency(diff, displayCurrency)}`,
-			)
-		}
-
-		if (type === "monthly") {
-			const topSpendingDay = findTopSpendingDay(entriesResult.entries, timeZone)
-			if (topSpendingDay) {
-				lines.push("")
-				lines.push(
-					`Top spending day: ${topSpendingDay.date} (${formatCurrency(topSpendingDay.amount, displayCurrency)})`,
-				)
-			}
-
-			const mostUsedCategory = findMostUsedCategory(entriesResult.entries)
-			if (mostUsedCategory) {
-				lines.push(
-					`Most used category: ${mostUsedCategory.category} (${mostUsedCategory.count} transactions)`,
-				)
-			}
-		}
-
-		return lines.join("\n")
 	}
 
 	private async scheduleNextAlarm(): Promise<void> {

@@ -28,10 +28,10 @@
 	"license": "ISC",
 	"packageManager": "pnpm@10.14.0",
 	"dependencies": {
-		"luxon": "^3.5.0"
+		"luxon": "^3.7.2"
 	},
 	"devDependencies": {
-		"@types/luxon": "^3.4.2",
+		"@types/luxon": "^3.7.1",
 		"typescript": "^5.9.3"
 	}
 }

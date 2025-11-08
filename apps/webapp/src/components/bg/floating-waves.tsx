@@ -162,7 +162,13 @@ export function FloatingWaves({
 					const isLast = idx === points.length - 1
 					p1 = moved(p, !isLast)
 					const p2 = moved(
-						points[idx + 1] || points[points.length - 1]!,
+						points[idx + 1] ??
+							points[points.length - 1] ?? {
+								x: 0,
+								y: 0,
+								wave: { x: 0, y: 0 },
+								cursor: { x: 0, y: 0, vx: 0, vy: 0 },
+							},
 						!isLast,
 					)
 					ctx.lineTo(p1.x, p1.y)

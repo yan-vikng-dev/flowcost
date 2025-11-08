@@ -162,7 +162,7 @@ export function CategoryMultiCombobox({
 							data-placeholder={value.length ? undefined : true}
 							id={id}
 							type="button"
-							variant="input"
+							variant="outline"
 						>
 							{triggerLabel}
 							<ChevronsUpDownIcon className="size-4 opacity-50" />
@@ -192,7 +192,7 @@ export function CategoryMultiCombobox({
 						className={triggerClass}
 						id={id}
 						type="button"
-						variant="input"
+						variant="outline"
 					>
 						{triggerLabel}
 						<ChevronsUpDownIcon className="size-4 opacity-50" />

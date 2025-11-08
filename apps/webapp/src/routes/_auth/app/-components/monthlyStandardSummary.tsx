@@ -84,7 +84,7 @@ export function MonthlyStandardSummary() {
 				<CardTitle>Summary</CardTitle>
 				<CardDescription>{data?.monthLabel ?? "This month"}</CardDescription>
 				<CardAction>
-					<Button onClick={() => setOpen(true)} size="sm" variant="primary">
+					<Button onClick={() => setOpen(true)} size="sm" variant="default">
 						New Entry
 					</Button>
 				</CardAction>

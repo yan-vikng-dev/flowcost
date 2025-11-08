@@ -63,7 +63,7 @@ function RouteComponent() {
 		<div className="space-y-4">
 			<MonthlyEntriesTable
 				headerAction={
-					<Button onClick={() => setOpen(true)} size="sm" variant="primary">
+					<Button onClick={() => setOpen(true)} size="sm" variant="default">
 						New Entry
 					</Button>
 				}

@@ -194,7 +194,7 @@ export function BudgetsCard() {
 								aria-label={isEditMode ? "Exit edit mode" : "Enter edit mode"}
 								onClick={() => setIsEditMode(!isEditMode)}
 								size="icon"
-								variant={isEditMode ? "primary" : "secondary"}
+								variant={isEditMode ? "default" : "secondary"}
 							>
 								<EditIcon />
 							</Button>
@@ -203,7 +203,7 @@ export function BudgetsCard() {
 							aria-label="New Budget"
 							onClick={() => setCreateOpen(true)}
 							size="icon"
-							variant="primary"
+							variant="default"
 						>
 							<PlusIcon />
 						</Button>

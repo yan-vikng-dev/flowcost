@@ -14,32 +14,29 @@ import {
 } from "./-functions/monthlyEntries"
 
 export const Route = createFileRoute("/_auth/app/")({
+	ssr: "data-only",
 	loader: async ({ context }) => {
-		await context.queryClient.ensureQueryData({
-			queryKey: ["userPreferences"],
-			queryFn: () => getUserPreferences(),
-		})
-
-		// Prefetch monthly entries once
-		await context.queryClient.ensureQueryData({
-			queryKey: MONTHLY_ENTRIES_KEY,
-			queryFn: () => getMonthlyEntries(),
-		})
-
-		// Prefetch budgets list
-		await context.queryClient.ensureQueryData({
-			queryKey: MONTHLY_BUDGETS_KEY,
-			queryFn: () => getMonthlyBudgets(),
-		})
-
-		// Prefetch connection state (for partner labeling)
-		await context.queryClient.ensureQueryData({
-			queryKey: ["connectionState"],
-			queryFn: async () => {
-				const mod = await import("./settings/-functions/connections")
-				return mod.getConnectionState()
-			},
-		})
+		await Promise.all([
+			context.queryClient.ensureQueryData({
+				queryKey: ["userPreferences"],
+				queryFn: () => getUserPreferences(),
+			}),
+			context.queryClient.ensureQueryData({
+				queryKey: MONTHLY_ENTRIES_KEY,
+				queryFn: () => getMonthlyEntries(),
+			}),
+			context.queryClient.ensureQueryData({
+				queryKey: MONTHLY_BUDGETS_KEY,
+				queryFn: () => getMonthlyBudgets(),
+			}),
+			context.queryClient.ensureQueryData({
+				queryKey: ["connectionState"],
+				queryFn: async () => {
+					const mod = await import("./settings/-functions/connections")
+					return mod.getConnectionState()
+				},
+			}),
+		])
 	},
 	component: RouteComponent,
 })

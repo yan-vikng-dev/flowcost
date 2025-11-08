@@ -137,7 +137,7 @@ export function EntriesForm() {
 															}
 															id={executedAtId}
 															type="button"
-															variant="input"
+															variant="outline"
 														>
 															{field.state.value
 																? new Date(

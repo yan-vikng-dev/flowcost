@@ -111,7 +111,7 @@ export function ResponsiveCombobox<T extends string>({
 						id={id}
 						role="combobox"
 						type="button"
-						variant="input"
+						variant="outline"
 					>
 						{current ? (current.triggerLabel ?? current.label) : placeholder}
 						<ChevronsUpDownIcon className="size-4 opacity-50" />
@@ -139,7 +139,7 @@ export function ResponsiveCombobox<T extends string>({
 					id={id}
 					role="combobox"
 					type="button"
-					variant="input"
+					variant="outline"
 				>
 					{current ? (current.triggerLabel ?? current.label) : placeholder}
 					<ChevronsUpDownIcon className="size-4 opacity-50" />

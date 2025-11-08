@@ -1,20 +1,10 @@
 import type { Category, Currency } from "@repo/shared-lib"
 import { DateTime } from "luxon"
-
-export type ReportType = "daily" | "weekly" | "monthly"
-
-export type ReportPreferences = {
-	reportsMonthlyEnabled: boolean | null
-	reportsWeeklyEnabled: boolean | null
-	reportsDailyEnabled: boolean | null
-	reportsWeeklyDay: number | null
-	timezone: string
-	displayCurrency: Currency
-}
+import type { ReportType } from "./types"
 
 export function determineReportType(
 	now: DateTime,
-	prefs: ReportPreferences,
+	prefs: import("./types").ReportPreferences,
 ): ReportType | null {
 	const isLastDayOfMonth = now.day === now.endOf("month").day
 	const weeklyDay = prefs.reportsWeeklyDay ?? 0
