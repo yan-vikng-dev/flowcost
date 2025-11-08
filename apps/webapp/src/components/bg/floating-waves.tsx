@@ -208,8 +208,8 @@ export function FloatingWaves({
 			if (disableInteraction) return
 			const { left, top } = boundingRef.current
 			const mouse = mouseRef.current
-			mouse.x = e.pageX - left
-			mouse.y = e.pageY - top
+			mouse.x = e.clientX - left
+			mouse.y = e.clientY - top
 		}
 
 		function onTouchMove(e: TouchEvent) {
@@ -220,8 +220,8 @@ export function FloatingWaves({
 				const mouse = mouseRef.current
 				const touch = e.touches[0]
 				if (!touch) return
-				mouse.x = touch.pageX - left
-				mouse.y = touch.pageY - top
+				mouse.x = touch.clientX - left
+				mouse.y = touch.clientY - top
 			}
 		}
 
@@ -260,7 +260,7 @@ export function FloatingWaves({
 
 	return (
 		<div
-			className={`absolute top-0 left-0 h-full w-full overflow-hidden ${className}`}
+			className={`fixed top-0 left-0 h-screen w-full overflow-hidden ${className}`}
 			ref={containerRef}
 			style={{
 				backgroundColor: backgroundColor,

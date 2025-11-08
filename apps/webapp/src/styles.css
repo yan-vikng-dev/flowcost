@@ -38,7 +38,7 @@
 	--sidebar-accent-foreground: oklch(0.3729 0.0306 259.7328);
 	--sidebar-border: oklch(0.9276 0.0058 264.5313);
 	--sidebar-ring: oklch(0.7227 0.192 196.222);
-	--font-sans: DM Sans, sans-serif;
+	--font-sans: Poppins, sans-serif;
 	--font-serif: Lora, serif;
 	--font-mono: IBM Plex Mono, monospace;
 	--shadow-color: hsl(0 0% 0%);
@@ -99,7 +99,7 @@
 	--sidebar-border: oklch(0.4461 0.0263 256.8018);
 	--sidebar-ring: oklch(0.7828 0.1223 196.9442);
 	--radius: 1.2rem;
-	--font-sans: DM Sans, sans-serif;
+	--font-sans: Poppins, sans-serif;
 	--font-serif: Lora, serif;
 	--font-mono: IBM Plex Mono, monospace;
 	--shadow-color: hsl(0 0% 0%);

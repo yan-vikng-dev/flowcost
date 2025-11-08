@@ -179,7 +179,7 @@ export function MonthlyStandardSummary() {
 	const [open, setOpen] = React.useState(false)
 
 	return (
-		<Card>
+		<Card variant="glass">
 			<CardHeader>
 				<CardTitle>Summary</CardTitle>
 				<CardDescription>

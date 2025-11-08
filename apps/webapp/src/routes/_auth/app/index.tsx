@@ -59,12 +59,12 @@ function RouteComponent() {
 	return (
 		<div className="flex flex-col gap-4 md:flex-row md:items-start">
 			<div className="flex flex-1 flex-col gap-4">
-				<MonthlyStandardSummary />
 				<BudgetsCard />
+				<ExpensesByCategoryBar />
 			</div>
 			<div className="flex flex-1 flex-col gap-4">
+				<MonthlyStandardSummary />
 				<RecurringCard />
-				<ExpensesByCategoryBar />
 			</div>
 		</div>
 	)

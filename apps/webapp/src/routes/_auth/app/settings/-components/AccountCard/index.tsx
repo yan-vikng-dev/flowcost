@@ -1,6 +1,16 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { LogOutIcon, MailPlusIcon, Trash2Icon, XIcon } from "lucide-react"
 import * as React from "react"
+import {
+	AlertDialog,
+	AlertDialogAction,
+	AlertDialogCancel,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { UserAvatar } from "@/components/user-avatar"
@@ -18,6 +28,7 @@ export function AccountCard() {
 	const user = session?.user
 	const stateQuery = useConnectionState()
 	const [inviteOpen, setInviteOpen] = React.useState(false)
+	const [logoutOpen, setLogoutOpen] = React.useState(false)
 
 	const cancelMutation = useMutation({
 		mutationFn: (id: string) => cancelInvitation({ data: { id } }),
@@ -66,7 +77,7 @@ export function AccountCard() {
 								</div>
 							)}
 							<Button
-								onClick={() => void authClient.signOut()}
+								onClick={() => setLogoutOpen(true)}
 								size="icon"
 								variant="outline"
 							>
@@ -154,6 +165,31 @@ export function AccountCard() {
 			</Card>
 
 			<InviteDialog onOpenChange={setInviteOpen} open={inviteOpen} />
+
+			<AlertDialog onOpenChange={setLogoutOpen} open={logoutOpen}>
+				<AlertDialogContent>
+					<AlertDialogHeader>
+						<AlertDialogTitle>Log out?</AlertDialogTitle>
+						<AlertDialogDescription>
+							Are you sure you want to log out? You will need to sign in again
+							to access your account.
+						</AlertDialogDescription>
+					</AlertDialogHeader>
+					<AlertDialogFooter>
+						<AlertDialogCancel onClick={() => setLogoutOpen(false)}>
+							Cancel
+						</AlertDialogCancel>
+						<AlertDialogAction
+							onClick={() => {
+								void authClient.signOut()
+								setLogoutOpen(false)
+							}}
+						>
+							Log out
+						</AlertDialogAction>
+					</AlertDialogFooter>
+				</AlertDialogContent>
+			</AlertDialog>
 		</>
 	)
 }

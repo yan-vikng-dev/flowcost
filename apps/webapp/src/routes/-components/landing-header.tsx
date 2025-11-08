@@ -38,7 +38,11 @@ export function LandingHeader() {
 				<div className="flex h-16 items-center justify-between">
 					<Link to="/">
 						<div className="flex items-center gap-2">
-							<img alt="Flowcost" className="size-12" src="/logo/logo192.png" />
+							<img
+								alt="Flowcost"
+								className="size-12 rounded-full object-cover"
+								src="/logo/logo320_bg.png"
+							/>
 							<span className="bg-linear-to-r from-primary to-foreground bg-clip-text font-bold text-lg text-transparent transition-all duration-300 hover:from-foreground hover:to-primary lg:text-xl">
 								Flowcost
 							</span>

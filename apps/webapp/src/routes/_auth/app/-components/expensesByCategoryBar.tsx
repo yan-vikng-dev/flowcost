@@ -129,7 +129,13 @@ function ExpensesChart() {
 					}
 					cursor={false}
 				/>
-				<Bar barSize={BAR_SIZE} dataKey="amount" radius={4}>
+				<Bar
+					animationBegin={500}
+					animationDuration={500}
+					barSize={BAR_SIZE}
+					dataKey="amount"
+					radius={4}
+				>
 					{chartData.map((item) => (
 						<Cell fill={item.fill} key={`cell-${item.category}`} />
 					))}
@@ -152,7 +158,7 @@ export function ExpensesByCategoryBar() {
 	}, [])
 
 	return (
-		<Card>
+		<Card variant="glass">
 			<CardHeader className="items-center pb-0">
 				<CardTitle>Expenses</CardTitle>
 				<CardDescription>{monthLabel}</CardDescription>

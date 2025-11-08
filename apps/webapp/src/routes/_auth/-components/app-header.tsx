@@ -21,11 +21,11 @@ export function AppHeader() {
 				<div className="flex items-center justify-between">
 					<div className="flex items-center gap-2">
 						<Link to="/app">
-							<div className="flex size-10 items-center justify-center rounded-full dark:bg-primary">
+							<div className="flex h-8 w-8 items-center justify-center">
 								<img
 									alt="Flowcost"
-									className="size-8"
-									src="/logo/logo192.png"
+									className="h-8 w-8 rounded-full object-cover"
+									src="/logo/logo320_bg.png"
 								/>
 							</div>
 						</Link>
