@@ -29,7 +29,6 @@ export const entries = sqliteTable(
 		userId: text()
 			.notNull()
 			.references(() => auth_users.id, { onDelete: "cascade" }),
-		executedAt: integer({ mode: "timestamp_ms" }),
 		executedDate: text().notNull(),
 
 		// Recurring linkage & flags

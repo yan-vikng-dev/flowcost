@@ -65,9 +65,9 @@ export const makeCreateEntryTool = (context: MessageContext, db: DrizzleDb) =>
 			}
 			const [inserted] = await db.insert(entries).values(newEntry).returning()
 			if (!inserted) throw new Error("Failed to create entry")
-			const executedAt = inserted.executedAt
-				? new Date(inserted.executedAt).toISOString()
-				: isoDateToUtcMidnight(inserted.executedDate).toISOString()
+			const executedAt = isoDateToUtcMidnight(
+				inserted.executedDate,
+			).toISOString()
 			const safe = {
 				...inserted,
 				executedAt,

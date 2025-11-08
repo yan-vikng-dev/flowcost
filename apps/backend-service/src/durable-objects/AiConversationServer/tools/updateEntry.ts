@@ -111,13 +111,11 @@ export const makeUpdateEntryTool = (context: MessageContext, db: DrizzleDb) =>
 				throw new Error("Failed to update entry")
 			}
 
-			const executedAt = updated.executedAt
-				? new Date(updated.executedAt).toISOString()
-				: DateTime.fromISO(updated.executedDate, {
-						zone: context.userTimezone,
-					})
-						.toJSDate()
-						.toISOString()
+			const executedAt = DateTime.fromISO(updated.executedDate, {
+				zone: context.userTimezone,
+			})
+				.toJSDate()
+				.toISOString()
 
 			const safe = {
 				...updated,

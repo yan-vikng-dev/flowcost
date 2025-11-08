@@ -58,7 +58,7 @@ export function MonthlyEntriesTable({
 		pageSize: 10,
 	})
 	const [sorting, setSorting] = React.useState<SortingState>([
-		{ id: "executedAt", desc: true },
+		{ id: "executedDate", desc: true },
 	])
 
 	const { data, isLoading, isError } = useQuery({

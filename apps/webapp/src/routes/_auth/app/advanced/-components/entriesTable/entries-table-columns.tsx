@@ -193,11 +193,10 @@ export function entriesTableColumns({
 			cell: ({ row }) => {
 				const dateStr = row.original.executedDate
 				const dt = new Date(`${dateStr}T00:00:00`)
-				return dt.toLocaleDateString(undefined, {
-					year: "numeric",
-					month: "short",
-					day: "2-digit",
-				})
+				const day = String(dt.getDate()).padStart(2, "0")
+				const month = String(dt.getMonth() + 1).padStart(2, "0")
+				const year = String(dt.getFullYear()).slice(-2)
+				return `${day}/${month}/${year}`
 			},
 			sortingFn: (a, b) =>
 				a.original.executedDate.localeCompare(b.original.executedDate),
