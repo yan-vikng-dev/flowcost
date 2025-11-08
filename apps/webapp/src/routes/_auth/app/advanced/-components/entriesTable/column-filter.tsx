@@ -1,4 +1,3 @@
-import { entryTypes } from "@repo/data-ops/drizzle/schemas/helpers"
 import type { Category } from "@repo/shared-lib"
 import type { Column } from "@tanstack/react-table"
 import { FilterIcon } from "lucide-react"
@@ -27,13 +26,6 @@ export function ColumnFilter({ column }: ColumnFilterProps) {
 	const filterValue = column.getFilterValue()
 	const hasFilter = column.getIsFiltered()
 
-	// Computed values for enum filters
-	const entryTypeSelected = React.useMemo(() => {
-		const enumValue =
-			columnId === "entryType" ? (filterValue as EnumMultiSelectFilter) : []
-		return new Set(enumValue)
-	}, [columnId, filterValue])
-
 	const categorySelected = React.useMemo(() => {
 		const enumValue =
 			columnId === "category" ? (filterValue as EnumMultiSelectFilter) : []
@@ -42,42 +34,6 @@ export function ColumnFilter({ column }: ColumnFilterProps) {
 
 	const getFilterComponent = () => {
 		switch (columnId) {
-			case "entryType": {
-				// Direct Command component for enum multi-select
-				const toggleOption = (optionValue: string) => {
-					const newValue = new Set(entryTypeSelected)
-					if (newValue.has(optionValue)) {
-						newValue.delete(optionValue)
-					} else {
-						newValue.add(optionValue)
-					}
-
-					const finalValue = Array.from(newValue)
-					column.setFilterValue(finalValue.length > 0 ? finalValue : undefined)
-				}
-
-				return (
-					<div className="p-2">
-						<div className="space-y-1">
-							{entryTypes.map((type) => {
-								const isSelected = entryTypeSelected.has(type)
-								return (
-									<DropdownMenuCheckboxItem
-										checked={isSelected}
-										className="cursor-pointer"
-										key={type}
-										onCheckedChange={() => toggleOption(type)}
-										onSelect={(event) => event.preventDefault()}
-									>
-										{type}
-									</DropdownMenuCheckboxItem>
-								)
-							})}
-						</div>
-					</div>
-				)
-			}
-
 			case "category": {
 				const selectedCategories = Array.from(categorySelected) as Category[]
 
@@ -147,30 +103,6 @@ export function ColumnFilter({ column }: ColumnFilterProps) {
 			default:
 				return null
 		}
-	}
-
-	// Entry type keeps dropdown menu behavior
-	if (columnId === "entryType") {
-		return (
-			<DropdownMenu>
-				<DropdownMenuTrigger asChild>
-					<Button
-						className={cn(
-							"ml-1 h-6 w-6 shrink-0",
-							hasFilter && "bg-primary/10 text-primary hover:bg-primary/20",
-						)}
-						size="icon-sm"
-						variant={hasFilter ? "secondary" : "ghost"}
-					>
-						<FilterIcon className="h-3 w-3" />
-						<span className="sr-only">Filter entryType</span>
-					</Button>
-				</DropdownMenuTrigger>
-				<DropdownMenuContent align="start" className="w-auto p-0">
-					{getFilterComponent()}
-				</DropdownMenuContent>
-			</DropdownMenu>
-		)
 	}
 
 	// Recurring keeps dropdown menu behavior

@@ -95,14 +95,13 @@ export function MonthlyEntriesTable({
 				recurring: false,
 			}
 		} else {
-			// Mobile: show only date, type, category, converted
+			// Mobile: show only date, category, converted
 			return {
 				recurring: false,
 				description: false,
 				amount: false,
 				amountIls: true, // converted
 				executedDate: true, // date
-				entryType: true, // type
 				category: true, // category
 				globalFilter: false,
 				actions: false,
@@ -123,13 +122,12 @@ export function MonthlyEntriesTable({
 						recurring: false,
 					}
 				: {
-						// Mobile: show only date, type, category, converted
+						// Mobile: show only date, category, converted
 						recurring: false,
 						description: false,
 						amount: false,
 						amountIls: true, // converted
 						executedDate: true, // date
-						entryType: true, // type
 						category: true, // category
 						globalFilter: false,
 						actions: false,

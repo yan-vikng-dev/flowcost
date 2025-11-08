@@ -1,4 +1,3 @@
-import type { EntryType } from "@repo/data-ops/drizzle/schemas/index"
 import { type Currency, formatCurrency } from "@repo/shared-lib"
 import type { ColumnDef } from "@tanstack/react-table"
 import {
@@ -16,7 +15,6 @@ import {
 	PopoverTrigger,
 } from "@/components/ui/popover"
 import { getCategoryIcon } from "@/config/categories"
-import { getEntryTypeIcon } from "@/config/entryTypes"
 import type { MonthlyEntry } from "@/core/functions/entries"
 import type {
 	DateRangeFilter,
@@ -45,14 +43,17 @@ function getColumnMaxValue(
 	columnId: string,
 ): number {
 	const rows = column.getFacetedRowModel().rows
-	let maxValue = 0
+	let maxAbsValue = 0
 	for (const row of rows) {
 		const value = row.getValue(columnId)
-		if (typeof value === "number" && value > maxValue) {
-			maxValue = value
+		if (typeof value === "number") {
+			const absValue = Math.abs(value)
+			if (absValue > maxAbsValue) {
+				maxAbsValue = absValue
+			}
 		}
 	}
-	return Math.max(1, Math.ceil(maxValue * 1.1))
+	return Math.max(1, Math.ceil(maxAbsValue * 1.1))
 }
 
 export function entriesTableColumns({
@@ -202,60 +203,6 @@ export function entriesTableColumns({
 				a.original.executedDate.localeCompare(b.original.executedDate),
 		},
 		{
-			accessorKey: "entryType",
-			filterFn: enumMultiSelectFilter,
-			header: ({ column }) => {
-				const sorted = column.getIsSorted()
-				const hasSort = sorted !== false
-				return (
-					<div className="flex items-center gap-1">
-						<span>Type</span>
-						<Button
-							className={cn(
-								"h-6 w-6 shrink-0",
-								hasSort && "bg-primary/10 text-primary hover:bg-primary/20",
-							)}
-							onClick={() => {
-								if (sorted === "asc") {
-									column.toggleSorting(true) // to desc
-								} else if (sorted === "desc") {
-									column.clearSorting() // to off
-								} else {
-									column.toggleSorting(false) // to asc
-								}
-							}}
-							size="icon-sm"
-							variant={hasSort ? "secondary" : "ghost"}
-						>
-							{sorted === "asc" ? (
-								<ArrowUpIcon className="h-4 w-4" />
-							) : sorted === "desc" ? (
-								<ArrowDownIcon className="h-4 w-4" />
-							) : (
-								<ArrowUpDownIcon className="h-4 w-4 text-muted-foreground" />
-							)}
-						</Button>
-						{showFilters && <ColumnFilter column={column} />}
-					</div>
-				)
-			},
-			cell: ({ row }) => {
-				const entryType = row.getValue<EntryType>("entryType")
-				const Icon = getEntryTypeIcon(entryType)
-				return (
-					<span className="flex items-center gap-2">
-						<span
-							aria-hidden
-							className="inline-flex w-5 shrink-0 justify-center leading-none sm:w-6"
-						>
-							<Icon className="size-4" />
-						</span>
-						<span>{entryType}</span>
-					</span>
-				)
-			},
-		},
-		{
 			accessorKey: "category",
 			filterFn: enumMultiSelectFilter,
 			header: ({ column }) => {
@@ -316,7 +263,11 @@ export function entriesTableColumns({
 			cell: ({ row }) => String(row.getValue("description") ?? ""),
 		},
 		{
-			accessorKey: "amount",
+			accessorFn: (row) => {
+				const amount = row.amount
+				return row.entryType === "Expense" ? -amount : amount
+			},
+			id: "amount",
 			filterFn: numberRangeFilter,
 			meta: { align: "right" },
 			header: ({ column }) => {
@@ -379,7 +330,7 @@ export function entriesTableColumns({
 											<NumericRangeSlider
 												max={maxValue}
 												maxLabel="Max amount"
-												min={0}
+												min={-maxValue}
 												minLabel="Min amount"
 												onChange={(value: NumberRangeFilter | undefined) =>
 													column.setFilterValue(value)
@@ -406,7 +357,12 @@ export function entriesTableColumns({
 			},
 		},
 		{
-			accessorKey: "amountIls",
+			accessorFn: (row) => {
+				const val = row.amountIls
+				if (val === null) return null
+				return row.entryType === "Expense" ? -val : val
+			},
+			id: "amountIls",
 			filterFn: numberRangeFilter,
 			meta: { align: "right" },
 			header: ({ column }) => {
@@ -469,7 +425,7 @@ export function entriesTableColumns({
 											<NumericRangeSlider
 												max={maxValue}
 												maxLabel="Max converted"
-												min={0}
+												min={-maxValue}
 												minLabel="Min converted"
 												onChange={(value: NumberRangeFilter | undefined) =>
 													column.setFilterValue(value)
