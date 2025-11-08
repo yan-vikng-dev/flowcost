@@ -1,33 +1,19 @@
 import { currencyData } from "@repo/shared-lib"
-import {
-	useMutation,
-	useQueryClient,
-	useSuspenseQuery,
-} from "@tanstack/react-query"
+import { useSuspenseQuery } from "@tanstack/react-query"
 import { DateTime } from "luxon"
 import * as React from "react"
-import { Button } from "@/components/ui/button"
 import {
 	Card,
-	CardAction,
 	CardContent,
 	CardDescription,
 	CardHeader,
 	CardTitle,
 } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
-import { type CreateEntryInput, createEntry } from "@/core/functions/entries"
-import { getUserPreferences } from "@/core/functions/preferences"
-import {
-	type CreateRecurringTemplateInput,
-	createRecurringTemplate,
-} from "@/core/functions/recurring-templates"
 import {
 	getMonthlyEntries,
 	MONTHLY_ENTRIES_KEY,
 } from "../-functions/monthlyEntries"
-import { EntryDialog, getDefaultEntryInitial } from "./EntryDialog"
-import { buildRRuleFromUi } from "./RecurringCard/utils"
 
 function SummaryContent() {
 	const { data } = useSuspenseQuery({
@@ -66,11 +52,23 @@ function SummaryContent() {
 
 	return (
 		<div className="mt-2 flex flex-col items-end justify-center gap-2">
-			<NumberLine color="text-emerald-500" sign="+" value={incomeTotal} />
-			<NumberLine color="text-red-500" sign="-" value={expenseTotal} />
+			<NumberLine
+				color="text-[var(--amount-positive)]"
+				sign="+"
+				value={incomeTotal}
+			/>
+			<NumberLine
+				color="text-[var(--amount-negative)]"
+				sign="-"
+				value={expenseTotal}
+			/>
 			<div className="my-2 h-0.5 w-full max-w-[260px] self-end bg-border" />
 			<NumberLine
-				color={net >= 0 ? "text-emerald-500" : "text-red-500"}
+				color={
+					net >= 0
+						? "text-[var(--amount-positive)]"
+						: "text-[var(--amount-negative)]"
+				}
 				sign={net >= 0 ? "+" : "-"}
 				symbol={symbol}
 				value={Math.abs(net)}
@@ -79,117 +77,14 @@ function SummaryContent() {
 	)
 }
 
-function EntryDialogWrapper({
-	open,
-	setOpen,
-	createMut,
-	createRecurringMut,
-}: {
-	open: boolean
-	setOpen: (open: boolean) => void
-	createMut: {
-		mutate: (vars: CreateEntryInput) => void
-		isPending: boolean
-	}
-	createRecurringMut: {
-		mutate: (vars: CreateRecurringTemplateInput) => void
-		isPending: boolean
-	}
-}) {
-	const prefsQuery = useSuspenseQuery({
-		queryKey: ["userPreferences"],
-		queryFn: () => getUserPreferences(),
-		staleTime: 5 * 60 * 1000,
-	})
-
-	return (
-		<EntryDialog
-			initial={getDefaultEntryInitial({
-				defaultCurrency: prefsQuery.data.defaultEntryCurrency ?? "USD",
-			})}
-			onOpenChange={setOpen}
-			onSubmit={(state) => {
-				const amount = typeof state.amount === "number" ? state.amount : 0
-				createMut.mutate({
-					amount,
-					currency: state.currency,
-					category: state.category,
-					entryType: state.entryType,
-					description: state.description,
-					executedAt: state.executedAt,
-				})
-				setOpen(false)
-			}}
-			onSubmitRecurring={(state) => {
-				if (
-					!state.recurrence ||
-					!state.executedAt ||
-					!state.recurrence.unit ||
-					!state.recurrence.every
-				)
-					return
-				const amount = typeof state.amount === "number" ? state.amount : 0
-				const rrule = buildRRuleFromUi(
-					state.executedAt,
-					state.recurrence,
-					prefsQuery.data.timezone || "UTC",
-				)
-				createRecurringMut.mutate({
-					amount,
-					currency: state.currency,
-					category: state.category,
-					entryType: state.entryType,
-					description: state.description,
-					rrule,
-					dtstart: state.executedAt,
-					endAt: state.endAt,
-				})
-				setOpen(false)
-			}}
-			open={open}
-			submitLabel={
-				createMut.isPending || createRecurringMut.isPending
-					? "Creating..."
-					: "Create"
-			}
-			title="New Entry"
-		/>
-	)
-}
-
 export function MonthlyStandardSummary() {
-	const queryClient = useQueryClient()
-	const createMut = useMutation({
-		mutationFn: (input: CreateEntryInput) => createEntry({ data: input }),
-		onSuccess: async () => {
-			await queryClient.invalidateQueries({ queryKey: ["entries"] })
-		},
-	})
-	const createRecurringMut = useMutation({
-		mutationFn: (input: CreateRecurringTemplateInput) =>
-			createRecurringTemplate({ data: input }),
-		onSuccess: async () => {
-			await Promise.all([
-				queryClient.invalidateQueries({ queryKey: ["entries"] }),
-				queryClient.invalidateQueries({ queryKey: ["recurringTemplates"] }),
-			])
-		},
-	})
-
-	const [open, setOpen] = React.useState(false)
-
 	return (
-		<Card variant="glass">
+		<Card>
 			<CardHeader>
 				<CardTitle>Summary</CardTitle>
 				<CardDescription>
 					{DateTime.now().toFormat("LLLL yyyy")}
 				</CardDescription>
-				<CardAction>
-					<Button onClick={() => setOpen(true)} size="sm" variant="default">
-						New Entry
-					</Button>
-				</CardAction>
 			</CardHeader>
 			<CardContent className="flex-1">
 				<React.Suspense
@@ -205,14 +100,6 @@ export function MonthlyStandardSummary() {
 					<SummaryContent />
 				</React.Suspense>
 			</CardContent>
-			<React.Suspense fallback={null}>
-				<EntryDialogWrapper
-					createMut={createMut}
-					createRecurringMut={createRecurringMut}
-					open={open}
-					setOpen={setOpen}
-				/>
-			</React.Suspense>
 		</Card>
 	)
 }
@@ -229,15 +116,13 @@ function NumberLine({
 	color?: string
 }) {
 	return (
-		<div
-			className={`flex w-full items-baseline justify-end gap-2 font-bold leading-none ${color}`}
-		>
+		<div className="flex w-full items-center justify-end gap-2 font-bold leading-none">
 			{symbol ? (
 				<span className="text-3xl text-muted-foreground md:text-4xl">
 					{symbol}
 				</span>
 			) : null}
-			<span className="text-5xl tracking-tight md:text-6xl">
+			<span className={`text-5xl tracking-tight md:text-6xl ${color}`}>
 				{sign}
 				{value.toLocaleString()}
 			</span>
