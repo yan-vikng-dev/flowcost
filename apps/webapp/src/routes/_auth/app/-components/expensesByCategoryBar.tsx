@@ -158,7 +158,7 @@ export function ExpensesByCategoryBar() {
 	}, [])
 
 	return (
-		<Card variant="glass">
+		<Card>
 			<CardHeader className="items-center pb-0">
 				<CardTitle>Expenses</CardTitle>
 				<CardDescription>{monthLabel}</CardDescription>
