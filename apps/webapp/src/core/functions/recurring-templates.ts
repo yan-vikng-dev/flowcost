@@ -12,7 +12,6 @@ import {
 import {
 	categories,
 	currencies,
-	getStartOfDayInTimezone,
 	toIsoDateInTimezone,
 	toUtcMidnightInTimezone,
 } from "@repo/shared-lib"
@@ -86,11 +85,6 @@ export const createRecurringTemplate = createServerFn({ method: "POST" })
 
 		validateRRule(rrule, normalizedDtstart, normalizedEndAt, timezone)
 
-		const generationValidUntilDate = toIsoDateInTimezone(
-			getStartOfDayInTimezone(new Date(), timezone),
-			timezone,
-		)
-
 		const [result] = await db
 			.insert(recurring_entry_templates)
 			.values({
@@ -98,7 +92,7 @@ export const createRecurringTemplate = createServerFn({ method: "POST" })
 				rrule,
 				dtstartDate,
 				endDate,
-				generationValidUntil: generationValidUntilDate,
+				generationValidUntil: dtstartDate,
 				userId: ctx.context.userId,
 			})
 			.returning({ id: recurring_entry_templates.id })

@@ -37,7 +37,6 @@ export const recurring_entry_templates = sqliteTable(
 		index("recurring_entry_templates_by_valid_until_idx").on(
 			table.generationValidUntil,
 		),
-		// endAt index removed; date-only storage uses endDate string
 	],
 )
 
