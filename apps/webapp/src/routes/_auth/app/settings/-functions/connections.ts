@@ -197,7 +197,7 @@ export const sendInvitation = createServerFn({ method: "POST" })
 	})
 
 // cancelInvitation
-export const cancelInvitationInput = z.object({ id: z.string().uuid() })
+export const cancelInvitationInput = z.object({ id: z.uuid() })
 export type CancelInvitationInput = z.infer<typeof cancelInvitationInput>
 
 export const cancelInvitation = createServerFn({ method: "POST" })
