@@ -70,16 +70,15 @@ export function TablePagination({ table }: TablePaginationProps) {
 		<div className="flex flex-wrap items-center justify-end gap-2 py-4">
 			{/* Pagination controls */}
 			<div className="flex items-center gap-1">
-				{table.getCanPreviousPage() && (
-					<Button
-						aria-label="Previous page"
-						onClick={() => table.previousPage()}
-						size="icon-sm"
-						variant="outline"
-					>
-						<ChevronLeft />
-					</Button>
-				)}
+				<Button
+					aria-label="Previous page"
+					disabled={!table.getCanPreviousPage()}
+					onClick={() => table.previousPage()}
+					size="icon-sm"
+					variant="outline"
+				>
+					<ChevronLeft />
+				</Button>
 				{paginationItems.map((item, idx) => {
 					if (item === "dots") {
 						return (
@@ -109,17 +108,15 @@ export function TablePagination({ table }: TablePaginationProps) {
 						</Button>
 					)
 				})}
-				{(table.getCanNextPage() || table.getPageCount() === 1) && (
-					<Button
-						aria-label="Next page"
-						disabled={!table.getCanNextPage()}
-						onClick={() => table.nextPage()}
-						size="icon-sm"
-						variant="outline"
-					>
-						<ChevronRight />
-					</Button>
-				)}
+				<Button
+					aria-label="Next page"
+					disabled={!table.getCanNextPage()}
+					onClick={() => table.nextPage()}
+					size="icon-sm"
+					variant="outline"
+				>
+					<ChevronRight />
+				</Button>
 			</div>
 
 			{/* Rows per page selector */}

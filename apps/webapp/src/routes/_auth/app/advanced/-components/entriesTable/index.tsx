@@ -72,16 +72,6 @@ export function MonthlyEntriesTable({
 		return getCurrentMonthRange(timezone).start
 	}, [timezone])
 
-	const sortedAndPaginated = React.useMemo(() => {
-		if (!data) return { items: [], total: 0 }
-
-		const start = pagination.pageIndex * pagination.pageSize
-		const end = start + pagination.pageSize
-		const items = data.entries.slice(start, end)
-
-		return { items, total: data.entries.length }
-	}, [data, pagination])
-
 	const isDesktop = useIsDesktop()
 	const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
 		[],
@@ -254,11 +244,6 @@ export function MonthlyEntriesTable({
 		onColumnFiltersChange: setColumnFilters,
 		onColumnVisibilityChange: setColumnVisibility,
 		onRowSelectionChange: setRowSelection,
-		manualPagination: true,
-		pageCount: Math.max(
-			1,
-			Math.ceil(sortedAndPaginated.total / pagination.pageSize),
-		),
 		onPaginationChange: setPagination,
 		globalFilterFn: fulltextFilter,
 		state: {

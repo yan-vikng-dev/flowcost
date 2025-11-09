@@ -1,14 +1,7 @@
 import { currencyData } from "@repo/shared-lib"
 import { useSuspenseQuery } from "@tanstack/react-query"
-import { DateTime } from "luxon"
 import * as React from "react"
-import {
-	Card,
-	CardContent,
-	CardDescription,
-	CardHeader,
-	CardTitle,
-} from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
 	getMonthlyEntries,
@@ -77,14 +70,11 @@ function SummaryContent() {
 	)
 }
 
-export function MonthlyStandardSummary() {
+export function SummaryCard() {
 	return (
 		<Card>
 			<CardHeader>
 				<CardTitle>Summary</CardTitle>
-				<CardDescription>
-					{DateTime.now().toFormat("LLLL yyyy")}
-				</CardDescription>
 			</CardHeader>
 			<CardContent className="flex-1">
 				<React.Suspense
@@ -112,8 +102,8 @@ function NumberLine({
 }: {
 	value: number
 	symbol?: string
-	sign?: "+" | "-" | ""
-	color?: string
+	sign: "+" | "-" | ""
+	color: string
 }) {
 	return (
 		<div className="flex w-full items-center justify-end gap-2 font-bold leading-none">

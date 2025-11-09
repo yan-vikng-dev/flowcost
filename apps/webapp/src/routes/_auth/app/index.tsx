@@ -2,8 +2,8 @@ import { createFileRoute } from "@tanstack/react-router"
 import { getUserPreferences } from "@/core/functions/preferences"
 import { listRecurringTemplates } from "@/core/functions/recurring-templates"
 import { BudgetsCard } from "./-components/BudgetsCard"
-import { ExpensesByCategoryBar } from "./-components/expensesByCategoryBar"
-import { MonthlyStandardSummary } from "./-components/MonthlyStandardSummary"
+import { ExpensesCard } from "./-components/expensesByCategoryBar"
+import { SummaryCard } from "./-components/MonthlyStandardSummary"
 import { RecurringCard } from "./-components/RecurringCard"
 import {
 	EXCHANGE_RATES_KEY,
@@ -60,10 +60,10 @@ function RouteComponent() {
 		<div className="flex flex-col gap-4 md:flex-row md:items-start">
 			<div className="flex flex-1 flex-col gap-4">
 				<BudgetsCard />
-				<ExpensesByCategoryBar />
+				<ExpensesCard />
 			</div>
 			<div className="flex flex-1 flex-col gap-4">
-				<MonthlyStandardSummary />
+				<SummaryCard />
 				<RecurringCard />
 			</div>
 		</div>

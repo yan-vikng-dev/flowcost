@@ -1,6 +1,5 @@
 import { formatCurrency } from "@repo/shared-lib"
 import { useSuspenseQuery } from "@tanstack/react-query"
-import { DateTime } from "luxon"
 import * as React from "react"
 import { Bar, BarChart, Cell, LabelList, XAxis, YAxis } from "recharts"
 import {
@@ -152,16 +151,12 @@ function ExpensesChart() {
 	)
 }
 
-export function ExpensesByCategoryBar() {
-	const monthLabel = React.useMemo(() => {
-		return DateTime.now().toFormat("LLLL yyyy")
-	}, [])
-
+export function ExpensesCard() {
 	return (
 		<Card>
 			<CardHeader className="items-center pb-0">
 				<CardTitle>Expenses</CardTitle>
-				<CardDescription>{monthLabel}</CardDescription>
+				<CardDescription>By category</CardDescription>
 			</CardHeader>
 			<CardContent className="min-w-0 flex-1 pb-0">
 				<React.Suspense
