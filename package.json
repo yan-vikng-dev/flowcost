@@ -9,7 +9,8 @@
 		"dev": "pnpm run --filter webapp dev",
 		"studio": "pnpm run --filter data-ops drizzle:studio",
 		"check": "pnpm exec biome check --write --max-diagnostics 10 --unsafe && turbo typecheck",
-		"db:push": "pnpm run --filter data-ops drizzle:push"
+		"db:push": "pnpm run --filter data-ops drizzle:push",
+		"cf:types": "turbo run cf:types"
 	},
 	"keywords": [],
 	"author": "",

@@ -9,7 +9,7 @@
 		"start": "wrangler dev",
 		"test": "vitest",
 		"typecheck": "tsc --noEmit",
-		"cf-typegen": "wrangler types --env-interface BaseEnv"
+		"cf:types": "wrangler types --env-interface BaseEnv"
 	},
 	"devDependencies": {
 		"@cloudflare/vitest-pool-workers": "^0.10.5",

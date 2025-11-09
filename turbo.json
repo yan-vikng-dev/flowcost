@@ -21,6 +21,10 @@
 		"deploy": {
 			"dependsOn": ["build"],
 			"cache": false
+		},
+		"cf:types": {
+			"dependsOn": ["build"],
+			"outputs": []
 		}
 	}
 }
