@@ -97,7 +97,7 @@ export async function generateWeeklyReport(
 	})
 
 	const previousWeekTotal = previousWeekResult.entries.reduce(
-		(sum, entry) => sum + (entry.convertedAmount ?? 0),
+		(sum, entry) => sum + entry.convertedAmount,
 		0,
 	)
 

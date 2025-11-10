@@ -22,12 +22,12 @@ function SummaryContent() {
 		const incomeTotal = Math.round(
 			entries
 				.filter((e) => e.entryType === "Income")
-				.reduce((acc, e) => acc + (e.amountIls ?? 0), 0),
+				.reduce((acc, e) => acc + e.convertedAmount, 0),
 		)
 		const expenseTotal = Math.round(
 			entries
 				.filter((e) => e.entryType === "Expense")
-				.reduce((acc, e) => acc + (e.amountIls ?? 0), 0),
+				.reduce((acc, e) => acc + e.convertedAmount, 0),
 		)
 		const net = incomeTotal - expenseTotal
 		return { incomeTotal, expenseTotal, net }

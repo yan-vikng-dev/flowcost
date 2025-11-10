@@ -50,7 +50,7 @@ import {
 import { BudgetDialog, type FormState } from "./BudgetDialog"
 import { BudgetItem } from "./BudgetItem"
 import { getMonthProgress } from "./utils"
-import { VirtualBudgetItem, type VirtualItemsMap } from "./VirtualBudgetItem"
+import { VirtualBudgetItem, type VirtualItemData } from "./VirtualBudgetItem"
 
 function BudgetsContent({
 	onDelete,
@@ -87,7 +87,7 @@ function BudgetsContent({
 		if (budgets.length === 0) return []
 
 		const expenseEntries = (monthlyQuery.data.entries ?? []).filter(
-			(entry) => entry.entryType === "Expense",
+			(entry) => entry.entryType === "Expense" && !entry.recurringTemplateId,
 		)
 		const displayCurrency =
 			monthlyQuery.data.displayCurrency ??
@@ -107,7 +107,7 @@ function BudgetsContent({
 		prefsQuery.data,
 	])
 
-	const virtualItems: VirtualItemsMap = React.useMemo(() => {
+	const virtualItems: VirtualItemData[] = React.useMemo(() => {
 		const entries = monthlyQuery.data.entries ?? []
 		const displayCurrency: Currency =
 			monthlyQuery.data.displayCurrency ??
@@ -123,27 +123,46 @@ function BudgetsContent({
 
 		const incomeSum = entries
 			.filter((entry) => entry.entryType === "Income")
-			.reduce((sum, entry) => sum + (entry.amountIls ?? 0), 0)
+			.reduce((sum, entry) => sum + entry.convertedAmount, 0)
 		const budgets = budgetsWithProgress
 		const budgetedCats = new Set<Category>()
 		for (const budget of budgets)
 			for (const category of budget.categories) budgetedCats.add(category)
 
+		const recurringExpenseSum = entries
+			.filter(
+				(entry) => entry.entryType === "Expense" && entry.recurringTemplateId,
+			)
+			.reduce((sum, entry) => sum + entry.convertedAmount, 0)
+
 		const unbudgetedExpenseSum = entries
 			.filter(
 				(entry) =>
-					entry.entryType === "Expense" && !budgetedCats.has(entry.category),
+					entry.entryType === "Expense" &&
+					!entry.recurringTemplateId &&
+					!budgetedCats.has(entry.category),
 			)
-			.reduce((sum, entry) => sum + (entry.amountIls ?? 0), 0)
+			.reduce((sum, entry) => sum + entry.convertedAmount, 0)
 
-		const committed = budgets.reduce(
+		const committedBudgets = budgets.reduce(
 			(sum, budget) =>
 				sum + Math.max(budget.amountDisplay, budget.spentDisplay),
 			0,
 		)
+		const committed = committedBudgets + recurringExpenseSum
 		const cap = Math.max(0, incomeSum - committed)
 		const spentDisplay = Math.max(0, unbudgetedExpenseSum)
 		const amountDisplay = cap
+		const recurringBudget =
+			recurringExpenseSum > 0
+				? {
+						label: "Recurring expenses",
+						percent: 100,
+						usage: recurringExpenseSum,
+						currency: displayCurrency,
+						showPercentLabel: false,
+					}
+				: null
 
 		const freeBudget =
 			incomeSum > 0
@@ -159,19 +178,19 @@ function BudgetsContent({
 					}
 				: null
 
-		return {
-			"virtual:month-progress": monthProgress,
-			"virtual:free-budget": freeBudget,
-		}
+		return [
+			monthProgress,
+			...(recurringBudget ? [recurringBudget] : []),
+			...(freeBudget ? [freeBudget] : []),
+		]
 	}, [monthlyQuery.data, budgetsWithProgress, prefsQuery.data])
 
 	const realBudgets = budgetsWithProgress
 
 	return (
 		<div>
-			{realBudgets.map((budget, index) => (
+			{realBudgets.map((budget) => (
 				<div key={budget.id}>
-					{index > 0 && <Separator />}
 					<BudgetItem
 						budget={budget}
 						onDelete={onDelete}
@@ -180,16 +199,12 @@ function BudgetsContent({
 					/>
 				</div>
 			))}
-			{realBudgets.length > 0 && <Separator />}
-			<VirtualBudgetItem data={virtualItems["virtual:month-progress"]} />
-			{virtualItems["virtual:free-budget"] && (
-				<>
-					<Separator />
-					<VirtualBudgetItem data={virtualItems["virtual:free-budget"]} />
-				</>
-			)}
-		</div>
-	)
+			{realBudgets.length > 0 && <Separator className="my-2" />}
+		{virtualItems.map((item) => (
+			<VirtualBudgetItem key={item.label} data={item} />
+		))}
+	</div>
+)
 }
 
 function BudgetsHeaderActions({

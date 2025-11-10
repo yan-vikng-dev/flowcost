@@ -5,19 +5,20 @@ export function convertCurrency(
 	from: Currency,
 	to: Currency,
 	rates: Record<Currency, number>,
-): number | null {
+): number {
 	const srcRate = rates[from]
 	const targetRate = rates[to]
 
 	if (
 		typeof srcRate === "number" &&
 		srcRate > 0 &&
-		typeof targetRate === "number"
+		typeof targetRate === "number" &&
+		targetRate > 0
 	) {
 		return amount * (targetRate / srcRate)
 	}
 
-	return null
+	throw new Error(`Missing exchange rate for conversion from ${from} to ${to}`)
 }
 
 export function formatCurrency(

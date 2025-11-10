@@ -84,18 +84,17 @@ export function MonthlyEntriesTable({
 				description: false,
 				recurring: false,
 			}
-		} else {
-			// Mobile: show only date, category, converted
-			return {
-				recurring: false,
-				description: false,
-				amount: false,
-				amountIls: true, // converted
-				executedDate: true, // date
-				category: true, // category
-				globalFilter: false,
-				actions: false,
-			}
+		}
+		// Mobile: show only date, category, converted
+		return {
+			recurring: false,
+			description: false,
+			amount: false,
+			convertedAmount: true, // converted
+			executedDate: true, // date
+			category: true, // category
+			globalFilter: false,
+			actions: false,
 		}
 	}
 
@@ -116,7 +115,7 @@ export function MonthlyEntriesTable({
 						recurring: false,
 						description: false,
 						amount: false,
-						amountIls: true, // converted
+						convertedAmount: true, // converted
 						executedDate: true, // date
 						category: true, // category
 						globalFilter: false,

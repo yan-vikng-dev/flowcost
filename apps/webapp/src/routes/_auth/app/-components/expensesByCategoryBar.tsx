@@ -42,7 +42,7 @@ function ExpensesChart() {
 		)
 		const aggregated = expenses.reduce((acc: Record<string, number>, e) => {
 			const category = e.category.trim()
-			const amount = Math.round(e.amountIls ?? 0)
+			const amount = Math.round(e.convertedAmount)
 			acc[category] = (acc[category] ?? 0) + amount
 			return acc
 		}, {})
@@ -114,7 +114,7 @@ function ExpensesChart() {
 					tick={{ fontSize: 12, fill: "var(--color-muted-foreground)" }}
 					tickLine={false}
 					type="category"
-					width={60}
+					width={70}
 				/>
 				<ChartTooltip
 					content={

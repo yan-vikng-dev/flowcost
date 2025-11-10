@@ -5,7 +5,7 @@ import type { Currency } from "@repo/shared-lib"
 import { getCurrentMonthRange } from "@repo/shared-lib"
 import { createServerFn } from "@tanstack/react-start"
 import { DateTime } from "luxon"
-import { type MonthlyEntry, mapToMonthlyEntry } from "@/core/functions/entries"
+import type { MonthlyEntry } from "@/core/functions/entries"
 import { protectedFunctionMiddleware } from "@/core/middleware/auth"
 
 export type MonthlyEntriesResult = {
@@ -44,6 +44,6 @@ export const getMonthlyEntries = createServerFn()
 			displayCurrency,
 			timezone,
 			monthLabel,
-			entries: result.entries.map(mapToMonthlyEntry),
+			entries: result.entries,
 		}
 	})

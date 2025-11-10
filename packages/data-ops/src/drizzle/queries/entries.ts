@@ -9,7 +9,7 @@ import { getAllowedUserIds, getUserTimezoneAndCurrency } from "./helpers"
 import { ensureRecurringEntriesMaterialized } from "./recurring-entries"
 
 export type ConvertedEntry = SelectEntry & {
-	convertedAmount: number | null
+	convertedAmount: number
 }
 
 export type FetchConvertedEntriesOptions = {

@@ -358,11 +358,10 @@ export function entriesTableColumns({
 		},
 		{
 			accessorFn: (row) => {
-				const val = row.amountIls
-				if (val === null) return null
+				const val = row.convertedAmount
 				return row.entryType === "Expense" ? -val : val
 			},
-			id: "amountIls",
+			id: "convertedAmount",
 			filterFn: numberRangeFilter,
 			meta: { align: "right" },
 			header: ({ column }) => {
@@ -372,7 +371,7 @@ export function entriesTableColumns({
 				const filterValue = column.getFilterValue() as
 					| NumberRangeFilter
 					| undefined
-				const maxValue = getColumnMaxValue(column, "amountIls")
+				const maxValue = getColumnMaxValue(column, "convertedAmount")
 
 				return (
 					<div className="flex items-center justify-end gap-1">
@@ -442,12 +441,10 @@ export function entriesTableColumns({
 				)
 			},
 			cell: ({ row }) => {
-				const val = row.getValue("amountIls")
+				const val = row.getValue("convertedAmount") as number
 				return (
 					<div className="text-right">
-						{typeof val === "number"
-							? formatCurrency(val, displayCurrency as Currency)
-							: "-"}
+						{formatCurrency(val, displayCurrency as Currency)}
 					</div>
 				)
 			},

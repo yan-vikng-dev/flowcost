@@ -51,11 +51,21 @@ export type EntryFormState = Omit<CreateEntryInput, "amount"> & {
 	endAt?: Date
 }
 
-function parseAmountInput(input: string, previous: number | ""): number | "" {
-	const sanitized = input.replace(/[^0-9.]/g, "")
-	if (sanitized.length === 0) return ""
-	const parsed = Number.parseFloat(sanitized)
-	if (Number.isNaN(parsed)) return previous
+function normalizeAmountInput(input: string): string {
+	const cleaned = input.replace(/[^0-9.]/g, "")
+	const [integerPart = "", ...decimalParts] = cleaned.split(".")
+	if (decimalParts.length === 0) return integerPart
+	return `${integerPart}.${decimalParts.join("")}`
+}
+
+function formatAmountInputValue(value: number | ""): string {
+	return value === "" ? "" : String(value)
+}
+
+function parseAmountInput(input: string): number | "" {
+	if (input === "" || input === ".") return ""
+	const parsed = Number.parseFloat(input)
+	if (Number.isNaN(parsed)) return ""
 	return parsed
 }
 
@@ -75,6 +85,9 @@ export function EntryDialog({
 	isPending?: boolean
 }) {
 	const [state, setState] = React.useState<EntryFormState>(initial)
+	const [amountInput, setAmountInput] = React.useState(
+		formatAmountInputValue(initial.amount),
+	)
 	const executedAtId = React.useId()
 	const amountId = React.useId()
 	const descriptionId = React.useId()
@@ -93,7 +106,10 @@ export function EntryDialog({
 
 	const timezone = prefsQuery.data?.timezone || "UTC"
 
-	React.useEffect(() => setState(initial), [initial])
+	React.useEffect(() => {
+		setState(initial)
+		setAmountInput(formatAmountInputValue(initial.amount))
+	}, [initial])
 
 	const isRecurring = state.isRecurring ?? false
 
@@ -165,17 +181,18 @@ export function EntryDialog({
 									<Input
 										id={amountId}
 										inputMode="decimal"
-										onChange={(event) =>
+										onChange={(event) => {
+											const normalizedValue = normalizeAmountInput(
+												event.target.value,
+											)
+											setAmountInput(normalizedValue)
 											setState((prev) => ({
 												...prev,
-												amount: parseAmountInput(
-													event.target.value,
-													prev.amount,
-												),
+												amount: parseAmountInput(normalizedValue),
 											}))
-										}
+										}}
 										placeholder="0.00"
-										value={state.amount}
+										value={amountInput}
 									/>
 								</Field>
 

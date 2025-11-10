@@ -66,29 +66,26 @@ export function formatProgressBar(percentage: number): string {
 }
 
 export function aggregateCategoryTotals(
-	entries: Array<{ category: string; convertedAmount: number | null }>,
+	entries: Array<{ category: string; convertedAmount: number }>,
 ): Map<Category, number> {
 	const categoryTotals = new Map<Category, number>()
 	for (const entry of entries) {
-		if (entry.convertedAmount !== null) {
-			const current = categoryTotals.get(entry.category as Category) || 0
-			categoryTotals.set(
-				entry.category as Category,
-				current + entry.convertedAmount,
-			)
-		}
+		const current = categoryTotals.get(entry.category as Category) || 0
+		categoryTotals.set(
+			entry.category as Category,
+			current + entry.convertedAmount,
+		)
 	}
 	return categoryTotals
 }
 
 export function findTopSpendingDay(
-	entries: Array<{ executedDate: string; convertedAmount: number | null }>,
+	entries: Array<{ executedDate: string; convertedAmount: number }>,
 	timeZone: string,
 ): { date: string; amount: number } | null {
 	const dayTotals = new Map<string, number>()
 
 	for (const entry of entries) {
-		if (entry.convertedAmount === null) continue
 		const dateKey = entry.executedDate
 		if (!dateKey) continue
 		const current = dayTotals.get(dateKey) || 0
@@ -141,7 +138,7 @@ export function calculateBudgetProgressForBudgets(
 		currency: string
 		categories: unknown
 	}>,
-	entries: Array<{ category: string; convertedAmount: number | null }>,
+	entries: Array<{ category: string; convertedAmount: number }>,
 	latestRates: Record<Currency, number>,
 	displayCurrency: Currency,
 ): BudgetProgress[] {
@@ -153,9 +150,7 @@ export function calculateBudgetProgressForBudgets(
 
 		for (const entry of entries) {
 			if (!budgetCategories.includes(entry.category as Category)) continue
-			if (entry.convertedAmount !== null) {
-				spentDisplay += entry.convertedAmount
-			}
+			spentDisplay += entry.convertedAmount
 		}
 
 		const srcBudgetRate = latestRates[budget.currency as Currency]

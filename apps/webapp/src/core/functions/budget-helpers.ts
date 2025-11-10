@@ -12,9 +12,7 @@ function calculateSpentForBudget(
 	const budgetCategories = budget.categories
 	for (const entry of expenseEntries) {
 		if (!budgetCategories.includes(entry.category)) continue
-		if (entry.convertedAmount !== null) {
-			spent += entry.convertedAmount
-		}
+		spent += entry.convertedAmount
 	}
 	return spent
 }
@@ -27,9 +25,7 @@ function calculateSpentForBudgetFromMonthlyEntries(
 	const budgetCategories = budget.categories
 	for (const entry of expenseEntries) {
 		if (!budgetCategories.includes(entry.category)) continue
-		if (entry.amountIls !== null) {
-			spent += entry.amountIls
-		}
+		spent += entry.convertedAmount
 	}
 	return spent
 }

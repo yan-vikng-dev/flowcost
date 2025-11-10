@@ -10,39 +10,34 @@ export type VirtualItemData = {
 	usage?: number
 	cap?: number
 	currency?: Currency
+	showPercentLabel?: boolean
 }
 
-export type VirtualItemsMap = {
-	"virtual:month-progress": VirtualItemData
-	"virtual:free-budget": VirtualItemData | null
-}
 
 export function VirtualBudgetItem({ data }: { data: VirtualItemData }) {
 	const pct = Math.max(0, Math.min(100, data.percent))
-	const right =
-		typeof data.rightLabel === "string" && data.rightLabel.length > 0
-			? data.rightLabel
-			: typeof data.usage === "number" && typeof data.cap === "number"
-				? `${formatNumber(data.usage)}/${formatNumber(data.cap)}${
-						data.currency ? ` ${getCurrencySymbol(data.currency)}` : ""
-					}`
-				: ""
+	const currencyLabel = data.currency ? ` ${getCurrencySymbol(data.currency)}` : ""
+	const usageOnly = data.usage ? `${formatNumber(data.usage)}${currencyLabel}` : undefined
+	const usageWithCap =
+		data.usage && data.cap ?
+			`${formatNumber(data.usage)}/${formatNumber(data.cap)}${currencyLabel}`
+			: usageOnly
+	const right = data.rightLabel ?? usageWithCap
+	const showPercent = data.showPercentLabel !== false
+	const leftText = showPercent ? `${Math.round(pct)}%` : ""
+	const separator = leftText && right ? " · " : ""
 
 	return (
 		<div className="space-y-2 py-3">
 			<div className="flex items-center justify-between gap-2">
-				<div className="flex items-center gap-2">
-					<div className="flex flex-wrap gap-1">
-						<Badge variant="secondary">{data.label}</Badge>
-					</div>
-				</div>
-				<div className="flex items-center gap-2">
-					<span className="text-sm">
-						{Math.round(pct)}% · {right}
-					</span>
-				</div>
+				<Badge variant="secondary">{data.label}</Badge>
+				<span className="text-sm">
+					{leftText}
+					{separator}
+					{right}
+				</span>
 			</div>
-			<Progress value={pct} />
+			<Progress progressColor="var(--amount-positive)" value={pct} />
 		</div>
 	)
 }

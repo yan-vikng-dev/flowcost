@@ -32,7 +32,7 @@ export const enumMultiSelectFilter: FilterFn<MonthlyEntry> = (
 	return selectedValues.includes(rowValue)
 }
 
-// Number range filter for amount and amountIls columns
+// Number range filter for amount and converted columns
 export const numberRangeFilter: FilterFn<MonthlyEntry> = (
 	row,
 	columnId,
@@ -101,7 +101,7 @@ export const fulltextFilter: FilterFn<MonthlyEntry> = (
 		entry.entryType,
 		entry.currency,
 		entry.amount?.toString(),
-		entry.amountIls?.toString(),
+		entry.convertedAmount.toString(),
 		entry.executedDate,
 		entry.id,
 		// Include recurring template info if available

@@ -55,7 +55,7 @@ export function MobileAppNav() {
 
 	return (
 		<>
-			<nav className="fixed bottom-0 z-20 flex h-16 w-full items-center justify-between bg-background/90 backdrop-blur-xl">
+			<nav className="fixed bottom-0 z-20 flex h-16 py-2 w-full items-center justify-between bg-background/90 backdrop-blur-xl border-t border-border/20">
 				<div className="flex flex-1 justify-center">
 					<Button aria-label={toggleLabel} asChild size="icon" variant="ghost">
 						<Link to={toggleTarget}>

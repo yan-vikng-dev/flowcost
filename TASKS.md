@@ -1,0 +1,2 @@
+- recurring entry form, "until" date, never before start date
+- recurring don't need categories and budgets

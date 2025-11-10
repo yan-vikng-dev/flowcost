@@ -15,7 +15,7 @@ export type BudgetForProgress = {
 
 export type EntryForProgress = {
 	category: string
-	convertedAmount: number | null
+	convertedAmount: number
 }
 
 export function calculateBudgetProgress(
@@ -32,9 +32,7 @@ export function calculateBudgetProgress(
 
 		for (const entry of entries) {
 			if (!budgetCategories.includes(entry.category as Category)) continue
-			if (entry.convertedAmount !== null) {
-				spentDisplay += entry.convertedAmount
-			}
+			spentDisplay += entry.convertedAmount
 		}
 
 		const srcBudgetRate = latestRates[budget.currency as Currency]

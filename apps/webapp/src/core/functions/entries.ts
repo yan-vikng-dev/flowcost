@@ -1,5 +1,6 @@
 import { getDb } from "@repo/data-ops/database/setup"
 import { getEntryForUser } from "@repo/data-ops/drizzle/queries"
+import type { ConvertedEntry } from "@repo/data-ops/drizzle/queries/entries"
 import {
 	getAllowedUserIds,
 	getUserTimezoneAndCurrency,
@@ -8,7 +9,6 @@ import {
 	entries,
 	entryTypes,
 	type InsertEntry,
-	type SelectEntry,
 } from "@repo/data-ops/drizzle/schemas/index"
 import { categories, currencies, toIsoDateInTimezone } from "@repo/shared-lib"
 import { createServerFn } from "@tanstack/react-start"
@@ -120,15 +120,4 @@ export const deleteEntries = createServerFn({ method: "POST" })
 		return { deleted: ids.length }
 	})
 
-export type MonthlyEntry = SelectEntry & {
-	amountIls: number | null
-}
-
-export function mapToMonthlyEntry(
-	entry: SelectEntry & { convertedAmount: number | null },
-): MonthlyEntry {
-	return {
-		...entry,
-		amountIls: entry.convertedAmount,
-	}
-}
+export type MonthlyEntry = ConvertedEntry

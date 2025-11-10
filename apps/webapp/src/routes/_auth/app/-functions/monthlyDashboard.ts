@@ -10,7 +10,6 @@ import { createServerFn } from "@tanstack/react-start"
 import { DateTime } from "luxon"
 import { calculateBudgetsWithProgress } from "@/core/functions/budget-helpers"
 import type { BudgetWithProgress } from "@/core/functions/budgets"
-import { mapToMonthlyEntry } from "@/core/functions/entries"
 import { protectedFunctionMiddleware } from "@/core/middleware/auth"
 import type { MonthlyEntriesResult } from "./monthlyEntries"
 
@@ -52,7 +51,7 @@ export const getMonthlyDashboardData = createServerFn()
 			displayCurrency,
 			timezone,
 			monthLabel: formatMonthLabel(start, timezone),
-			entries: allEntriesResult.entries.map(mapToMonthlyEntry),
+			entries: allEntriesResult.entries,
 		}
 
 		const expenseEntries = allEntriesResult.entries.filter(
