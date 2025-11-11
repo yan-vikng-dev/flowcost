@@ -1,15 +1,22 @@
-import { ArrowRight } from "lucide-react"
+import { ArrowRight, Loader2 } from "lucide-react"
+import * as React from "react"
 import { Button } from "@/components/ui/button"
 import { authClient } from "@/lib/auth-client"
 
 export function HeroSection() {
-	const handleGoogleSignIn = async () => {
-		await authClient.signIn.social({
-			provider: "google",
-			callbackURL: "/app",
-		})
-	}
+	const [isLoading, setIsLoading] = React.useState(false)
 
+	const handleGoogleSignIn = async () => {
+		setIsLoading(true)
+		try {
+			await authClient.signIn.social({
+				provider: "google",
+				callbackURL: "/app",
+			})
+		} catch {
+			setIsLoading(false)
+		}
+	}
 	return (
 		<section className="relative flex min-h-screen items-center">
 			<div className="mx-auto max-w-4xl space-y-6 text-center">
@@ -27,11 +34,21 @@ export function HeroSection() {
 				<div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
 					<Button
 						className="group"
+						disabled={isLoading}
 						onClick={() => void handleGoogleSignIn()}
 						size="lg"
 					>
-						Get Started
-						<ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+						{isLoading ? (
+							<>
+								<Loader2 className="h-4 w-4 animate-spin" />
+								Loading...
+							</>
+						) : (
+							<>
+								Get Started
+								<ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+							</>
+						)}
 					</Button>
 				</div>
 			</div>

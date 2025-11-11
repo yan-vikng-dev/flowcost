@@ -2,9 +2,9 @@
 globs: *.tsx
 alwaysApply: false
 ---
-- text defaults to text-foreground, so no need to set explicitly
+- text defaults to text-foreground, so no need to set explicitly, unless a different semantic text color is desired
 - prefer parent `space-y-x` and `gap` over individual children `mb-x` and `mt-x`
-- when creating icon-only buttons, use `size="icon"`, `size="icon-sm"`, or `size="icon-xs"` variants. When using these icon size variants, no need to add a size class to the icon.
+- when creating icon-only buttons, use `size="icon"`, `size="icon-sm"`, or `size="icon-lg"` variants. When using these icon size variants, no need to add an explicit size class to the icon.
 - import icons explicitly with the Icon suffix, e.g PencilIcon instead of Pencil (lucide has Icon suffix alias for all icons)
 - component naming convention is kebab-case, e.g. `text-filter.tsx` instead of `TextFilter.tsx`
 - Avoid wrapper divs that only have one child unless the wrapper provides necessary layout context or the child can't accept the wrapper's styling directly.

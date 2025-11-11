@@ -9,7 +9,7 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select"
-import { getEntryTypeIcon } from "@/config/entryTypes"
+import { getEntryTypeIcon } from "@/config/entry-types"
 
 export function EntryTypeSelect({
 	value,

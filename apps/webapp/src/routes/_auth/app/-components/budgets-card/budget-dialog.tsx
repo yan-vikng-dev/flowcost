@@ -1,7 +1,7 @@
 import type { Category, Currency } from "@repo/shared-lib"
 import * as React from "react"
-import { CategoryMultiCombobox } from "@/components/combobox/CategoryMultiCombobox"
-import { CurrencyCombobox } from "@/components/combobox/CurrencyCombobox"
+import { CategoryMultiCombobox } from "@/components/combobox/category-multi-combobox"
+import { CurrencyCombobox } from "@/components/combobox/currency-combobox"
 import { Button } from "@/components/ui/button"
 import {
 	Dialog,

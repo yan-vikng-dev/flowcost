@@ -1,2 +1,2 @@
 export * from "./categories"
-export * from "./entryTypes"
+export * from "./entry-types"

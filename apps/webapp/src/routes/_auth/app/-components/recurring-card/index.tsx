@@ -39,8 +39,8 @@ import {
 	EntryDialog,
 	type EntryFormState,
 	getDefaultEntryInitial,
-} from "../EntryDialog"
-import { RecurringTemplateItem } from "./RecurringTemplateItem"
+} from "../entry-dialog"
+import { RecurringTemplateItem } from "./recurring-template-item"
 import { buildRRuleFromUi } from "./utils"
 
 function RecurringHeaderActions({

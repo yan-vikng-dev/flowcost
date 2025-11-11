@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router"
-import { LogInIcon } from "lucide-react"
+import { Loader2Icon, LogInIcon } from "lucide-react"
 import * as React from "react"
 import { ThemeToggle } from "@/components/theme"
 import { Button } from "@/components/ui/button"
@@ -8,12 +8,18 @@ import { cn } from "@/lib/utils"
 
 export function LandingHeader() {
 	const [isScrolled, setIsScrolled] = React.useState(false)
+	const [isLoading, setIsLoading] = React.useState(false)
 
 	const handleGoogleSignIn = async () => {
-		await authClient.signIn.social({
-			provider: "google",
-			callbackURL: "/app",
-		})
+		setIsLoading(true)
+		try {
+			await authClient.signIn.social({
+				provider: "google",
+				callbackURL: "/app",
+			})
+		} catch {
+			setIsLoading(false)
+		}
 	}
 
 	React.useEffect(() => {
@@ -50,8 +56,16 @@ export function LandingHeader() {
 					</Link>
 
 					<div className="flex items-center gap-2">
-						<Button className="gap-2" onClick={() => void handleGoogleSignIn()}>
-							<LogInIcon className="h-4 w-4" />
+						<Button
+							className="gap-2"
+							disabled={isLoading}
+							onClick={() => void handleGoogleSignIn()}
+						>
+							{isLoading ? (
+								<Loader2Icon className="h-4 w-4 animate-spin" />
+							) : (
+								<LogInIcon className="h-4 w-4" />
+							)}
 							Sign In
 						</Button>
 						<ThemeToggle />

@@ -18,9 +18,39 @@
 		"rules": {
 			"nursery": {
 				"useSortedClasses": "error"
+			},
+			"style": {
+				"useFilenamingConvention": "off"
 			}
 		}
 	},
+	"overrides": [
+		{
+			"includes": ["**/*.tsx"],
+			"linter": {
+				"rules": {
+					"style": {
+						"useFilenamingConvention": {
+							"level": "error",
+							"options": {
+								"filenameCases": ["kebab-case"]
+							}
+						}
+					}
+				}
+			}
+		},
+		{
+			"includes": ["**/*$*.tsx"],
+			"linter": {
+				"rules": {
+					"style": {
+						"useFilenamingConvention": "off"
+					}
+				}
+			}
+		}
+	],
 	"assist": {
 		"enabled": true,
 		"actions": {

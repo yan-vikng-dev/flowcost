@@ -20,9 +20,10 @@ function LandingPage() {
 			<FloatingWaves
 				className="z-0"
 				lineColor="rgba(59, 130, 246, 0.15)"
+				secondaryWaveSpeedX={0.01}
 				waveAmpX={35}
 				waveAmpY={18}
-				waveSpeedX={0.012}
+				waveSpeedX={0.005}
 				waveSpeedY={0.006}
 			/>
 			<LandingHeader />

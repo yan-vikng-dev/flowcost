@@ -20,7 +20,7 @@ import {
 	cancelInvitation,
 	disconnectConnection,
 } from "../../-functions/connections"
-import { InviteDialog } from "./InviteDialog"
+import { InviteDialog } from "./invite-dialog"
 
 export function AccountCard() {
 	const queryClient = useQueryClient()

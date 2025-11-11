@@ -2,9 +2,9 @@ import { parseRRULE } from "@repo/data-ops/drizzle/queries"
 import { type Category, type Currency, categories } from "@repo/shared-lib"
 import { useQuery } from "@tanstack/react-query"
 import * as React from "react"
-import { CategoryCombobox } from "@/components/combobox/CategoryCombobox"
-import { CurrencyCombobox } from "@/components/combobox/CurrencyCombobox"
-import { EntryTypeSelect } from "@/components/combobox/EntryTypeSelect"
+import { CategoryCombobox } from "@/components/combobox/category-combobox"
+import { CurrencyCombobox } from "@/components/combobox/currency-combobox"
+import { EntryTypeSelect } from "@/components/combobox/entry-type-select"
 import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
 import {
@@ -42,7 +42,7 @@ import {
 	getDefaultRecurrence,
 	getWeekdayFromDate,
 	type RecurrenceUi,
-} from "./RecurringCard/utils"
+} from "./recurring-card/utils"
 
 export type EntryFormState = Omit<CreateEntryInput, "amount"> & {
 	amount: number | ""
@@ -404,7 +404,10 @@ export function EntryDialog({
 													className="w-auto overflow-hidden p-0"
 												>
 													<Calendar
-														initialFocus
+														autoFocus
+														disabled={(date) =>
+															state.executedAt ? date < state.executedAt : false
+														}
 														mode="single"
 														onSelect={(date) => {
 															setState((prev) => ({

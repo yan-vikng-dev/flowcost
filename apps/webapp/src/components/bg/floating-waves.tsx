@@ -5,6 +5,11 @@ export function FloatingWaves({
 	waveSpeedY = 0.008,
 	waveAmpX = 50,
 	waveAmpY = 25,
+	secondaryWaveSpeedX = 0.025,
+	secondaryWaveSpeedY = 0.012,
+	secondaryWaveAmpX = 20,
+	secondaryWaveAmpY = 12,
+	secondaryWaveFrequency = 0.0035,
 	backgroundColor = "transparent",
 	lineColor = "rgba(255, 255, 255, 0.3)",
 	disableInteraction = false,
@@ -94,13 +99,26 @@ export function FloatingWaves({
 			const mouse = mouseRef.current
 			lines.forEach((pts) => {
 				pts.forEach((p) => {
-					const move =
-						Math.sin(
-							(p.x + time * waveSpeedX) * 0.002 +
-								(p.y + time * waveSpeedY) * 0.002,
-						) * 12
-					p.wave.x = Math.cos(move) * waveAmpX
-					p.wave.y = Math.sin(move) * waveAmpY
+					const primaryPhase =
+						(p.x + time * waveSpeedX) * 0.002 +
+						(p.y + time * waveSpeedY) * 0.002
+					const primaryMove = Math.sin(primaryPhase) * 12
+
+					const secondaryPhase =
+						(p.x * 0.7 + time * secondaryWaveSpeedX) * secondaryWaveFrequency +
+						(p.y * 1.3 + time * secondaryWaveSpeedY) * secondaryWaveFrequency
+					const secondaryMove = Math.sin(secondaryPhase) * 8
+
+					const primaryX = Math.cos(primaryMove) * waveAmpX
+					const primaryY = Math.sin(primaryMove) * waveAmpY
+
+					const secondaryX =
+						Math.cos(secondaryMove + Math.PI / 3) * secondaryWaveAmpX
+					const secondaryY =
+						Math.sin(secondaryMove + Math.PI / 4) * secondaryWaveAmpY
+
+					p.wave.x = primaryX + secondaryX
+					p.wave.y = primaryY + secondaryY
 
 					const dx = p.x - mouse.sx,
 						dy = p.y - mouse.sy
@@ -254,6 +272,11 @@ export function FloatingWaves({
 		waveSpeedY,
 		waveAmpX,
 		waveAmpY,
+		secondaryWaveSpeedX,
+		secondaryWaveSpeedY,
+		secondaryWaveAmpX,
+		secondaryWaveAmpY,
+		secondaryWaveFrequency,
 		lineColor,
 		disableInteraction,
 	])

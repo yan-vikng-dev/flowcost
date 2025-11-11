@@ -1,10 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router"
 import { getUserPreferences } from "@/core/functions/preferences"
 import { listRecurringTemplates } from "@/core/functions/recurring-templates"
-import { BudgetsCard } from "./-components/BudgetsCard"
-import { ExpensesCard } from "./-components/expensesByCategoryBar"
-import { SummaryCard } from "./-components/MonthlyStandardSummary"
-import { RecurringCard } from "./-components/RecurringCard"
+import { BudgetsCard } from "./-components/budgets-card"
+import { ExpensesCard } from "./-components/expenses-by-category-bar"
+import { SummaryCard } from "./-components/monthly-standard-summary"
+import { RecurringCard } from "./-components/recurring-card"
 import {
 	EXCHANGE_RATES_KEY,
 	getBudgets,

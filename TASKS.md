@@ -1,2 +1,1 @@
-- recurring entry form, "until" date, never before start date
-- recurring don't need categories and budgets
+- "Free budget" virtual item needs an explanation tooltip

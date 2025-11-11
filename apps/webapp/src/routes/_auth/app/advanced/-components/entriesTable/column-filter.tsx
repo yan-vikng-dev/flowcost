@@ -2,7 +2,7 @@ import type { Category } from "@repo/shared-lib"
 import type { Column } from "@tanstack/react-table"
 import { FilterIcon } from "lucide-react"
 import * as React from "react"
-import { CategoryMultiCombobox } from "@/components/combobox/CategoryMultiCombobox"
+import { CategoryMultiCombobox } from "@/components/combobox/category-multi-combobox"
 import { Button } from "@/components/ui/button"
 import {
 	DropdownMenu,

@@ -4,8 +4,8 @@ import { createEntry } from "@/core/functions/entries"
 import { getUserPreferences } from "@/core/functions/preferences"
 import type { CreateRecurringTemplateInput } from "@/core/functions/recurring-templates"
 import { createRecurringTemplate } from "@/core/functions/recurring-templates"
-import type { EntryFormState } from "./EntryDialog"
-import { buildRRuleFromUi } from "./RecurringCard/utils"
+import type { EntryFormState } from "./entry-dialog"
+import { buildRRuleFromUi } from "./recurring-card/utils"
 
 function isValidEntryState(state: EntryFormState): boolean {
 	return !!(

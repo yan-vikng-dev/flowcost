@@ -1,6 +1,6 @@
 import { type Category, categories } from "@repo/shared-lib"
 import { getCategoryIcon } from "@/config/categories"
-import { ResponsiveCombobox } from "./ResponsiveCombobox"
+import { ResponsiveCombobox } from "./responsive-combobox"
 
 export function CategoryCombobox({
 	value,

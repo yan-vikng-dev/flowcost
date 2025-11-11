@@ -3,7 +3,7 @@ import { PencilIcon, Trash2Icon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import type { BudgetWithProgress } from "@/core/functions/budgets"
-import { CategoryChips } from "./CategoryChips"
+import { CategoryChips } from "./category-chips"
 import { formatNumber } from "./utils"
 
 export function BudgetItem({

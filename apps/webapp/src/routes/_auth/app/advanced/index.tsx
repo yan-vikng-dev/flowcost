@@ -9,8 +9,11 @@ import {
 	createRecurringTemplate,
 } from "@/core/functions/recurring-templates"
 import { useIsDesktop } from "@/hooks/use-is-desktop"
-import { EntryDialog, getDefaultEntryInitial } from "../-components/EntryDialog"
-import { buildRRuleFromUi } from "../-components/RecurringCard/utils"
+import {
+	EntryDialog,
+	getDefaultEntryInitial,
+} from "../-components/entry-dialog"
+import { buildRRuleFromUi } from "../-components/recurring-card/utils"
 import {
 	getMonthlyEntries,
 	MONTHLY_ENTRIES_KEY,

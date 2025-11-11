@@ -3,8 +3,8 @@ import { getUserPreferences } from "@/core/functions/preferences"
 import { getWhatsappLinkStatus } from "@/core/functions/whatsapp"
 import { AccountCard } from "./-components/AccountCard"
 import { AssistantCard } from "./-components/AssistantCard"
-import { IncomingInviteCard } from "./-components/IncomingInviteCard"
-import { PreferencesCard } from "./-components/PreferencesCard"
+import { IncomingInviteCard } from "./-components/incoming-invite-card"
+import { PreferencesCard } from "./-components/preferences-card"
 
 export const Route = createFileRoute("/_auth/app/settings/")({
 	loader: async ({ context }) => {

@@ -19,11 +19,11 @@ interface DataTableProps {
 
 export function DataTable({ table, isLoading }: DataTableProps) {
 	return (
-		<div className="w-full overflow-x-auto overscroll-x-contain rounded-md border">
+		<div className="max-h-[600px] w-full overflow-x-auto overflow-y-auto overscroll-x-contain rounded-md border">
 			{isLoading ? (
 				<Table>
-					<TableHeader>
-						<TableRow>
+					<TableHeader className="sticky top-0 z-10">
+						<TableRow className="bg-card">
 							{table.getAllColumns().map((col, idx) => (
 								<TableHead key={col.id ?? String(idx)}>
 									<div className="h-4 w-24 animate-pulse rounded bg-muted" />
@@ -45,9 +45,9 @@ export function DataTable({ table, isLoading }: DataTableProps) {
 				</Table>
 			) : (
 				<Table>
-					<TableHeader>
+					<TableHeader className="sticky top-0 z-10">
 						{table.getHeaderGroups().map((headerGroup) => (
-							<TableRow key={headerGroup.id}>
+							<TableRow className="bg-card" key={headerGroup.id}>
 								{headerGroup.headers.map((header) => {
 									const align = (
 										header.column.columnDef as { meta?: ColumnMeta }

@@ -1,4 +1,4 @@
-export { GithubIcon } from "./GithubIcon"
-export { TelegramIcon } from "./TelegramIcon"
+export { GithubIcon } from "./github-icon"
+export { TelegramIcon } from "./telegram-icon"
 export * from "./types"
-export { WhatsappIcon } from "./WhatsappIcon"
+export { WhatsappIcon } from "./whatsapp-icon"

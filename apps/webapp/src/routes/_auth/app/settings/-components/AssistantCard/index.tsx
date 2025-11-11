@@ -1,8 +1,8 @@
 import { useQuery } from "@tanstack/react-query"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { getWhatsappLinkStatus } from "@/core/functions/whatsapp"
-import { ReportsSection } from "./ReportsSection"
-import { WhatsAppSection } from "./WhatsAppSection"
+import { ReportsSection } from "./reports-section"
+import { WhatsAppSection } from "./whats-app-section"
 
 export function AssistantCard() {
 	const whatsappStatusQuery = useQuery({

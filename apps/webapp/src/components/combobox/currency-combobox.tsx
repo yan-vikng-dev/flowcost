@@ -4,7 +4,7 @@ import {
 	getCurrencyName,
 	getCurrencySymbol,
 } from "@repo/shared-lib"
-import { ResponsiveCombobox } from "./ResponsiveCombobox"
+import { ResponsiveCombobox } from "./responsive-combobox"
 
 export function CurrencyCombobox({
 	value,

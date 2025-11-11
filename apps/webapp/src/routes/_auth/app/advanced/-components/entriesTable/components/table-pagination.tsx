@@ -16,10 +16,12 @@ interface TablePaginationProps {
 }
 
 export function TablePagination({ table }: TablePaginationProps) {
-	// Helper to compute pagination items with ellipses
+	const paginationState = table.getState().pagination
+	const pageCount = table.getPageCount()
+
 	const paginationItems = React.useMemo(() => {
-		const total = table.getPageCount()
-		const current = table.getState().pagination.pageIndex + 1 // 1-based for UI
+		const total = pageCount
+		const current = paginationState.pageIndex + 1
 		const siblingCount = 1
 		const boundaryCount = 1
 		if (total <= 0) return [] as Array<number | "dots">
@@ -63,9 +65,8 @@ export function TablePagination({ table }: TablePaginationProps) {
 		}
 
 		items.push(...endPages)
-		// De-duplicate in case of overlaps
 		return items.filter((v, i, arr) => i === 0 || v !== arr[i - 1])
-	}, [table])
+	}, [paginationState.pageIndex, pageCount])
 	return (
 		<div className="flex flex-wrap items-center justify-end gap-2 py-4">
 			{/* Pagination controls */}
@@ -95,7 +96,7 @@ export function TablePagination({ table }: TablePaginationProps) {
 						)
 					}
 					const page = item
-					const isActive = table.getState().pagination.pageIndex === page - 1
+					const isActive = paginationState.pageIndex === page - 1
 					return (
 						<Button
 							aria-current={isActive ? "page" : undefined}
@@ -124,10 +125,12 @@ export function TablePagination({ table }: TablePaginationProps) {
 				<span className="text-muted-foreground text-sm">Rows per page</span>
 				<Select
 					onValueChange={(v) => {
-						table.setPageSize(Number(v))
-						table.setPageIndex(0)
+						table.setPagination({
+							pageIndex: 0,
+							pageSize: Number(v),
+						})
 					}}
-					value={String(table.getState().pagination.pageSize)}
+					value={String(paginationState.pageSize)}
 				>
 					<SelectTrigger className="h-8 w-[100px]">
 						<SelectValue />

@@ -1,4 +1,4 @@
-import { ResponsiveCombobox } from "./ResponsiveCombobox"
+import { ResponsiveCombobox } from "./responsive-combobox"
 
 export type TimezoneOption = { value: string; label: string }
 

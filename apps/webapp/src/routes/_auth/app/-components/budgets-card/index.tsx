@@ -47,10 +47,10 @@ import {
 	getMonthlyEntries,
 	MONTHLY_ENTRIES_KEY,
 } from "../../-functions/monthlyEntries"
-import { BudgetDialog, type FormState } from "./BudgetDialog"
-import { BudgetItem } from "./BudgetItem"
+import { BudgetDialog, type FormState } from "./budget-dialog"
+import { BudgetItem } from "./budget-item"
 import { getMonthProgress } from "./utils"
-import { VirtualBudgetItem, type VirtualItemData } from "./VirtualBudgetItem"
+import { VirtualBudgetItem, type VirtualItemData } from "./virtual-budget-item"
 
 function BudgetsContent({
 	onDelete,
@@ -175,6 +175,14 @@ function BudgetsContent({
 						usage: spentDisplay,
 						cap: amountDisplay,
 						currency: displayCurrency,
+						freeBudgetCalculation: {
+							incomeSum,
+							committedBudgets,
+							recurringExpenseSum,
+							committed,
+							cap,
+							unbudgetedExpenseSum,
+						},
 					}
 				: null
 
@@ -200,11 +208,11 @@ function BudgetsContent({
 				</div>
 			))}
 			{realBudgets.length > 0 && <Separator className="my-2" />}
-		{virtualItems.map((item) => (
-			<VirtualBudgetItem key={item.label} data={item} />
-		))}
-	</div>
-)
+			{virtualItems.map((item) => (
+				<VirtualBudgetItem data={item} key={item.label} />
+			))}
+		</div>
+	)
 }
 
 function BudgetsHeaderActions({

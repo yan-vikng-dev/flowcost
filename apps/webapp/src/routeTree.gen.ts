@@ -8,13 +8,13 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
-import { Route as rootRouteImport } from './routes/__root'
-import { Route as AuthRouteRouteImport } from './routes/_auth/route'
-import { Route as IndexRouteImport } from './routes/index'
-import { Route as AuthAppIndexRouteImport } from './routes/_auth/app/index'
-import { Route as ApiAuthSplatRouteImport } from './routes/api/auth.$'
-import { Route as AuthAppSettingsIndexRouteImport } from './routes/_auth/app/settings/index'
-import { Route as AuthAppAdvancedIndexRouteImport } from './routes/_auth/app/advanced/index'
+import { Route as rootRouteImport } from "./routes/__root"
+import { Route as AuthRouteRouteImport } from "./routes/_auth/route"
+import { Route as IndexRouteImport } from "./routes/index"
+import { Route as AuthAppIndexRouteImport } from "./routes/_auth/app/index"
+import { Route as ApiAuthSplatRouteImport } from "./routes/api/auth.$"
+import { Route as AuthAppSettingsIndexRouteImport } from "./routes/_auth/app/settings/index"
+import { Route as AuthAppAdvancedIndexRouteImport } from "./routes/_auth/app/advanced/index"
 
 const AuthRouteRoute = AuthRouteRouteImport.update({
   id: '/_auth',
@@ -162,8 +162,8 @@ export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
 
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.tsx'
+import type { getRouter } from "./router.tsx"
+import type { startInstance } from "./start.tsx"
 declare module '@tanstack/react-start' {
   interface Register {
     ssr: true
