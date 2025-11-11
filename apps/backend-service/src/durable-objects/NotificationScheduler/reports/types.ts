@@ -20,4 +20,6 @@ export type ReportGeneratorParams = {
 		timezone: string
 		displayCurrency: Currency
 	}
+	allowedUserIds: string[]
+	partnerId: string | null
 }

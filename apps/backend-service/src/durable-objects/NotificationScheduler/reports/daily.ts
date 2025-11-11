@@ -6,7 +6,7 @@ import type { ReportGeneratorParams } from "./types"
 export async function generateDailyReport(
 	params: ReportGeneratorParams,
 ): Promise<string | null> {
-	const { db, userId, now, prefs } = params
+	const { db, userId, now, prefs, allowedUserIds, partnerId } = params
 	const timeZone = prefs.timezone
 	const displayCurrency = prefs.displayCurrency
 
@@ -17,6 +17,8 @@ export async function generateDailyReport(
 		timezone: timeZone,
 		displayCurrency,
 		entryType: "Expense",
+		allowedUserIds,
+		partnerId,
 	})
 
 	if (entriesResult.entries.length === 0) {

@@ -1,3 +1,9 @@
+import {
+	calculateBudgetsWithProgress,
+	calculateFreeBudget,
+	calculateMonthProgress,
+	calculateRecurringExpenses,
+} from "@repo/data-ops/drizzle/queries"
 import type { Category, Currency } from "@repo/shared-lib"
 import {
 	useMutation,
@@ -28,7 +34,6 @@ import {
 } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
 import { Skeleton } from "@/components/ui/skeleton"
-import { calculateBudgetsWithProgressFromMonthlyEntries } from "@/core/functions/budget-helpers"
 import type { BudgetWithProgress } from "@/core/functions/budgets"
 import {
 	type CreateBudgetInput,
@@ -49,7 +54,6 @@ import {
 } from "../../-functions/monthlyEntries"
 import { BudgetDialog, type FormState } from "./budget-dialog"
 import { BudgetItem } from "./budget-item"
-import { getMonthProgress } from "./utils"
 import { VirtualBudgetItem, type VirtualItemData } from "./virtual-budget-item"
 
 function BudgetsContent({
@@ -94,7 +98,7 @@ function BudgetsContent({
 			prefsQuery.data.displayCurrency ??
 			"USD"
 
-		return calculateBudgetsWithProgressFromMonthlyEntries(
+		return calculateBudgetsWithProgress(
 			budgets,
 			expenseEntries,
 			displayCurrency,
@@ -114,77 +118,42 @@ function BudgetsContent({
 			prefsQuery.data.displayCurrency ??
 			"USD"
 
-		const { percent, day, days } = getMonthProgress(DateTime.local())
+		const monthProgressData = calculateMonthProgress(DateTime.local())
 		const monthProgress = {
-			label: "Month progress",
-			percent,
-			rightLabel: `${day}/${days} days`,
+			label: "Month progress" as const,
+			percent: monthProgressData.percent,
+			rightLabel: `${monthProgressData.day}/${monthProgressData.days} days`,
 		}
 
-		const incomeSum = entries
-			.filter((entry) => entry.entryType === "Income")
-			.reduce((sum, entry) => sum + entry.convertedAmount, 0)
-		const budgets = budgetsWithProgress
-		const budgetedCats = new Set<Category>()
-		for (const budget of budgets)
-			for (const category of budget.categories) budgetedCats.add(category)
-
-		const recurringExpenseSum = entries
-			.filter(
-				(entry) => entry.entryType === "Expense" && entry.recurringTemplateId,
-			)
-			.reduce((sum, entry) => sum + entry.convertedAmount, 0)
-
-		const unbudgetedExpenseSum = entries
-			.filter(
-				(entry) =>
-					entry.entryType === "Expense" &&
-					!entry.recurringTemplateId &&
-					!budgetedCats.has(entry.category),
-			)
-			.reduce((sum, entry) => sum + entry.convertedAmount, 0)
-
-		const committedBudgets = budgets.reduce(
-			(sum, budget) =>
-				sum + Math.max(budget.amountDisplay, budget.spentDisplay),
-			0,
+		const recurringExpensesData = calculateRecurringExpenses(
+			entries,
+			displayCurrency,
 		)
-		const committed = committedBudgets + recurringExpenseSum
-		const cap = Math.max(0, incomeSum - committed)
-		const spentDisplay = Math.max(0, unbudgetedExpenseSum)
-		const amountDisplay = cap
-		const recurringBudget =
-			recurringExpenseSum > 0
-				? {
-						label: "Recurring expenses",
-						percent: 100,
-						usage: recurringExpenseSum,
-						currency: displayCurrency,
-						showPercentLabel: false,
-					}
-				: null
+		const recurringBudget = recurringExpensesData
+			? {
+					label: "Recurring expenses" as const,
+					percent: 100,
+					usage: recurringExpensesData.usage,
+					currency: displayCurrency,
+					showPercentLabel: false,
+				}
+			: null
 
-		const freeBudget =
-			incomeSum > 0
-				? {
-						label: "Free budget",
-						percent:
-							amountDisplay > 0
-								? Math.min(100, (spentDisplay / amountDisplay) * 100)
-								: 0,
-						usage: spentDisplay,
-						cap: amountDisplay,
-						currency: displayCurrency,
-						freeBudgetCalculation: {
-							incomeSum,
-							committedBudgets,
-							recurringExpenseSum,
-							committed,
-							cap,
-							unbudgetedExpenseSum,
-						},
-					}
-				: null
+		const freeBudgetData = calculateFreeBudget(
+			entries,
+			budgetsWithProgress,
+			displayCurrency,
+		)
+		const freeBudget = freeBudgetData
+			? {
+					label: "Free budget" as const,
+					percent: freeBudgetData.percent,
+					usage: freeBudgetData.usage,
+					cap: freeBudgetData.cap,
+					currency: displayCurrency,
+					freeBudgetCalculation: freeBudgetData.calculation,
+				}
+			: null
 
 		return [
 			monthProgress,

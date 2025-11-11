@@ -1,5 +1,6 @@
 import { DurableObject } from "cloudflare:workers"
 import { getDb, initDatabase } from "@repo/data-ops/database/setup"
+import { getAllowedUserIds } from "@repo/data-ops/drizzle/queries/helpers"
 import {
 	user_preferences,
 	whatsapp_links,
@@ -107,7 +108,20 @@ export class NotificationScheduler extends DurableObject {
 			reportType,
 		})
 
-		const report = await this.generateReport(db, userId, reportType, now, prefs)
+		const allowedUserIds = await getAllowedUserIds(db, userId, true)
+		const partnerId =
+			allowedUserIds.length > 1
+				? (allowedUserIds.find((id) => id !== userId) ?? null)
+				: null
+		const report = await this.generateReport(
+			db,
+			userId,
+			reportType,
+			now,
+			prefs,
+			allowedUserIds,
+			partnerId,
+		)
 		if (report) {
 			try {
 				await sendWhatsAppText({
@@ -147,8 +161,10 @@ export class NotificationScheduler extends DurableObject {
 			timezone: string
 			displayCurrency: Currency
 		},
+		allowedUserIds: string[],
+		partnerId: string | null,
 	): Promise<string | null> {
-		const params = { db, userId, now, prefs }
+		const params = { db, userId, now, prefs, allowedUserIds, partnerId }
 		switch (type) {
 			case "daily":
 				return generateDailyReport(params)

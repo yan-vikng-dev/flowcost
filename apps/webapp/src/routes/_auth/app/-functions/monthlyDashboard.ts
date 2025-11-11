@@ -1,5 +1,6 @@
 import { getDb } from "@repo/data-ops/database/setup"
 import {
+	calculateBudgetsWithProgress,
 	fetchBudgetsForUser,
 	fetchConvertedEntriesForRange,
 	getLatestExchangeRates,
@@ -8,7 +9,6 @@ import { getUserTimezoneAndCurrency } from "@repo/data-ops/drizzle/queries/helpe
 import { getCurrentMonthRange } from "@repo/shared-lib"
 import { createServerFn } from "@tanstack/react-start"
 import { DateTime } from "luxon"
-import { calculateBudgetsWithProgress } from "@/core/functions/budget-helpers"
 import type { BudgetWithProgress } from "@/core/functions/budgets"
 import { protectedFunctionMiddleware } from "@/core/middleware/auth"
 import type { MonthlyEntriesResult } from "./monthlyEntries"

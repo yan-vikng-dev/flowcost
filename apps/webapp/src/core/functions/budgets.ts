@@ -1,26 +1,19 @@
 import { getDb } from "@repo/data-ops/database/setup"
 import {
+	type BudgetWithProgress,
+	calculateBudgetsWithProgress,
+	fetchBudgetById,
 	fetchBudgetsForUser,
 	fetchConvertedEntriesForRange,
 	getLatestExchangeRates,
 } from "@repo/data-ops/drizzle/queries"
-import {
-	getAllowedUserIds,
-	getUserTimezoneAndCurrency,
-} from "@repo/data-ops/drizzle/queries/helpers"
+import { getUserTimezoneAndCurrency } from "@repo/data-ops/drizzle/queries/helpers"
 import { budgets } from "@repo/data-ops/drizzle/schemas/index"
-import {
-	type Category,
-	type Currency,
-	categories,
-	currencies,
-	getCurrentMonthRange,
-} from "@repo/shared-lib"
+import { categories, currencies, getCurrentMonthRange } from "@repo/shared-lib"
 import { createServerFn } from "@tanstack/react-start"
-import { and, eq, inArray } from "drizzle-orm"
+import { eq } from "drizzle-orm"
 import { z } from "zod"
 import { protectedFunctionMiddleware } from "@/core/middleware/auth"
-import { calculateBudgetsWithProgress } from "./budget-helpers"
 
 export const createBudgetInput = z.object({
 	amount: z.number().gt(0),
@@ -65,19 +58,13 @@ export const updateBudget = createServerFn({ method: "POST" })
 	.inputValidator(updateBudgetInput)
 	.handler(async (ctx) => {
 		const db = getDb()
-		const allowedUserIds = await getAllowedUserIds(
+		const existing = await fetchBudgetById(
 			db,
+			ctx.data.id,
 			ctx.context.userId,
 			true,
 			ctx.context.partnerUserId,
 		)
-
-		const existing = await db.query.budgets.findFirst({
-			where: and(
-				eq(budgets.id, ctx.data.id),
-				inArray(budgets.userId, allowedUserIds),
-			),
-		})
 
 		if (!existing) {
 			throw new Error("Not found or not authorized")
@@ -100,19 +87,13 @@ export const deleteBudget = createServerFn({ method: "POST" })
 	.inputValidator(deleteBudgetInput)
 	.handler(async (ctx) => {
 		const db = getDb()
-		const allowedUserIds = await getAllowedUserIds(
+		const existing = await fetchBudgetById(
 			db,
+			ctx.data.id,
 			ctx.context.userId,
 			true,
 			ctx.context.partnerUserId,
 		)
-
-		const existing = await db.query.budgets.findFirst({
-			where: and(
-				eq(budgets.id, ctx.data.id),
-				inArray(budgets.userId, allowedUserIds),
-			),
-		})
 
 		if (!existing) {
 			throw new Error("Not found or not authorized")
@@ -122,19 +103,7 @@ export const deleteBudget = createServerFn({ method: "POST" })
 		return { id: ctx.data.id }
 	})
 
-// Types
-export type BudgetWithProgress = {
-	id: string
-	userId: string
-	amount: number
-	currency: Currency
-	categories: Category[]
-	displayCurrency: Currency
-	amountDisplay: number
-	spentDisplay: number
-	remainingDisplay: number
-	utilizationPct: number
-}
+export type { BudgetWithProgress } from "@repo/data-ops/drizzle/queries"
 
 export const listBudgetsWithProgress = createServerFn()
 	.middleware([protectedFunctionMiddleware])

@@ -1,4 +1,4 @@
-import type { Category, Currency } from "@repo/shared-lib"
+import type { Category } from "@repo/shared-lib"
 import { DateTime } from "luxon"
 import type { ReportType } from "./types"
 
@@ -123,57 +123,4 @@ export function findMostUsedCategory(
 	}
 
 	return topCategory
-}
-
-export type BudgetProgress = {
-	categories: Category[]
-	spentDisplay: number
-	amountDisplay: number
-	utilizationPct: number
-}
-
-export function calculateBudgetProgressForBudgets(
-	budgetsList: Array<{
-		amount: number
-		currency: string
-		categories: unknown
-	}>,
-	entries: Array<{ category: string; convertedAmount: number }>,
-	latestRates: Record<Currency, number>,
-	displayCurrency: Currency,
-): BudgetProgress[] {
-	const result: BudgetProgress[] = []
-
-	for (const budget of budgetsList) {
-		const budgetCategories = budget.categories as Category[]
-		let spentDisplay = 0
-
-		for (const entry of entries) {
-			if (!budgetCategories.includes(entry.category as Category)) continue
-			spentDisplay += entry.convertedAmount
-		}
-
-		const srcBudgetRate = latestRates[budget.currency as Currency]
-		const dstBudgetRate = latestRates[displayCurrency]
-		const amountDisplay =
-			typeof srcBudgetRate === "number" &&
-			srcBudgetRate > 0 &&
-			typeof dstBudgetRate === "number"
-				? budget.amount * (dstBudgetRate / srcBudgetRate)
-				: budget.amount
-
-		const utilizationPct =
-			amountDisplay > 0
-				? Math.min(100, (spentDisplay / amountDisplay) * 100)
-				: 0
-
-		result.push({
-			categories: budgetCategories,
-			spentDisplay,
-			amountDisplay,
-			utilizationPct,
-		})
-	}
-
-	return result
 }
