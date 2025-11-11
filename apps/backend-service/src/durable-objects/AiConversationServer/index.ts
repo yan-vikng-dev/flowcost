@@ -54,56 +54,80 @@ export class AiConversationServer extends DurableObject {
 	}
 
 	async handleMessage(message: string, messageContext: MessageContext) {
-		if (this.seenMessageIds.has(messageContext.messageId)) return null
-		else this.seenMessageIds.add(messageContext.messageId)
-		if (this.seenMessageIds.size > 100) {
-			const toKeep = Array.from(this.seenMessageIds).slice(-50)
-			this.seenMessageIds = new Set(toKeep)
+		try {
+			if (this.seenMessageIds.has(messageContext.messageId)) return null
+			else this.seenMessageIds.add(messageContext.messageId)
+			if (this.seenMessageIds.size > 100) {
+				const toKeep = Array.from(this.seenMessageIds).slice(-50)
+				this.seenMessageIds = new Set(toKeep)
+			}
+			await this.ctx.storage.setAlarm(Date.now() + contextWindowMs)
+			const googleProvider = createGoogleGenerativeAI({
+				apiKey: this.env.GEMINI_API_KEY,
+			})
+			const baseModel = googleProvider("gemini-2.5-flash")
+			if (!this.posthogClient) throw new Error("Posthog client not initialized")
+			if (!this.traceId) throw new Error("Trace ID not initialized")
+			const model = withTracing(baseModel, this.posthogClient, {
+				posthogDistinctId: messageContext.userId,
+				posthogTraceId: this.traceId,
+				posthogPrivacyMode: false,
+			})
+			this.conversationHistory.push({ role: "user", content: message })
+			const db = getDb()
+			const tools = {
+				create_entry: makeCreateEntryTool(messageContext, db),
+				get_entries: makeGetEntriesTool(messageContext, db),
+				update_preferences: makeUpdatePreferencesTool(messageContext, db),
+				update_entry: makeUpdateEntryTool(messageContext, db),
+				delete_entry: makeDeleteEntryTool(messageContext, db),
+			}
+			const result = await generateText({
+				model,
+				tools,
+				messages: this.conversationHistory,
+				stopWhen: [
+					({ steps }) => steps.some((step) => step.finishReason === "stop"),
+					stepCountIs(10),
+				],
+			})
+			this.conversationHistory.push(...result.response.messages)
+			await this.ctx.storage.put(
+				"seenMessageIds",
+				Array.from(this.seenMessageIds),
+			)
+			console.debug({
+				message: "generated text",
+				text: result.text,
+				finishReason: result.finishReason,
+				stepCount: result.steps.length,
+			})
+			if (!result.text || result.finishReason === "error") {
+				console.error("AI text generation failed", {
+					userId: messageContext.userId,
+					waId: messageContext.waId,
+					messageId: messageContext.messageId,
+					finishReason: result.finishReason,
+					hasText: !!result.text,
+					stepCount: result.steps.length,
+					traceId: this.traceId,
+				})
+				throw new Error("Failed to generate text")
+			}
+			return result.text
+		} catch (error) {
+			console.error("Error in AiConversationServer.handleMessage", {
+				userId: messageContext.userId,
+				waId: messageContext.waId,
+				messageId: messageContext.messageId,
+				message,
+				traceId: this.traceId,
+				error: error instanceof Error ? error.message : String(error),
+				stack: error instanceof Error ? error.stack : undefined,
+				errorName: error instanceof Error ? error.name : undefined,
+			})
+			throw error
 		}
-		await this.ctx.storage.setAlarm(Date.now() + contextWindowMs)
-		const googleProvider = createGoogleGenerativeAI({
-			apiKey: this.env.GEMINI_API_KEY,
-		})
-		const baseModel = googleProvider("gemini-2.5-flash")
-		if (!this.posthogClient) throw new Error("Posthog client not initialized")
-		if (!this.traceId) throw new Error("Trace ID not initialized")
-		const model = withTracing(baseModel, this.posthogClient, {
-			posthogDistinctId: messageContext.userId,
-			posthogTraceId: this.traceId,
-			posthogPrivacyMode: false,
-		})
-		this.conversationHistory.push({ role: "user", content: message })
-		const db = getDb()
-		const tools = {
-			create_entry: makeCreateEntryTool(messageContext, db),
-			get_entries: makeGetEntriesTool(messageContext, db),
-			update_preferences: makeUpdatePreferencesTool(messageContext, db),
-			update_entry: makeUpdateEntryTool(messageContext, db),
-			delete_entry: makeDeleteEntryTool(messageContext, db),
-		}
-		const result = await generateText({
-			model,
-			tools,
-			messages: this.conversationHistory,
-			stopWhen: [
-				({ steps }) => steps.some((step) => step.finishReason === "stop"),
-				stepCountIs(10),
-			],
-		})
-		this.conversationHistory.push(...result.response.messages)
-		await this.ctx.storage.put(
-			"seenMessageIds",
-			Array.from(this.seenMessageIds),
-		)
-		console.debug({
-			message: "generated text",
-			text: result.text,
-			finishReason: result.finishReason,
-			stepCount: result.steps.length,
-		})
-		if (!result.text || result.finishReason === "error")
-			throw new Error("Failed to generate text")
-		return result.text
 	}
 
 	async alarm() {

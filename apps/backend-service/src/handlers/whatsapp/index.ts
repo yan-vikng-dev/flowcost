@@ -226,6 +226,15 @@ export async function handleIncomingMessage(
 		const reply = await stub.handleMessage(text, messageContext)
 		if (reply) await sendWhatsAppText({ env, waId, text: reply })
 	} catch (error) {
+		console.error("Error handling WhatsApp message", {
+			waId,
+			userId: link.user.id,
+			messageId,
+			text,
+			error: error instanceof Error ? error.message : String(error),
+			stack: error instanceof Error ? error.stack : undefined,
+			errorName: error instanceof Error ? error.name : undefined,
+		})
 		await sendWhatsAppText({
 			env,
 			waId,
