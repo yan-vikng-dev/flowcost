@@ -216,7 +216,6 @@ export async function handleIncomingMessage(
 	}
 	const messageContext: MessageContext = {
 		messageId,
-		waId,
 		userId: link.user.id,
 		defaultEntryCurrency: link.user.preferences.defaultEntryCurrency,
 		displayCurrency: link.user.preferences.displayCurrency,

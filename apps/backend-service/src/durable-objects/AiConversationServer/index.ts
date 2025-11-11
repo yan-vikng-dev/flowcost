@@ -18,7 +18,6 @@ const contextWindowMs = 1000 * 60 * 60 // 1 hour
 
 export type MessageContext = {
 	messageId: string
-	waId: string
 	userId: string
 	defaultEntryCurrency: Currency
 	displayCurrency: Currency
@@ -105,7 +104,6 @@ export class AiConversationServer extends DurableObject {
 			if (!result.text || result.finishReason === "error") {
 				console.error("AI text generation failed", {
 					userId: messageContext.userId,
-					waId: messageContext.waId,
 					messageId: messageContext.messageId,
 					finishReason: result.finishReason,
 					hasText: !!result.text,
@@ -118,7 +116,6 @@ export class AiConversationServer extends DurableObject {
 		} catch (error) {
 			console.error("Error in AiConversationServer.handleMessage", {
 				userId: messageContext.userId,
-				waId: messageContext.waId,
 				messageId: messageContext.messageId,
 				message,
 				traceId: this.traceId,
