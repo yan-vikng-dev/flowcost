@@ -100,8 +100,9 @@ export class AiConversationServer extends DurableObject {
 				text: result.text,
 				finishReason: result.finishReason,
 				stepCount: result.steps.length,
+				toolCallsCount: result.toolCalls.length,
 			})
-			if (!result.text || result.finishReason === "error") {
+			if (result.finishReason === "error") {
 				console.error("AI text generation failed", {
 					userId: messageContext.userId,
 					messageId: messageContext.messageId,
