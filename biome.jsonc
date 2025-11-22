@@ -17,7 +17,12 @@
 	"linter": {
 		"rules": {
 			"nursery": {
-				"useSortedClasses": "error"
+				"useSortedClasses": {
+					"level": "error",
+					"options": {
+						"functions": ["clsx", "cva", "tw", "tw.*", "cn"]
+					}
+				}
 			},
 			"style": {
 				"useFilenamingConvention": "off"

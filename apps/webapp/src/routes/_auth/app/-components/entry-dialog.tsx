@@ -1,6 +1,7 @@
 import { parseRRULE } from "@repo/data-ops/drizzle/queries"
 import { type Category, type Currency, categories } from "@repo/shared-lib"
 import { useQuery } from "@tanstack/react-query"
+import { CalendarIcon } from "lucide-react"
 import * as React from "react"
 import { CategoryCombobox } from "@/components/combobox/category-combobox"
 import { CurrencyCombobox } from "@/components/combobox/currency-combobox"
@@ -243,6 +244,7 @@ export function EntryDialog({
 												id={executedAtId}
 												variant="outline"
 											>
+												<CalendarIcon className="mr-2 h-4 w-4" />
 												{state.executedAt.toLocaleDateString()}
 											</Button>
 										</PopoverTrigger>
@@ -394,6 +396,7 @@ export function EntryDialog({
 											>
 												<PopoverTrigger asChild>
 													<Button className="w-full" variant="outline">
+														<CalendarIcon className="mr-2 h-4 w-4" />
 														{state.endAt
 															? state.endAt.toLocaleDateString()
 															: "Unlimited"}

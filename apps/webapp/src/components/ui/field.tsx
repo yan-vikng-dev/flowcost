@@ -63,7 +63,7 @@ const fieldVariants = cva(
 					"has-[>[data-slot=field-content]]:items-center has-[>[data-slot=field-content]]:[&>[role=checkbox],[role=radio]]:mt-px",
 				],
 				responsive: [
-					"flex-col [&>*]:w-full [&>.sr-only]:w-auto @md/field-group:flex-row @md/field-group:items-center @md/field-group:[&>*]:w-auto",
+					"@md/field-group:flex-row flex-col @md/field-group:items-center @md/field-group:[&>*]:w-auto [&>*]:w-full [&>.sr-only]:w-auto",
 					"@md/field-group:[&>[data-slot=field-label]]:flex-auto",
 					"@md/field-group:has-[>[data-slot=field-content]]:items-center @md/field-group:has-[>[data-slot=field-content]]:[&>[role=checkbox],[role=radio]]:mt-px",
 				],
