@@ -14,7 +14,11 @@ import { z } from "zod"
 import type { MessageContext } from ".."
 
 const updateEntrySchema = z.object({
-	id: z.string().uuid().describe("The ID of the entry to update"),
+	id: z
+		.uuid()
+		.describe(
+			"The ID of the entry to update. This ID comes from the 'id' field in entries retrieved via get_entries. When a user corrects an entry, match their description to a previously retrieved entry and use that entry's ID.",
+		),
 	entryType: z
 		.enum(["Expense", "Income"])
 		.optional()
@@ -47,7 +51,7 @@ export const makeUpdateEntryTool = (context: MessageContext, db: DrizzleDb) =>
 	tool({
 		name: "update_entry",
 		description:
-			"Update an existing financial entry. Only provide fields that should be changed. Omitted fields will remain unchanged.",
+			"Update an existing financial entry. Only provide fields that should be changed. Omitted fields will remain unchanged. When a user corrects an entry (e.g., 'the breakfast was 360k, not 360'), retrieve entries for the relevant date using get_entries, match the user's description to the correct entry, and use that entry's ID to update it. Never ask the user for entry IDs.",
 		inputSchema: updateEntrySchema,
 		execute: async (input) => {
 			const entry = await getEntryForUser(db, input.id, context.userId)

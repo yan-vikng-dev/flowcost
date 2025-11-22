@@ -17,7 +17,7 @@ export const makeGetEntriesTool = (context: MessageContext, db: DrizzleDb) =>
 	tool({
 		name: "get_entries",
 		description:
-			"Get the entries for the user for a given date, with a conversion to the user's preferred display currency",
+			"Get the entries for the user for a given date, with a conversion to the user's preferred display currency. Each entry includes an ID field that can be used with update_entry or delete_entry to modify or remove entries.",
 		inputSchema: getEntriesSchema,
 		execute: async (input) => {
 			const inputDate = input.date ?? DateTime.now().toISODate()
