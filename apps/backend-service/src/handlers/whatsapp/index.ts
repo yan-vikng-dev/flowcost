@@ -7,7 +7,7 @@ import {
 import { sha256Hex, timingSafeEqualHex } from "@repo/shared-lib/crypto"
 import { and, eq, gt, isNull } from "drizzle-orm"
 import type { MessageContext } from "@/durable-objects/AiConversationServer"
-import { sendWhatsAppText } from "./helpers"
+import { sendTypingIndicator, sendWhatsAppText } from "./helpers"
 
 export async function verifyWhatsAppSignature(
 	rawBody: ArrayBuffer,
@@ -222,8 +222,28 @@ export async function handleIncomingMessage(
 		userTimezone: link.user.preferences.timezone,
 	}
 	try {
+		await sendTypingIndicator({ env, waId, action: "typing_on" })
 		const reply = await stub.handleMessage(text, messageContext)
-		if (reply) await sendWhatsAppText({ env, waId, text: reply })
+		if (reply) {
+			await sendWhatsAppText({ env, waId, text: reply })
+		} else {
+			const errorMessage =
+				"Something went wrong. Please try again, or start a new chat with /new"
+			await sendWhatsAppText({ env, waId, text: errorMessage })
+			const error = new Error("No text generated from AI conversation server")
+			error.name = "EmptyResponseError"
+			console.error("Error: No text generated from handleMessage", {
+				waId,
+				userId: link.user.id,
+				messageId,
+				text,
+				messageContext,
+				error: error.message,
+				stack: error.stack,
+				errorName: error.name,
+			})
+			throw error
+		}
 	} catch (error) {
 		console.error("Error handling WhatsApp message", {
 			waId,

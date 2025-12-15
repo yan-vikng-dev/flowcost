@@ -53,6 +53,10 @@ export class AiConversationServer extends DurableObject {
 	}
 
 	async handleMessage(message: string, messageContext: MessageContext) {
+		console.debug("handleMessage called", {
+			userMessage: message,
+			messageContext,
+		})
 		try {
 			if (this.seenMessageIds.has(messageContext.messageId)) return null
 			else this.seenMessageIds.add(messageContext.messageId)
@@ -85,6 +89,7 @@ export class AiConversationServer extends DurableObject {
 				model,
 				tools,
 				messages: this.conversationHistory,
+				maxRetries: 3,
 				stopWhen: [
 					({ steps }) => steps.some((step) => step.finishReason === "stop"),
 					stepCountIs(10),

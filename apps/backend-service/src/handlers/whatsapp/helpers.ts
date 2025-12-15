@@ -49,11 +49,52 @@ export async function sendWhatsAppText({
 			status: response.status,
 		})
 	} catch (parseError) {
-		// If JSON parsing fails, log but don't fail - the response was OK
 		console.warn("WhatsApp API response OK but JSON parse failed", {
 			waId,
 			parseError:
 				parseError instanceof Error ? parseError.message : String(parseError),
+		})
+	}
+
+	return response
+}
+
+export type SendTypingIndicatorParams = {
+	env: Env
+	waId: string
+	action: "typing_on" | "typing_off"
+}
+
+export async function sendTypingIndicator({
+	env,
+	waId,
+	action,
+}: SendTypingIndicatorParams): Promise<Response> {
+	const url = `https://graph.facebook.com/v19.0/${env.WHATSAPP_PHONE_NUMBER_ID}/messages`
+	const body = {
+		messaging_product: "whatsapp",
+		to: waId,
+		type: "typing",
+		typing: { action },
+	}
+	const response = await fetch(url, {
+		method: "POST",
+		headers: {
+			Authorization: `Bearer ${env.WHATSAPP_ACCESS_TOKEN}`,
+			"Content-Type": "application/json",
+		},
+		body: JSON.stringify(body),
+	})
+
+	if (!response.ok) {
+		const errorText = await response.text()
+		console.error("WhatsApp typing indicator API error:", {
+			status: response.status,
+			statusText: response.statusText,
+			url,
+			waId,
+			action,
+			errorBody: errorText,
 		})
 	}
 
