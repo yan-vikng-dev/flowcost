@@ -8,7 +8,7 @@
 		"deploy": "wrangler deploy",
 		"serve": "vite preview",
 		"typecheck": "tsc --noEmit",
-		"cf-typegen": "wrangler types"
+		"cf:types": "wrangler types --env-interface Env"
 	},
 	"dependencies": {
 		"@polar-sh/sdk": "^0.41.1",
