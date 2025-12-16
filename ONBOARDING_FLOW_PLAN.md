@@ -73,11 +73,8 @@ Settings targets:
 - Link WhatsApp button: `data-onboarding="link-whatsapp"`
 - Resume onboarding button/card: `data-onboarding="resume-onboarding"`
 
-## Required UI Changes (includes sidequests)
-1) **Desktop expense button**: add a new standalone “Add expense” button on the dashboard (tour target).
-2) **Desktop recurring income button**: add a large standalone “Add recurring income” button after the Expenses card (tour target).
-3) **Recurring card cleanup (sidequest)**: replace/remove the Recurring card header “+ / new entry” affordance so the standalone button becomes the primary creation entry point.
-4) Add `data-onboarding="..."` attributes to the relevant controls (budget create button, settings nav, WhatsApp link button, new dashboard buttons, resume button).
+## Required UI Changes
+1) Add `data-onboarding="..."` attributes to the relevant controls (main desktop “Add entry” button, mobile “+ entry” button, budget create button, settings nav, WhatsApp link button, resume button).
 
 ## Implementation Steps (agent checklist)
 1) **Compute onboarding status (server)**
@@ -104,8 +101,8 @@ Settings targets:
 		- Scroll-to-target on selection when the target exists.
 	- If the target isn’t present on the current page, show copy pointing to the navigation target (e.g., Settings).
 7) **Step behaviors (real UI usage)**
-	- Expense: callout points to the new desktop button / mobile “+ entry”; uses existing `EntryDialog` (Expense, non-recurring).
-	- Income: callout points to desktop income button / mobile “+ entry”; uses existing recurring template creation flow; category selectable.
+	- Expense: callout points to the main “Add entry” control; uses existing `EntryDialog` (Expense, non-recurring).
+	- Income: callout points to the main “Add entry” control; uses existing recurring template creation flow; category selectable.
 	- Budget: callout points to Budgets “+” and uses existing budget dialog.
 	- WhatsApp: callout prompts user to navigate to Settings; once on Settings, anchor to WhatsApp link button and reuse existing linking behavior.
 8) **Settings “Resume onboarding”**
