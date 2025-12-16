@@ -10,7 +10,7 @@
 		"studio": "pnpm run --filter data-ops drizzle:studio",
 		"fix": "pnpm exec biome check --write --max-diagnostics 10 --unsafe && turbo typecheck",
 		"db:push": "pnpm run --filter data-ops drizzle:push",
-		"cf:types": "turbo run cf:types --filter=webapp --filter=backend-service"
+		"cf:types": "turbo run cf:types"
 	},
 	"keywords": [],
 	"author": "",
