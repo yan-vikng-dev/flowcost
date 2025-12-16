@@ -16,7 +16,7 @@ export function DesktopAppNav() {
 	const hasIncoming = hasIncomingInvites(connectionStateQuery)
 
 	return (
-		<header className="fixed top-0 z-20 flex h-16 w-full items-center justify-between border-border/20 border-b bg-background/80 px-6 backdrop-blur-xl">
+		<header className="fixed top-0 z-20 flex h-16 w-full items-center justify-between bg-background/80 px-6 backdrop-blur-xl">
 			<Link to="/app">
 				<img
 					alt="Flowcost"

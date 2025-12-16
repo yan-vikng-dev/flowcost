@@ -15,7 +15,7 @@ function RouteComponent() {
 	const isDesktop = useIsDesktop()
 
 	return (
-		<div className="relative min-h-screen flex-col">
+		<div>
 			<FloatingWaves
 				disableInteraction
 				lineColor="rgba(59, 130, 246, 0.1)"

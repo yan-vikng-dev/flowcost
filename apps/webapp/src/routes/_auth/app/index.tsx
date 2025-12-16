@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router"
 import { getUserPreferences } from "@/core/functions/preferences"
 import { listRecurringTemplates } from "@/core/functions/recurring-templates"
+import { AddEntryButton } from "./-components/add-entry-button"
 import { BudgetsCard } from "./-components/budgets-card"
 import { ExpensesCard } from "./-components/expenses-by-category-bar"
 import { SummaryCard } from "./-components/monthly-standard-summary"
@@ -61,6 +62,7 @@ function RouteComponent() {
 			<div className="flex flex-1 flex-col gap-4">
 				<BudgetsCard />
 				<ExpensesCard />
+				<AddEntryButton />
 			</div>
 			<div className="flex flex-1 flex-col gap-4">
 				<SummaryCard />

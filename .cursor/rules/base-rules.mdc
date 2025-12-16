@@ -1,4 +1,0 @@
----
-alwaysApply: true
----
-- always run `pnpm fix` when finished making all desired changes, the check command lints, formats and typechecks the codebase.

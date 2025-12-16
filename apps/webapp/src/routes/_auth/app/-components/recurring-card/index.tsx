@@ -1,10 +1,9 @@
-import type { Currency } from "@repo/shared-lib"
 import {
 	useMutation,
 	useQueryClient,
 	useSuspenseQuery,
 } from "@tanstack/react-query"
-import { EditIcon, PlusIcon } from "lucide-react"
+import { EditIcon } from "lucide-react"
 import * as React from "react"
 import {
 	AlertDialog,
@@ -26,37 +25,24 @@ import {
 } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
 import { Skeleton } from "@/components/ui/skeleton"
-import { getUserPreferences } from "@/core/functions/preferences"
 import {
-	type CreateRecurringTemplateInput,
-	createRecurringTemplate,
 	deleteRecurringTemplate,
 	listRecurringTemplates,
 	stopRecurringTemplate,
 } from "@/core/functions/recurring-templates"
-import { useIsDesktop } from "@/hooks/use-is-desktop"
-import {
-	EntryDialog,
-	type EntryFormState,
-	getDefaultEntryInitial,
-} from "../entry-dialog"
 import { RecurringTemplateItem } from "./recurring-template-item"
-import { buildRRuleFromUi } from "./utils"
 
 function RecurringHeaderActions({
 	isEditMode,
 	setIsEditMode,
-	setCreateOpen,
 }: {
 	isEditMode: boolean
 	setIsEditMode: (mode: boolean) => void
-	setCreateOpen: (open: boolean) => void
 }) {
 	const templatesQuery = useSuspenseQuery({
 		queryKey: ["recurringTemplates"],
 		queryFn: () => listRecurringTemplates({ data: { includeInactive: false } }),
 	})
-	const isDesktop = useIsDesktop()
 
 	return (
 		<div className="flex items-center gap-2">
@@ -68,16 +54,6 @@ function RecurringHeaderActions({
 					variant={isEditMode ? "default" : "secondary"}
 				>
 					<EditIcon />
-				</Button>
-			)}
-			{isDesktop && (
-				<Button
-					aria-label="New Recurring Entry"
-					onClick={() => setCreateOpen(true)}
-					size="icon"
-					variant="default"
-				>
-					<PlusIcon />
 				</Button>
 			)}
 		</div>
@@ -124,26 +100,17 @@ function RecurringContent({
 }
 
 function RecurringDialogs({
-	createOpen,
-	setCreateOpen,
 	deleteId,
 	setDeleteId,
 	stopId,
 	setStopId,
-	createMut,
 	deleteMut,
 	stopMut,
 }: {
-	createOpen: boolean
-	setCreateOpen: (open: boolean) => void
 	deleteId: string | null
 	setDeleteId: (id: string | null) => void
 	stopId: string | null
 	setStopId: (id: string | null) => void
-	createMut: {
-		mutate: (vars: CreateRecurringTemplateInput) => void
-		isPending: boolean
-	}
 	deleteMut: {
 		mutate: (id: string) => void
 		isPending: boolean
@@ -153,58 +120,8 @@ function RecurringDialogs({
 		isPending: boolean
 	}
 }) {
-	const prefsQuery = useSuspenseQuery({
-		queryKey: ["userPreferences"],
-		queryFn: () => getUserPreferences(),
-		staleTime: 5 * 60 * 1000,
-	})
-
-	const defaultCurrency: Currency =
-		(prefsQuery.data.displayCurrency as Currency) ?? "USD"
-
-	const timezone = prefsQuery.data.timezone || "UTC"
-
-	const createInitial: EntryFormState = getDefaultEntryInitial({
-		defaultCurrency,
-		isRecurring: true,
-	})
-
 	return (
 		<>
-			<EntryDialog
-				initial={createInitial}
-				isPending={createMut.isPending}
-				onOpenChange={setCreateOpen}
-				onSubmit={() => {}}
-				onSubmitRecurring={(state) => {
-					if (
-						!state.recurrence ||
-						!state.executedAt ||
-						!state.recurrence.unit ||
-						!state.recurrence.every
-					)
-						return
-					const amount = typeof state.amount === "number" ? state.amount : 0
-					const rrule = buildRRuleFromUi(
-						state.executedAt,
-						state.recurrence,
-						timezone,
-					)
-					createMut.mutate({
-						amount,
-						currency: state.currency,
-						category: state.category,
-						entryType: state.entryType,
-						description: state.description,
-						rrule,
-						dtstart: state.executedAt,
-						endAt: state.endAt,
-					})
-					setCreateOpen(false)
-				}}
-				open={createOpen}
-			/>
-
 			<AlertDialog
 				onOpenChange={(isOpen) => {
 					if (!isOpen) setDeleteId(null)
@@ -276,16 +193,6 @@ function RecurringDialogs({
 export function RecurringCard() {
 	const queryClient = useQueryClient()
 
-	const createMut = useMutation({
-		mutationFn: (input: CreateRecurringTemplateInput) =>
-			createRecurringTemplate({ data: input }),
-		onSuccess: async () => {
-			await Promise.all([
-				queryClient.invalidateQueries({ queryKey: ["recurringTemplates"] }),
-				queryClient.invalidateQueries({ queryKey: ["entries"] }),
-			])
-		},
-	})
 	const deleteMut = useMutation({
 		mutationFn: (id: string) => deleteRecurringTemplate({ data: { id } }),
 		onSuccess: async () => {
@@ -305,7 +212,6 @@ export function RecurringCard() {
 		},
 	})
 
-	const [createOpen, setCreateOpen] = React.useState(false)
 	const [deleteId, setDeleteId] = React.useState<null | string>(null)
 	const [stopId, setStopId] = React.useState<null | string>(null)
 	const [isEditMode, setIsEditMode] = React.useState(false)
@@ -318,7 +224,6 @@ export function RecurringCard() {
 					<React.Suspense fallback={<Skeleton className="h-10 w-20" />}>
 						<RecurringHeaderActions
 							isEditMode={isEditMode}
-							setCreateOpen={setCreateOpen}
 							setIsEditMode={setIsEditMode}
 						/>
 					</React.Suspense>
@@ -365,11 +270,8 @@ export function RecurringCard() {
 
 				<React.Suspense fallback={null}>
 					<RecurringDialogs
-						createMut={createMut}
-						createOpen={createOpen}
 						deleteId={deleteId}
 						deleteMut={deleteMut}
-						setCreateOpen={setCreateOpen}
 						setDeleteId={setDeleteId}
 						setStopId={setStopId}
 						stopId={stopId}
