@@ -3,6 +3,7 @@ import { getUserPreferences } from "@/core/functions/preferences"
 import { getWhatsappLinkStatus } from "@/core/functions/whatsapp"
 import { AccountCard } from "./-components/AccountCard"
 import { AssistantCard } from "./-components/AssistantCard"
+import { DangerZoneCard } from "./-components/danger-zone-card"
 import { IncomingInviteCard } from "./-components/incoming-invite-card"
 import { PreferencesCard } from "./-components/preferences-card"
 
@@ -36,6 +37,7 @@ function RouteComponent() {
 			<AccountCard />
 			<PreferencesCard />
 			<AssistantCard />
+			<DangerZoneCard />
 		</div>
 	)
 }
