@@ -21,7 +21,11 @@ export function DesktopAppNav() {
 				<img
 					alt="Flowcost"
 					className="size-8 rounded-full object-cover"
-					src="/logo/logo320_bg.png"
+					height={32}
+					sizes="32px"
+					src="/logo/logo-bg-128.webp"
+					srcSet="/logo/logo-bg-64.webp 1x, /logo/logo-bg-128.webp 2x"
+					width={32}
 				/>
 			</Link>
 			<div className="flex items-center gap-2">
@@ -33,7 +37,9 @@ export function DesktopAppNav() {
 				</Button>
 				<div className="relative">
 					<Button asChild variant="outline">
-						<Link to="/app/settings">Settings</Link>
+						<Link data-onboarding="nav-settings" to="/app/settings">
+							Settings
+						</Link>
 					</Button>
 					{hasIncoming && (
 						<div className="absolute top-1 right-0 size-2 rounded-full bg-destructive" />

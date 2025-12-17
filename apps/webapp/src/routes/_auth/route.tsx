@@ -31,7 +31,11 @@ function RouteComponent() {
 					<img
 						alt="Flowcost"
 						className="h-16 w-16 animate-spin rounded-full object-cover"
-						src="/logo/logo320_bg.png"
+						height={64}
+						sizes="64px"
+						src="/logo/logo-bg-128.webp"
+						srcSet="/logo/logo-bg-64.webp 1x, /logo/logo-bg-128.webp 2x"
+						width={64}
 					/>
 				</div>
 			)}
