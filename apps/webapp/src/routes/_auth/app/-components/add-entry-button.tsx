@@ -34,8 +34,7 @@ export function AddEntryButton() {
 	return (
 		<>
 			<Button
-				className="w-full justify-between py-6 text-left"
-				data-onboarding="add-entry"
+				className="w-full justify-center"
 				onClick={() => setOpen(true)}
 				size="lg"
 				variant="default"

@@ -16,7 +16,7 @@
 		"@types/node": "^24.10.0",
 		"typescript": "^5.9.3",
 		"vitest": "~4.0.8",
-		"wrangler": "^4.46.0"
+		"wrangler": "^4.55.0"
 	},
 	"dependencies": {
 		"@ai-sdk/google": "^2.0.29",
