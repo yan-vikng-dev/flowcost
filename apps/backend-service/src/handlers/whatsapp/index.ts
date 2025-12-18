@@ -156,13 +156,7 @@ export async function handleIncomingMessage(
 					id: true,
 				},
 				with: {
-					preferences: {
-						columns: {
-							defaultEntryCurrency: true,
-							timezone: true,
-							displayCurrency: true,
-						},
-					},
+					preferences: true,
 				},
 			},
 		},
@@ -220,6 +214,11 @@ export async function handleIncomingMessage(
 		defaultEntryCurrency: link.user.preferences.defaultEntryCurrency,
 		displayCurrency: link.user.preferences.displayCurrency,
 		userTimezone: link.user.preferences.timezone,
+		reportsDailyEnabled: !!link.user.preferences.reportsDailyEnabled,
+		reportsWeeklyEnabled: !!link.user.preferences.reportsWeeklyEnabled,
+		reportsMonthlyEnabled: !!link.user.preferences.reportsMonthlyEnabled,
+		reportsTime: link.user.preferences.reportsTime,
+		reportsWeeklyDay: link.user.preferences.reportsWeeklyDay,
 	}
 	try {
 		await sendTypingIndicator({ env, waId, action: "typing_on" })

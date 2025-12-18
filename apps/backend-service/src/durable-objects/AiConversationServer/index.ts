@@ -4,6 +4,7 @@ import { withTracing } from "@posthog/ai"
 import { getDb, initDatabase } from "@repo/data-ops/database/setup"
 import type { Currency } from "@repo/shared-lib"
 import { generateText, type ModelMessage, stepCountIs } from "ai"
+import { DateTime } from "luxon"
 import { PostHog } from "posthog-node"
 import { getSystemMessage } from "./config"
 import {
@@ -22,10 +23,15 @@ export type MessageContext = {
 	defaultEntryCurrency: Currency
 	displayCurrency: Currency
 	userTimezone: string
+	reportsDailyEnabled: boolean
+	reportsWeeklyEnabled: boolean
+	reportsMonthlyEnabled: boolean
+	reportsTime: string
+	reportsWeeklyDay: number
 }
 
 export class AiConversationServer extends DurableObject {
-	conversationHistory: ModelMessage[] = []
+	turns: ModelMessage[] = []
 	posthogClient: PostHog | null = null
 	seenMessageIds: Set<string> = new Set()
 	traceId: string | null = null
@@ -34,10 +40,9 @@ export class AiConversationServer extends DurableObject {
 		super(ctx, env)
 		void ctx.blockConcurrencyWhile(async () => {
 			initDatabase(env.DB)
-			const storedHistory = await ctx.storage.get<ModelMessage[]>(
-				"conversationHistory",
-			)
-			this.conversationHistory = storedHistory ?? [getSystemMessage()]
+			const storedHistory =
+				(await ctx.storage.get<ModelMessage[]>("conversationHistory")) ?? []
+			this.turns = sanitizeTurns(storedHistory)
 
 			this.traceId =
 				(await ctx.storage.get<string>("traceId")) || crypto.randomUUID()
@@ -76,7 +81,7 @@ export class AiConversationServer extends DurableObject {
 				posthogTraceId: this.traceId,
 				posthogPrivacyMode: false,
 			})
-			this.conversationHistory.push({ role: "user", content: message })
+			this.turns.push({ role: "user", content: message })
 			const db = getDb()
 			const tools = {
 				create_entry: makeCreateEntryTool(messageContext, db),
@@ -85,21 +90,23 @@ export class AiConversationServer extends DurableObject {
 				update_entry: makeUpdateEntryTool(messageContext, db),
 				delete_entry: makeDeleteEntryTool(messageContext, db),
 			}
+			const messages = buildPrompt(this.turns, messageContext)
 			const result = await generateText({
 				model,
 				tools,
-				messages: this.conversationHistory,
+				messages,
 				maxRetries: 3,
 				stopWhen: [
 					({ steps }) => steps.some((step) => step.finishReason === "stop"),
 					stepCountIs(10),
 				],
 			})
-			this.conversationHistory.push(...result.response.messages)
+			this.turns.push(...result.response.messages)
 			await this.ctx.storage.put(
 				"seenMessageIds",
 				Array.from(this.seenMessageIds),
 			)
+			await this.ctx.storage.put("conversationHistory", this.turns)
 			console.debug({
 				message: "generated text",
 				text: result.text,
@@ -138,9 +145,9 @@ export class AiConversationServer extends DurableObject {
 	}
 
 	async reset() {
-		this.conversationHistory = [getSystemMessage()]
+		this.turns = []
 		this.traceId = crypto.randomUUID()
-		await this.ctx.storage.put("conversationHistory", this.conversationHistory)
+		await this.ctx.storage.put("conversationHistory", this.turns)
 		await this.ctx.storage.put("traceId", this.traceId)
 	}
 
@@ -149,14 +156,55 @@ export class AiConversationServer extends DurableObject {
 			return
 		}
 		this.seenMessageIds.add(messageId)
-		this.conversationHistory.push({
+		this.turns.push({
 			role: "assistant",
 			content: report,
 		})
-		await this.ctx.storage.put("conversationHistory", this.conversationHistory)
+		await this.ctx.storage.put("conversationHistory", this.turns)
 		await this.ctx.storage.put(
 			"seenMessageIds",
 			Array.from(this.seenMessageIds),
 		)
+	}
+}
+
+function buildPrompt(
+	turns: ModelMessage[],
+	context: MessageContext,
+): ModelMessage[] {
+	return [getSystemMessage(), makeContextMessage(context), ...turns]
+}
+
+function sanitizeTurns(messages: ModelMessage[]): ModelMessage[] {
+	return messages.filter((m) => {
+		if (m.role === "system") return false
+		if (
+			m.role === "assistant" &&
+			typeof m.content === "string" &&
+			m.content.startsWith("[Context]")
+		)
+			return false
+		return true
+	})
+}
+
+function makeContextMessage(context: MessageContext): ModelMessage {
+	const localNow = DateTime.now().setZone(context.userTimezone)
+	const localDate = localNow.toISODate()
+	const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"] as const
+	const weeklyDay = dayNames[context.reportsWeeklyDay] ?? "?"
+	const reports =
+		`${context.reportsDailyEnabled ? "daily✅" : "daily❌"} ` +
+		`${context.reportsWeeklyEnabled ? `weekly✅(${weeklyDay})` : `weekly❌(${weeklyDay})`} ` +
+		`${context.reportsMonthlyEnabled ? "monthly✅" : "monthly❌"} @${context.reportsTime}`
+
+	return {
+		role: "assistant",
+		content:
+			`[Context]\n` +
+			`- Local date: ${localDate}\n` +
+			`- Timezone: ${context.userTimezone}\n` +
+			`- Currencies: display ${context.displayCurrency}, default ${context.defaultEntryCurrency}\n` +
+			`- Reports: ${reports}`,
 	}
 }
