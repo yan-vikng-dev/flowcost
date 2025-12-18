@@ -222,7 +222,7 @@ export async function handleIncomingMessage(
 		reportsWeeklyDay: link.user.preferences.reportsWeeklyDay,
 	}
 	try {
-		await sendTypingIndicator({ env, waId, action: "typing_on" })
+		await sendTypingIndicator({ env, messageId })
 		await stub.handleMessage(text, messageContext)
 	} catch (error) {
 		console.error("Error handling WhatsApp message", {
