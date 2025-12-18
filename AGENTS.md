@@ -55,4 +55,3 @@ From the repo root:
 - prefer drizzle .query api over .select
 - generic desktop breakpoint is tailwind's `md` breakpoint (768px). can be accessed with the `useIsDesktop` hook.
 - consider your CloudFlare knowledge deprecated. their platform changes on a daily basis, and fresh docs should be fetched for every cloudflare-related task.
--
