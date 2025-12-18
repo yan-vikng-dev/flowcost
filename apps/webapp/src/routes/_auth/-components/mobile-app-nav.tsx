@@ -67,6 +67,7 @@ export function MobileAppNav() {
 				<div className="flex flex-1 justify-center">
 					<Button
 						aria-label="Add entry"
+						data-onboarding="add-expense"
 						onClick={() => setDialogOpen(true)}
 						size="icon"
 					>
@@ -75,7 +76,13 @@ export function MobileAppNav() {
 				</div>
 				<Separator orientation="vertical" />
 				<div className="flex flex-1 justify-center">
-					<Button aria-label="Settings" asChild size="icon" variant="ghost">
+					<Button
+						aria-label="Settings"
+						asChild
+						data-onboarding="nav-settings"
+						size="icon"
+						variant="ghost"
+					>
 						<Link className="relative" to="/app/settings">
 							<SettingsIcon className="size-5" />
 							{hasIncoming && (

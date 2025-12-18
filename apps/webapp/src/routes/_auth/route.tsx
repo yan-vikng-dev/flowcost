@@ -3,6 +3,7 @@ import { GoogleLogin } from "@/components/auth/google-login"
 import { FloatingWaves } from "@/components/bg/floating-waves"
 import { useIsDesktop } from "@/hooks/use-is-desktop"
 import { authClient } from "@/lib/auth-client"
+import { OnboardingTourProvider } from "@/onboarding/provider"
 import { DesktopAppNav } from "./-components/desktop-app-nav"
 import { MobileAppNav } from "./-components/mobile-app-nav"
 
@@ -41,13 +42,13 @@ function RouteComponent() {
 			)}
 			{!session.isPending && !session.data && <GoogleLogin />}
 			{!session.isPending && session.data && (
-				<>
+				<OnboardingTourProvider>
 					{isDesktop && <DesktopAppNav />}
 					<main className="z-10 mt-0 mb-16 px-4 py-6 md:mt-16 md:mb-0">
 						<Outlet />
 					</main>
 					{!isDesktop && <MobileAppNav />}
-				</>
+				</OnboardingTourProvider>
 			)}
 		</div>
 	)

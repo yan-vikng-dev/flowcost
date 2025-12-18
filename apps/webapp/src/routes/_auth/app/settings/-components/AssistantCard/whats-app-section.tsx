@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from "@tanstack/react-query"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Loader2Icon } from "lucide-react"
 import * as React from "react"
 import {
@@ -26,6 +26,7 @@ import {
 import { formatPhoneNumber } from "@/utils/phone"
 
 export function WhatsAppSection() {
+	const queryClient = useQueryClient()
 	const [linkInitiatedAt, setLinkInitiatedAt] = React.useState<number | null>(
 		null,
 	)
@@ -57,6 +58,7 @@ export function WhatsAppSection() {
 		onSuccess: async () => {
 			setLinkInitiatedAt(Date.now())
 			await whatsappStatusQuery.refetch()
+			await queryClient.invalidateQueries({ queryKey: ["onboardingStatus"] })
 		},
 	})
 
@@ -66,6 +68,7 @@ export function WhatsAppSection() {
 		},
 		onSuccess: async () => {
 			await whatsappStatusQuery.refetch()
+			await queryClient.invalidateQueries({ queryKey: ["onboardingStatus"] })
 			setUnlinkOpen(false)
 		},
 	})
@@ -103,6 +106,7 @@ export function WhatsAppSection() {
 					<FieldDescription>{description}</FieldDescription>
 				</FieldContent>
 				<Button
+					data-onboarding="link-whatsapp"
 					disabled={
 						isLoading ||
 						(isLinked ? unlinkMutation.isPending : startLinkMutation.isPending)

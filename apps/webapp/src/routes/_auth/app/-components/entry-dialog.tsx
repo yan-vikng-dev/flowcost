@@ -177,7 +177,7 @@ export function EntryDialog({
 										value={state.currency}
 									/>
 								</Field>
-								<Field className="min-w-0">
+								<Field className="min-w-0" data-onboarding="entry-amount">
 									<FieldLabel htmlFor={amountId}>Amount</FieldLabel>
 									<Input
 										id={amountId}
@@ -197,7 +197,7 @@ export function EntryDialog({
 									/>
 								</Field>
 
-								<Field>
+								<Field data-onboarding="entry-category">
 									<FieldLabel>Category</FieldLabel>
 									<CategoryCombobox
 										id={categoryId}
@@ -222,7 +222,7 @@ export function EntryDialog({
 									/>
 								</Field>
 
-								<Field>
+								<Field data-onboarding="entry-type">
 									<FieldLabel htmlFor={entryTypeId}>Type</FieldLabel>
 									<EntryTypeSelect
 										id={entryTypeId}
@@ -241,6 +241,7 @@ export function EntryDialog({
 										<PopoverTrigger asChild>
 											<Button
 												className="w-full"
+												data-onboarding="entry-date"
 												id={executedAtId}
 												variant="outline"
 											>
@@ -286,7 +287,11 @@ export function EntryDialog({
 									</Popover>
 								</Field>
 
-								<Field className="min-w-0" orientation="horizontal">
+								<Field
+									className="min-w-0"
+									data-onboarding="recurring-toggle"
+									orientation="horizontal"
+								>
 									<Switch
 										checked={isRecurring}
 										id={recurringId}
@@ -494,6 +499,7 @@ export function EntryDialog({
 						Cancel
 					</Button>
 					<Button
+						data-onboarding="entry-create-button"
 						disabled={!valid || isPending}
 						onClick={() => {
 							if (!valid) return

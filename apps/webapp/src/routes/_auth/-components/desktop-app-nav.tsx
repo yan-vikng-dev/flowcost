@@ -36,7 +36,7 @@ export function DesktopAppNav() {
 					<Link to="/app/advanced">Advanced</Link>
 				</Button>
 				<div className="relative">
-					<Button asChild variant="outline">
+					<Button asChild data-onboarding="nav-settings" variant="outline">
 						<Link to="/app/settings">Settings</Link>
 					</Button>
 					{hasIncoming && (
