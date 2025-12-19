@@ -61,21 +61,19 @@ export async function sendWhatsAppText({
 
 export type SendTypingIndicatorParams = {
 	env: Env
-	waId: string
-	action: "typing_on" | "typing_off"
+	messageId: string
 }
 
 export async function sendTypingIndicator({
 	env,
-	waId,
-	action,
+	messageId,
 }: SendTypingIndicatorParams): Promise<Response> {
 	const url = `https://graph.facebook.com/v19.0/${env.WHATSAPP_PHONE_NUMBER_ID}/messages`
 	const body = {
 		messaging_product: "whatsapp",
-		to: waId,
-		type: "typing",
-		typing: { action },
+		status: "read",
+		message_id: messageId,
+		typing_indicator: { type: "text" },
 	}
 	const response = await fetch(url, {
 		method: "POST",
@@ -92,9 +90,13 @@ export async function sendTypingIndicator({
 			status: response.status,
 			statusText: response.statusText,
 			url,
-			waId,
-			action,
+			messageId,
 			errorBody: errorText,
+		})
+	} else {
+		console.debug("WhatsApp read receipt + typing indicator sent", {
+			messageId,
+			status: response.status,
 		})
 	}
 

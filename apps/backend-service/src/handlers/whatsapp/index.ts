@@ -156,13 +156,7 @@ export async function handleIncomingMessage(
 					id: true,
 				},
 				with: {
-					preferences: {
-						columns: {
-							defaultEntryCurrency: true,
-							timezone: true,
-							displayCurrency: true,
-						},
-					},
+					preferences: true,
 				},
 			},
 		},
@@ -216,34 +210,20 @@ export async function handleIncomingMessage(
 	}
 	const messageContext: MessageContext = {
 		messageId,
+		waId,
 		userId: link.user.id,
 		defaultEntryCurrency: link.user.preferences.defaultEntryCurrency,
 		displayCurrency: link.user.preferences.displayCurrency,
 		userTimezone: link.user.preferences.timezone,
+		reportsDailyEnabled: !!link.user.preferences.reportsDailyEnabled,
+		reportsWeeklyEnabled: !!link.user.preferences.reportsWeeklyEnabled,
+		reportsMonthlyEnabled: !!link.user.preferences.reportsMonthlyEnabled,
+		reportsTime: link.user.preferences.reportsTime,
+		reportsWeeklyDay: link.user.preferences.reportsWeeklyDay,
 	}
 	try {
-		await sendTypingIndicator({ env, waId, action: "typing_on" })
-		const reply = await stub.handleMessage(text, messageContext)
-		if (reply) {
-			await sendWhatsAppText({ env, waId, text: reply })
-		} else {
-			const errorMessage =
-				"Something went wrong. Please try again, or start a new chat with /new"
-			await sendWhatsAppText({ env, waId, text: errorMessage })
-			const error = new Error("No text generated from AI conversation server")
-			error.name = "EmptyResponseError"
-			console.error("Error: No text generated from handleMessage", {
-				waId,
-				userId: link.user.id,
-				messageId,
-				text,
-				messageContext,
-				error: error.message,
-				stack: error.stack,
-				errorName: error.name,
-			})
-			throw error
-		}
+		await sendTypingIndicator({ env, messageId })
+		await stub.handleMessage(text, messageContext)
 	} catch (error) {
 		console.error("Error handling WhatsApp message", {
 			waId,
