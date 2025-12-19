@@ -7,6 +7,7 @@
 - `packages/data-ops/`: database/auth/schema layer (Drizzle + shared queries), source in `packages/data-ops/src/`.
 - `packages/shared-lib/`: shared types and utilities, source in `packages/shared-lib/src/`.
 - Build outputs: `dist/` folders inside each package/app.
+- each app's and package's README.md should be updated with the latest context of that project.
 
 ## Build, Lint and Development Commands
 
