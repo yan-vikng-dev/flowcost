@@ -47,17 +47,29 @@ export function MobileAppNav() {
 	const pathname = location.pathname
 	const isOnAdvanced =
 		pathname === "/app/advanced" || pathname.startsWith("/app/advanced/")
-	const toggleTarget = isOnAdvanced ? "/app" : "/app/advanced"
-	const ToggleIcon = isOnAdvanced
-		? ListChevronsDownUpIcon
-		: ListChevronsUpDownIcon
-	const toggleLabel = isOnAdvanced ? "Back to dashboard" : "Go to advanced"
+	const isOnSettings =
+		pathname === "/app/settings" || pathname.startsWith("/app/settings/")
+	const toggleTarget = isOnAdvanced || isOnSettings ? "/app" : "/app/advanced"
+	const ToggleIcon =
+		isOnAdvanced || isOnSettings
+			? ListChevronsDownUpIcon
+			: ListChevronsUpDownIcon
+	const toggleLabel =
+		isOnAdvanced || isOnSettings ? "Back to dashboard" : "Go to advanced"
 
 	return (
 		<>
 			<nav className="fixed bottom-0 z-20 flex h-16 w-full items-center justify-between bg-background/90 py-2 backdrop-blur-xl">
 				<div className="flex flex-1 justify-center">
-					<Button aria-label={toggleLabel} asChild size="icon" variant="ghost">
+					<Button
+						aria-label={toggleLabel}
+						asChild
+						data-onboarding={
+							toggleTarget === "/app" ? "nav-dashboard" : undefined
+						}
+						size="icon"
+						variant="ghost"
+					>
 						<Link to={toggleTarget}>
 							<ToggleIcon className="size-5" />
 						</Link>

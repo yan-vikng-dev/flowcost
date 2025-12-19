@@ -11,9 +11,6 @@ import { useEntryMutations } from "./useEntryMutations"
 export function AddEntryButton() {
 	const isDesktop = useIsDesktop()
 	const [open, setOpen] = React.useState(false)
-	const [mode, setMode] = React.useState<"expense" | "recurring-income">(
-		"expense",
-	)
 
 	const prefsQuery = useQuery({
 		queryKey: ["userPreferences"],
@@ -26,17 +23,8 @@ export function AddEntryButton() {
 		"USD") as Currency
 
 	const initial = React.useMemo(
-		() =>
-			mode === "recurring-income"
-				? {
-						...getDefaultEntryInitial({
-							defaultCurrency,
-							isRecurring: true,
-						}),
-						entryType: "Income" as const,
-					}
-				: getDefaultEntryInitial({ defaultCurrency, isRecurring: false }),
-		[defaultCurrency, mode],
+		() => getDefaultEntryInitial({ defaultCurrency, isRecurring: false }),
+		[defaultCurrency],
 	)
 
 	const { handleSubmit, handleSubmitRecurring, isPending } = useEntryMutations()
@@ -45,34 +33,16 @@ export function AddEntryButton() {
 
 	return (
 		<>
-			<div className="flex flex-col gap-2">
-				<Button
-					className="w-full justify-center"
-					data-onboarding="add-expense"
-					onClick={() => {
-						setMode("expense")
-						setOpen(true)
-					}}
-					size="lg"
-					variant="default"
-				>
-					<span className="font-medium text-base">Add expense</span>
-					<PlusIcon className="size-5" />
-				</Button>
-				<Button
-					className="w-full justify-center"
-					data-onboarding="add-income-recurring"
-					onClick={() => {
-						setMode("recurring-income")
-						setOpen(true)
-					}}
-					size="lg"
-					variant="secondary"
-				>
-					<span className="font-medium text-base">Add recurring income</span>
-					<PlusIcon className="size-5" />
-				</Button>
-			</div>
+			<Button
+				className="w-full justify-center"
+				data-onboarding="add-expense"
+				onClick={() => setOpen(true)}
+				size="lg"
+				variant="default"
+			>
+				<span className="font-medium text-base">Add expense</span>
+				<PlusIcon className="size-5" />
+			</Button>
 
 			<EntryDialog
 				initial={initial}

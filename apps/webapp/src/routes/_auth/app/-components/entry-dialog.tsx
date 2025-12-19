@@ -167,7 +167,7 @@ export function EntryDialog({
 					<FieldGroup>
 						<FieldSet>
 							<div className="grid grid-cols-[max-content_1fr] gap-x-4 gap-y-4">
-								<Field>
+								<Field data-onboarding="entry-currency">
 									<FieldLabel>Currency</FieldLabel>
 									<CurrencyCombobox
 										id={currencyId}
@@ -207,7 +207,7 @@ export function EntryDialog({
 										value={state.category}
 									/>
 								</Field>
-								<Field className="min-w-0">
+								<Field className="min-w-0" data-onboarding="entry-description">
 									<FieldLabel htmlFor={descriptionId}>Description</FieldLabel>
 									<Input
 										id={descriptionId}

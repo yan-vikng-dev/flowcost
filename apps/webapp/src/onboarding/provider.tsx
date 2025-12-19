@@ -6,7 +6,11 @@ import {
 } from "@/core/functions/onboarding"
 import { OnboardingCallouts } from "./callouts"
 import { OnboardingChecklist } from "./checklist"
-import { getFirstIncompleteStep, type OnboardingStepId } from "./steps"
+import {
+	completionByStep,
+	getFirstIncompleteStep,
+	type OnboardingStepId,
+} from "./steps"
 import { useOnboardingDismissal } from "./utils"
 import { WelcomeDialog } from "./welcome-dialog"
 
@@ -72,12 +76,31 @@ export function OnboardingTourProvider({
 		setSelectedStepId(null)
 	}, [dismissInStorage])
 
+	const previousStatus = React.useRef<OnboardingStatus | null>(null)
+
 	React.useEffect(() => {
 		if (!ONBOARDING_ENABLED || !status?.isMissingSetup) {
 			setIsChecklistOpen(false)
 			setSelectedStepId(null)
 		}
 	}, [status])
+
+	React.useEffect(() => {
+		if (!ONBOARDING_ENABLED || !status || !selectedStepId || !isChecklistOpen) {
+			previousStatus.current = status ?? null
+			return
+		}
+
+		const completionKey = completionByStep[selectedStepId]
+		const wasDone = previousStatus.current?.[completionKey] ?? false
+		const isDoneNow = status[completionKey]
+
+		if (!wasDone && isDoneNow) {
+			setSelectedStepId(getFirstIncompleteStep(status))
+		}
+
+		previousStatus.current = status
+	}, [isChecklistOpen, selectedStepId, status])
 
 	const value = React.useMemo(
 		() => ({

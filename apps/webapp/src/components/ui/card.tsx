@@ -19,7 +19,7 @@ function CardHeader({ className, ...props }: React.ComponentProps<"div">) {
 	return (
 		<div
 			className={cn(
-				"@container/card-header grid auto-rows-min grid-rows-[auto_auto] items-start gap-2 overflow-hidden px-6 [&:not(:has([data-slot=card-description]))_[data-slot=card-action]:row-span-1 [&:not(:has([data-slot=card-description]))_[data-slot=card-action]:self-center [&:not(:has([data-slot=card-description]))_[data-slot=card-title]:flex [&:not(:has([data-slot=card-description]))_[data-slot=card-title]:items-center [&:not(:has([data-slot=card-description]))_[data-slot=card-title]:min-h-8 has-data-[slot=card-action]:grid-cols-[1fr_auto] [&:not(:has([data-slot=card-description]))]:grid-rows-1 [&:not(:has([data-slot=card-description]))]:items-center [.border-b]:pb-6",
+				"@container/card-header grid auto-rows-min grid-rows-[auto_auto] items-start gap-2 px-6 [&:not(:has([data-slot=card-description]))_[data-slot=card-action]:row-span-1 [&:not(:has([data-slot=card-description]))_[data-slot=card-action]:self-center [&:not(:has([data-slot=card-description]))_[data-slot=card-title]:flex [&:not(:has([data-slot=card-description]))_[data-slot=card-title]:items-center [&:not(:has([data-slot=card-description]))_[data-slot=card-title]:min-h-8 has-data-[slot=card-action]:grid-cols-[1fr_auto] [&:not(:has([data-slot=card-description]))]:grid-rows-1 [&:not(:has([data-slot=card-description]))]:items-center [.border-b]:pb-6",
 				className,
 			)}
 			data-slot="card-header"

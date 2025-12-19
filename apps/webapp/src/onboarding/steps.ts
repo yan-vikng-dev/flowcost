@@ -14,41 +14,58 @@ export type OnboardingStep = {
 	target?: string
 	mobileTarget?: string
 	title: string
-	copy: string
+	triggerCopy: string
 	detailSteps?: Array<{
 		target: string
 		copy: string
 	}>
 }
 
-export const onboardingSteps: OnboardingStep[] = [
+export type OnboardingStepWithDetails = OnboardingStep & {
+	detailSteps: NonNullable<OnboardingStep["detailSteps"]>
+	detailsCopy: string
+}
+
+export type OnboardingStepWithoutDetails = OnboardingStep & {
+	detailSteps?: undefined
+	detailsCopy?: never
+}
+
+export type AnyOnboardingStep =
+	| OnboardingStepWithDetails
+	| OnboardingStepWithoutDetails
+
+export const onboardingSteps: AnyOnboardingStep[] = [
 	{
 		id: "add-expense",
 		checklistLabel: "Add an expense entry",
 		route: "/app",
 		target: "add-expense",
 		title: "Track Your Spending",
-		copy: "Bob here—tap the shiny add button so we can start responsibly spending your money.",
+		triggerCopy:
+			"Let's start by recording an expense. This will be your most used button, and you should use it to record everything.",
+		detailsCopy: "Nice. Bought some food today? You can add it now.",
 		detailSteps: [
-			{ target: "entry-type", copy: "Pick Expense" },
-			{ target: "entry-amount", copy: "Add the number" },
-			{ target: "entry-category", copy: "Tag it" },
-			{ target: "entry-date", copy: "Date it" },
-			{ target: "entry-create-button", copy: "Create" },
+			{ target: "entry-amount", copy: "add the number here" },
+			{ target: "entry-currency", copy: "$?" },
+			{ target: "entry-description", copy: "mcdonalds, wasn't it?" },
+			{ target: "entry-create-button", copy: "Launch!" },
 		],
 	},
 	{
 		id: "add-recurring-income",
 		checklistLabel: "Add recurring income",
 		route: "/app",
-		target: "add-income-recurring",
-		mobileTarget: "add-expense",
+		target: "add-expense",
 		title: "Set Up Your Income",
-		copy: "Open the entry dialog, flip to Recurring + Income, and let the paychecks roll in.",
+		triggerCopy:
+			"Next, open the entry dialog and add a recurring income so Flowcost can predict what’s coming in.",
+		detailsCopy:
+			"Open the entry dialog, flip to Recurring + Income, and let the paychecks roll in.",
 		detailSteps: [
 			{ target: "recurring-toggle", copy: "Make it repeat" },
 			{ target: "entry-type", copy: "Mark as Income" },
-			{ target: "entry-category", copy: "Pick a bucket" },
+			{ target: "entry-category", copy: "use 'salary' category" },
 			{ target: "entry-amount", copy: "Enter amount" },
 			{ target: "entry-create-button", copy: "Save it" },
 		],
@@ -59,7 +76,9 @@ export const onboardingSteps: OnboardingStep[] = [
 		route: "/app",
 		target: "add-budget",
 		title: "Fence Your Spending",
-		copy: "Bob suggests a financial fence—click and corral those dollars.",
+		triggerCopy:
+			"Now set a budget to keep a category from running wild. Click this and we’ll set one up.",
+		detailsCopy: "Nice. Set a limit, pick categories, and save your budget.",
 		detailSteps: [
 			{ target: "budget-amount", copy: "Set your limit" },
 			{ target: "budget-currency", copy: "Choose currency" },
@@ -73,7 +92,7 @@ export const onboardingSteps: OnboardingStep[] = [
 		route: "/app/settings",
 		target: "link-whatsapp",
 		title: "Summon Chat Magic",
-		copy: "Tap to summon your personal financial assistant on WhatsApp.",
+		triggerCopy: "Tap to summon your personal financial assistant on WhatsApp.",
 	},
 ]
 

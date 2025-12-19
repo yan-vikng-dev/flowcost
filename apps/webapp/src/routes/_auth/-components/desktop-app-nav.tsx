@@ -29,7 +29,7 @@ export function DesktopAppNav() {
 				/>
 			</Link>
 			<div className="flex items-center gap-2">
-				<Button asChild variant="outline">
+				<Button asChild data-onboarding="nav-dashboard" variant="outline">
 					<Link to="/app">Dashboard</Link>
 				</Button>
 				<Button asChild variant="outline">

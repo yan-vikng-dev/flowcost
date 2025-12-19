@@ -135,23 +135,27 @@ export function MonthlyEntriesTable({
 				const isAllSelected = table.getIsAllPageRowsSelected()
 				const isSomeSelected = table.getIsSomePageRowsSelected()
 				return (
-					<Checkbox
-						aria-label="Select all"
-						checked={
-							isAllSelected ? true : isSomeSelected ? "indeterminate" : false
-						}
-						onCheckedChange={(checked) =>
-							table.toggleAllPageRowsSelected(checked === true)
-						}
-					/>
+					<div className="flex items-center justify-center">
+						<Checkbox
+							aria-label="Select all"
+							checked={
+								isAllSelected ? true : isSomeSelected ? "indeterminate" : false
+							}
+							onCheckedChange={(checked) =>
+								table.toggleAllPageRowsSelected(checked === true)
+							}
+						/>
+					</div>
 				)
 			},
 			cell: ({ row }) => (
-				<Checkbox
-					aria-label="Select row"
-					checked={row.getIsSelected()}
-					onCheckedChange={(checked) => row.toggleSelected(checked === true)}
-				/>
+				<div className="flex items-center justify-center">
+					<Checkbox
+						aria-label="Select row"
+						checked={row.getIsSelected()}
+						onCheckedChange={(checked) => row.toggleSelected(checked === true)}
+					/>
+				</div>
 			),
 			enableSorting: false,
 			enableHiding: false,
