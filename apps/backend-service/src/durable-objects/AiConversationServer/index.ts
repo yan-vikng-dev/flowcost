@@ -128,16 +128,13 @@ export class AiConversationServer extends DurableObject {
 			this.turns.push(...result.response.messages)
 			await this.ctx.storage.put("conversationHistory", this.turns)
 
-			console.debug({
-				message: "generated text",
-				text: result.text,
-				finishReason: result.finishReason,
-				stepCount: result.steps.length,
-				toolCallsCount: result.toolCalls.length,
+			console.debug("Generated text, logging result",{
+				result,
+				messageContext,
 			})
 
 			if (result.finishReason === "error" || !result.text) {
-				throw new Error("Failed to generate text")
+				throw new Error("Failed to generate text. finishReason: " + result.finishReason + ", text: " + result.text)
 			}
 
 			await sendWhatsAppText({
