@@ -118,6 +118,7 @@ export class AiConversationServer extends DurableObject {
 				model,
 				tools,
 				messages,
+				maxOutputTokens: 512,
 				maxRetries: 3,
 				stopWhen: [
 					({ steps }) => steps.some((step) => step.finishReason === "stop"),
@@ -128,13 +129,15 @@ export class AiConversationServer extends DurableObject {
 			this.turns.push(...result.response.messages)
 			await this.ctx.storage.put("conversationHistory", this.turns)
 
-			console.debug("Generated text, logging result",{
+			console.debug("Generated text, logging result", {
 				result,
 				messageContext,
 			})
 
 			if (result.finishReason === "error" || !result.text) {
-				throw new Error("Failed to generate text. finishReason: " + result.finishReason + ", text: " + result.text)
+				throw new Error(
+					`Failed to generate text. finishReason: ${result.finishReason}, text: ${result.text}`,
+				)
 			}
 
 			await sendWhatsAppText({
