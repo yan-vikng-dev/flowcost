@@ -46,16 +46,25 @@ export function OnboardingTourProvider({
 		resetDismissal,
 	} = useOnboardingDismissal()
 
-	const { data: status, isLoading } = useQuery({
-		queryKey: ["onboardingStatus"],
-		queryFn: () => getOnboardingStatus(),
-		staleTime: 5 * 60 * 1000,
-		enabled: ONBOARDING_ENABLED,
-	})
-
 	const [selectedStepId, setSelectedStepId] =
 		React.useState<OnboardingStepId | null>(null)
 	const [isChecklistOpen, setIsChecklistOpen] = React.useState(false)
+
+	const isWaitingForWhatsapp =
+		isChecklistOpen && selectedStepId === "link-whatsapp"
+
+	const { data: status, isLoading } = useQuery({
+		queryKey: ["onboardingStatus"],
+		queryFn: () => getOnboardingStatus(),
+		staleTime: isWaitingForWhatsapp ? 0 : 5 * 60 * 1000,
+		refetchInterval: (query) => {
+			if (!isWaitingForWhatsapp) return false
+			const data = query.state.data as OnboardingStatus | undefined
+			if (data?.whatsappDone) return false
+			return 3000
+		},
+		enabled: ONBOARDING_ENABLED,
+	})
 
 	const shouldShowWelcome = Boolean(
 		ONBOARDING_ENABLED && status?.isMissingSetup && !dismissedAt,

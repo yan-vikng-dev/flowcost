@@ -65,14 +65,9 @@ function ChecklistBody({
 	const ordered = onboardingSteps.map((step) => step.id)
 
 	return (
-		<div className="flex flex-col gap-3 p-4">
-			<div className="flex items-start justify-between gap-3">
-				<div className="space-y-1">
+		<div className="flex flex-col gap-3">
+			<div className="flex items-center justify-between">
 					<p className="font-semibold text-sm">Bob&apos;s setup checklist</p>
-					<p className="text-muted-foreground text-xs">
-						Click any item to jump. You can return to this tour from Settings.
-					</p>
-				</div>
 				<Button onClick={onDismiss} size="icon-sm" variant="ghost">
 					<XIcon className="size-4" />
 				</Button>
@@ -150,7 +145,7 @@ export function OnboardingChecklist() {
 	if (isDesktop) {
 		return (
 			<Card className="fixed right-4 bottom-4 z-50 w-80 shadow-lg">
-				<CardContent className="p-0">{checklist}</CardContent>
+				<CardContent>{checklist}</CardContent>
 			</Card>
 		)
 	}
