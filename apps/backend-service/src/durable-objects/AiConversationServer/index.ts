@@ -57,7 +57,7 @@ export class AiConversationServer extends DurableObject {
 			this.seenMessageIds = new Set(
 				await ctx.storage.get<string[]>("seenMessageIds"),
 			)
-			this.posthogClient = new PostHog(env.POSTHOG_API_KEY, {
+			this.posthogClient = new PostHog(env.POSTHOG_KEY, {
 				host: env.POSTHOG_HOST,
 				flushAt: 1,
 				flushInterval: 0,
@@ -98,7 +98,7 @@ export class AiConversationServer extends DurableObject {
 			const baseModel = this.googleProvider("gemini-2.5-flash")
 			if (!this.posthogClient) throw new Error("Posthog client not initialized")
 			if (!this.traceId) throw new Error("Trace ID not initialized")
-			this.posthogClient.identify({distinctId: messageContext.userId})
+			this.posthogClient.identify({ distinctId: messageContext.userId })
 			const model = withTracing(baseModel, this.posthogClient, {
 				posthogDistinctId: messageContext.userId,
 				posthogTraceId: this.traceId,
