@@ -33,16 +33,6 @@ function SummaryContent() {
 		return { incomeTotal, expenseTotal, net }
 	}, [data])
 
-	const isEmpty = (data.entries?.length ?? 0) === 0
-
-	if (isEmpty) {
-		return (
-			<div className="mx-auto grid h-[160px] w-full place-items-center text-muted-foreground text-sm">
-				No entries this month
-			</div>
-		)
-	}
-
 	return (
 		<div className="mt-2 flex flex-col items-end justify-center gap-2">
 			<NumberLine
