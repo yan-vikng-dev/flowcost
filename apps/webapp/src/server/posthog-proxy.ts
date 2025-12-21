@@ -37,6 +37,11 @@ export const proxyPosthog = (request: Request, path?: string) => {
 
 	const target = new URL(normalizedPath, baseWithSlash)
 	target.search = new URL(request.url).search
+	console.info("[PostHog] Proxy request.", {
+		method: request.method,
+		path: normalizedPath || "/",
+		target: target.toString(),
+	})
 
 	const headers = new Headers(request.headers)
 	headers.delete("host")

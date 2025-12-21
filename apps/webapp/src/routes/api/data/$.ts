@@ -9,7 +9,7 @@ const handle = ({
 	params: { _splat?: string }
 }) => proxyPosthog(request, params._splat)
 
-export const Route = createFileRoute("/api/config/$")({
+export const Route = createFileRoute("/api/data/$")({
 	server: {
 		handlers: {
 			GET: handle,
