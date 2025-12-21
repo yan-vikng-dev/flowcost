@@ -14,7 +14,6 @@ import { DefaultCatchBoundary } from "@/components/default-catch-boundary"
 import { NotFound } from "@/components/not-found"
 import { ThemeProvider } from "@/components/theme"
 import { Toaster } from "@/components/ui/sonner"
-import { PosthogAnalytics } from "@/integrations/posthog/analytics"
 import appCss from "@/styles.css?url"
 import { seo } from "@/utils/seo"
 
@@ -87,7 +86,6 @@ function RootComponent() {
 	return (
 		<RootDocument>
 			<ThemeProvider>
-				<PosthogAnalytics />
 				<Outlet />
 			</ThemeProvider>
 		</RootDocument>
