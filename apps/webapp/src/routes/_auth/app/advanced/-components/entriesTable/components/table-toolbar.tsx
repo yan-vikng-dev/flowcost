@@ -24,6 +24,7 @@ export function TableToolbar({
 	setConfirmOpen,
 }: TableToolbarProps) {
 	const [globalFilter, setGlobalFilter] = React.useState("")
+	const searchId = React.useId()
 	return (
 		<div className="flex items-center gap-2 py-4">
 			{table.getFilteredSelectedRowModel().rows.length > 0 && (
@@ -66,6 +67,8 @@ export function TableToolbar({
 				<SearchIcon className="-translate-y-1/2 absolute top-1/2 right-3 h-4 w-4 text-muted-foreground" />
 				<Input
 					className="h-8 pr-9"
+					id={searchId}
+					name="search"
 					onChange={(e) => setGlobalFilter(e.target.value)}
 					placeholder="Search entries..."
 					value={globalFilter ?? ""}
