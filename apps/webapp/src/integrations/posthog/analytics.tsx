@@ -10,33 +10,45 @@ export function PosthogAnalytics() {
 	const lastIdentifiedUserId = useRef<string | null>(null)
 
 	useEffect(() => {
-		initializedRef.current = initPosthog()
-	}, [])
-
-	useEffect(() => {
-		if (!initializedRef.current) {
-			return
+		let isActive = true
+		void (async () => {
+			if (!initializedRef.current) {
+				initializedRef.current = await initPosthog()
+			}
+			if (!isActive || !initializedRef.current) return
+			posthog.capture("$pageview", { $current_url: location.href })
+		})()
+		return () => {
+			isActive = false
 		}
-		posthog.capture("$pageview", { $current_url: location.href })
 	}, [location.href])
 
 	useEffect(() => {
-		if (!initializedRef.current) return
-		const user = session?.user
-		if (!user?.id) {
-			if (lastIdentifiedUserId.current) {
-				posthog.reset()
-				lastIdentifiedUserId.current = null
+		let isActive = true
+		void (async () => {
+			if (!initializedRef.current) {
+				initializedRef.current = await initPosthog()
 			}
-			return
-		}
+			if (!isActive || !initializedRef.current) return
+			const user = session?.user
+			if (!user?.id) {
+				if (lastIdentifiedUserId.current) {
+					posthog.reset()
+					lastIdentifiedUserId.current = null
+				}
+				return
+			}
 
-		if (lastIdentifiedUserId.current !== user.id) {
-			posthog.identify(user.id, {
-				email: user.email ?? undefined,
-				name: user.name ?? undefined,
-			})
-			lastIdentifiedUserId.current = user.id
+			if (lastIdentifiedUserId.current !== user.id) {
+				posthog.identify(user.id, {
+					email: user.email ?? undefined,
+					name: user.name ?? undefined,
+				})
+				lastIdentifiedUserId.current = user.id
+			}
+		})()
+		return () => {
+			isActive = false
 		}
 	}, [
 		session?.user?.id,
