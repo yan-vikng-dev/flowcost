@@ -215,7 +215,6 @@ export async function handleIncomingMessage(
 		waId,
 		userId: link.user.id,
 		userEmail: link.user.email,
-		userName: link.user.name,
 		defaultEntryCurrency: link.user.preferences.defaultEntryCurrency,
 		displayCurrency: link.user.preferences.displayCurrency,
 		userTimezone: link.user.preferences.timezone,
