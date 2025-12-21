@@ -26,6 +26,7 @@ export type MessageContext = {
 	defaultEntryCurrency: Currency
 	displayCurrency: Currency
 	userTimezone: string
+	userEmail: string
 	reportsDailyEnabled: boolean
 	reportsWeeklyEnabled: boolean
 	reportsMonthlyEnabled: boolean
@@ -49,8 +50,10 @@ export class AiConversationServer extends DurableObject {
 		})
 		void ctx.blockConcurrencyWhile(async () => {
 			initDatabase(env.DB)
-			this.turns = (await ctx.storage.get<ModelMessage[]>("conversationHistory")) ?? []
-			this.traceId = (await ctx.storage.get<string>("traceId")) ?? crypto.randomUUID()
+			this.turns =
+				(await ctx.storage.get<ModelMessage[]>("conversationHistory")) ?? []
+			this.traceId =
+				(await ctx.storage.get<string>("traceId")) ?? crypto.randomUUID()
 			this.seenMessageIds = new Set(
 				await ctx.storage.get<string[]>("seenMessageIds"),
 			)

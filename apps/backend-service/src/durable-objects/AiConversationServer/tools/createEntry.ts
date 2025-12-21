@@ -1,4 +1,5 @@
 import type { DrizzleDb } from "@repo/data-ops/database/setup"
+import { fetchExchangeRatesForDates } from "@repo/data-ops/drizzle/queries"
 import { entries, type InsertEntry } from "@repo/data-ops/drizzle/schemas/index"
 import {
 	type Currency,
@@ -7,6 +8,7 @@ import {
 	isoDateToUtcMidnight,
 	toIsoDateInTimezone,
 } from "@repo/shared-lib"
+import { convertCurrency } from "@repo/shared-lib/currency"
 import { tool } from "ai"
 import { DateTime } from "luxon"
 import { z } from "zod"
@@ -65,6 +67,16 @@ export const makeCreateEntryTool = (context: MessageContext, db: DrizzleDb) =>
 			}
 			const [inserted] = await db.insert(entries).values(newEntry).returning()
 			if (!inserted) throw new Error("Failed to create entry")
+			const { ratesByDate, latest } = await fetchExchangeRatesForDates(db, [
+				inserted.executedDate,
+			])
+			const rateMap = ratesByDate.get(inserted.executedDate) ?? latest.rates
+			const convertedAmount = convertCurrency(
+				inserted.amount,
+				inserted.currency,
+				context.displayCurrency,
+				rateMap,
+			)
 			const executedAt = isoDateToUtcMidnight(
 				inserted.executedDate,
 			).toISOString()
@@ -73,7 +85,8 @@ export const makeCreateEntryTool = (context: MessageContext, db: DrizzleDb) =>
 				executedAt,
 				createdAt: inserted.createdAt.toISOString(),
 				updatedAt: inserted.updatedAt.toISOString(),
+				convertedAmount,
 			}
-			return { result: safe }
+			return { result: safe, targetCurrency: context.displayCurrency }
 		},
 	})
