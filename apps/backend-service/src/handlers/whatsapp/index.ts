@@ -154,6 +154,8 @@ export async function handleIncomingMessage(
 			user: {
 				columns: {
 					id: true,
+					email: true,
+					name: true,
 				},
 				with: {
 					preferences: true,
@@ -212,6 +214,8 @@ export async function handleIncomingMessage(
 		messageId,
 		waId,
 		userId: link.user.id,
+		userEmail: link.user.email,
+		userName: link.user.name,
 		defaultEntryCurrency: link.user.preferences.defaultEntryCurrency,
 		displayCurrency: link.user.preferences.displayCurrency,
 		userTimezone: link.user.preferences.timezone,

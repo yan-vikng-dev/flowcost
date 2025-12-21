@@ -19,12 +19,12 @@
 		"wrangler": "^4.55.0"
 	},
 	"dependencies": {
-		"@ai-sdk/google": "^2.0.29",
+		"@ai-sdk/google": "^2.0.51",
 		"@posthog/ai": "^7.0.0",
 		"@repo/data-ops": "workspace:^",
 		"@repo/shared-lib": "workspace:^",
 		"@types/luxon": "^3.7.1",
-		"ai": "^5.0.89",
+		"ai": "^5.0.116",
 		"drizzle-orm": "^0.44.7",
 		"hono": "^4.10.4",
 		"luxon": "^3.7.2",
