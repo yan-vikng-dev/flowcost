@@ -4,10 +4,9 @@ import { withTracing } from "@posthog/ai"
 import { getDb, initDatabase } from "@repo/data-ops/database/setup"
 import type { Currency } from "@repo/shared-lib"
 import { generateText, type ModelMessage, stepCountIs } from "ai"
-import { DateTime } from "luxon"
 import { PostHog } from "posthog-node"
 import { sendWhatsAppText } from "@/handlers/whatsapp/helpers"
-import { getSystemMessage } from "./config"
+import { buildSystemPrompt } from "./systemPrompt"
 import {
 	makeCreateEntryTool,
 	makeDeleteEntryTool,
@@ -17,6 +16,8 @@ import {
 } from "./tools"
 
 const contextWindowMs = 1000 * 60 * 60 // 1 hour
+const maxPromptMessages = 40
+const trimmedPromptMessages = 30
 
 export type MessageContext = {
 	messageId: string
@@ -39,17 +40,17 @@ export class AiConversationServer extends DurableObject {
 	inProgressMessageIds: Set<string> = new Set()
 	processing: Promise<void> = Promise.resolve()
 	traceId: string | null = null
+	googleProvider: ReturnType<typeof createGoogleGenerativeAI>
 
 	constructor(ctx: DurableObjectState, env: Env) {
 		super(ctx, env)
+		this.googleProvider = createGoogleGenerativeAI({
+			apiKey: env.GEMINI_API_KEY,
+		})
 		void ctx.blockConcurrencyWhile(async () => {
 			initDatabase(env.DB)
-			const storedHistory =
-				(await ctx.storage.get<ModelMessage[]>("conversationHistory")) ?? []
-			this.turns = sanitizeTurns(storedHistory)
-
-			this.traceId =
-				(await ctx.storage.get<string>("traceId")) || crypto.randomUUID()
+			this.turns = (await ctx.storage.get<ModelMessage[]>("conversationHistory")) ?? []
+			this.traceId = (await ctx.storage.get<string>("traceId")) ?? crypto.randomUUID()
 			this.seenMessageIds = new Set(
 				await ctx.storage.get<string[]>("seenMessageIds"),
 			)
@@ -91,10 +92,7 @@ export class AiConversationServer extends DurableObject {
 		messageContext: MessageContext,
 	) {
 		try {
-			const googleProvider = createGoogleGenerativeAI({
-				apiKey: this.env.GEMINI_API_KEY,
-			})
-			const baseModel = googleProvider("gemini-2.5-flash")
+			const baseModel = this.googleProvider("gemini-2.5-flash")
 			if (!this.posthogClient) throw new Error("Posthog client not initialized")
 			if (!this.traceId) throw new Error("Trace ID not initialized")
 			const model = withTracing(baseModel, this.posthogClient, {
@@ -113,10 +111,12 @@ export class AiConversationServer extends DurableObject {
 				delete_entry: makeDeleteEntryTool(messageContext, db),
 			}
 
-			const messages = buildPrompt(this.turns, messageContext)
+			const system = buildSystemPrompt(messageContext)
+			const messages = this.turns
 			const result = await generateText({
 				model,
 				tools,
+				system,
 				messages,
 				maxOutputTokens: 512,
 				maxRetries: 3,
@@ -124,6 +124,12 @@ export class AiConversationServer extends DurableObject {
 					({ steps }) => steps.some((step) => step.finishReason === "stop"),
 					stepCountIs(10),
 				],
+				prepareStep: ({ messages: stepMessages }) => {
+					if (stepMessages.length <= maxPromptMessages) return {}
+					return {
+						messages: stepMessages.slice(-trimmedPromptMessages),
+					}
+				},
 			})
 
 			this.turns.push(...result.response.messages)
@@ -150,9 +156,7 @@ export class AiConversationServer extends DurableObject {
 				userId: messageContext.userId,
 				messageId: messageContext.messageId,
 				traceId: this.traceId,
-				error: error instanceof Error ? error.message : String(error),
-				stack: error instanceof Error ? error.stack : undefined,
-				errorName: error instanceof Error ? error.name : undefined,
+				error,
 			})
 			try {
 				await sendWhatsAppText({
@@ -164,8 +168,7 @@ export class AiConversationServer extends DurableObject {
 				console.error("Failed to send WhatsApp error message", {
 					userId: messageContext.userId,
 					messageId: messageContext.messageId,
-					sendError:
-						sendError instanceof Error ? sendError.message : String(sendError),
+					sendError,
 				})
 			}
 		} finally {
@@ -183,10 +186,7 @@ export class AiConversationServer extends DurableObject {
 				console.error("Failed to persist seenMessageIds", {
 					userId: messageContext.userId,
 					messageId: messageContext.messageId,
-					storageError:
-						storageError instanceof Error
-							? storageError.message
-							: String(storageError),
+					storageError,
 				})
 			}
 		}
@@ -217,46 +217,5 @@ export class AiConversationServer extends DurableObject {
 			"seenMessageIds",
 			Array.from(this.seenMessageIds),
 		)
-	}
-}
-
-function buildPrompt(
-	turns: ModelMessage[],
-	context: MessageContext,
-): ModelMessage[] {
-	return [getSystemMessage(), makeContextMessage(context), ...turns]
-}
-
-function sanitizeTurns(messages: ModelMessage[]): ModelMessage[] {
-	return messages.filter((m) => {
-		if (m.role === "system") return false
-		if (
-			m.role === "assistant" &&
-			typeof m.content === "string" &&
-			m.content.startsWith("[Context]")
-		)
-			return false
-		return true
-	})
-}
-
-function makeContextMessage(context: MessageContext): ModelMessage {
-	const localNow = DateTime.now().setZone(context.userTimezone)
-	const localDate = localNow.toISODate()
-	const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"] as const
-	const weeklyDay = dayNames[context.reportsWeeklyDay] ?? "?"
-	const reports =
-		`${context.reportsDailyEnabled ? "daily✅" : "daily❌"} ` +
-		`${context.reportsWeeklyEnabled ? `weekly✅(${weeklyDay})` : `weekly❌(${weeklyDay})`} ` +
-		`${context.reportsMonthlyEnabled ? "monthly✅" : "monthly❌"} @${context.reportsTime}`
-
-	return {
-		role: "assistant",
-		content:
-			`[Context]\n` +
-			`- Local date: ${localDate}\n` +
-			`- Timezone: ${context.userTimezone}\n` +
-			`- Currencies: display ${context.displayCurrency}, default ${context.defaultEntryCurrency}\n` +
-			`- Reports: ${reports}`,
 	}
 }
