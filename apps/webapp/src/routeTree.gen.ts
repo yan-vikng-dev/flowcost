@@ -12,11 +12,11 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthRouteRouteImport } from './routes/_auth/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthAppIndexRouteImport } from './routes/_auth/app/index'
-import { Route as ApiConfigSplatRouteImport } from './routes/api/config/$'
+import { Route as ApiDataSplatRouteImport } from './routes/api/data/$'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as AuthAppSettingsIndexRouteImport } from './routes/_auth/app/settings/index'
 import { Route as AuthAppAdvancedIndexRouteImport } from './routes/_auth/app/advanced/index'
-import { Route as ApiConfigStaticSplatRouteImport } from './routes/api/config/static/$'
+import { Route as ApiDataStaticSplatRouteImport } from './routes/api/data/static/$'
 
 const AuthRouteRoute = AuthRouteRouteImport.update({
   id: '/_auth',
@@ -32,9 +32,9 @@ const AuthAppIndexRoute = AuthAppIndexRouteImport.update({
   path: '/app/',
   getParentRoute: () => AuthRouteRoute,
 } as any)
-const ApiConfigSplatRoute = ApiConfigSplatRouteImport.update({
-  id: '/api/config/$',
-  path: '/api/config/$',
+const ApiDataSplatRoute = ApiDataSplatRouteImport.update({
+  id: '/api/data/$',
+  path: '/api/data/$',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
@@ -52,27 +52,27 @@ const AuthAppAdvancedIndexRoute = AuthAppAdvancedIndexRouteImport.update({
   path: '/app/advanced/',
   getParentRoute: () => AuthRouteRoute,
 } as any)
-const ApiConfigStaticSplatRoute = ApiConfigStaticSplatRouteImport.update({
-  id: '/api/config/static/$',
-  path: '/api/config/static/$',
+const ApiDataStaticSplatRoute = ApiDataStaticSplatRouteImport.update({
+  id: '/api/data/static/$',
+  path: '/api/data/static/$',
   getParentRoute: () => rootRouteImport,
 } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
-  '/api/config/$': typeof ApiConfigSplatRoute
+  '/api/data/$': typeof ApiDataSplatRoute
   '/app': typeof AuthAppIndexRoute
-  '/api/config/static/$': typeof ApiConfigStaticSplatRoute
+  '/api/data/static/$': typeof ApiDataStaticSplatRoute
   '/app/advanced': typeof AuthAppAdvancedIndexRoute
   '/app/settings': typeof AuthAppSettingsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
-  '/api/config/$': typeof ApiConfigSplatRoute
+  '/api/data/$': typeof ApiDataSplatRoute
   '/app': typeof AuthAppIndexRoute
-  '/api/config/static/$': typeof ApiConfigStaticSplatRoute
+  '/api/data/static/$': typeof ApiDataStaticSplatRoute
   '/app/advanced': typeof AuthAppAdvancedIndexRoute
   '/app/settings': typeof AuthAppSettingsIndexRoute
 }
@@ -81,9 +81,9 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_auth': typeof AuthRouteRouteWithChildren
   '/api/auth/$': typeof ApiAuthSplatRoute
-  '/api/config/$': typeof ApiConfigSplatRoute
+  '/api/data/$': typeof ApiDataSplatRoute
   '/_auth/app/': typeof AuthAppIndexRoute
-  '/api/config/static/$': typeof ApiConfigStaticSplatRoute
+  '/api/data/static/$': typeof ApiDataStaticSplatRoute
   '/_auth/app/advanced/': typeof AuthAppAdvancedIndexRoute
   '/_auth/app/settings/': typeof AuthAppSettingsIndexRoute
 }
@@ -92,18 +92,18 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/api/auth/$'
-    | '/api/config/$'
+    | '/api/data/$'
     | '/app'
-    | '/api/config/static/$'
+    | '/api/data/static/$'
     | '/app/advanced'
     | '/app/settings'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/api/auth/$'
-    | '/api/config/$'
+    | '/api/data/$'
     | '/app'
-    | '/api/config/static/$'
+    | '/api/data/static/$'
     | '/app/advanced'
     | '/app/settings'
   id:
@@ -111,9 +111,9 @@ export interface FileRouteTypes {
     | '/'
     | '/_auth'
     | '/api/auth/$'
-    | '/api/config/$'
+    | '/api/data/$'
     | '/_auth/app/'
-    | '/api/config/static/$'
+    | '/api/data/static/$'
     | '/_auth/app/advanced/'
     | '/_auth/app/settings/'
   fileRoutesById: FileRoutesById
@@ -122,8 +122,8 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthRouteRoute: typeof AuthRouteRouteWithChildren
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
-  ApiConfigSplatRoute: typeof ApiConfigSplatRoute
-  ApiConfigStaticSplatRoute: typeof ApiConfigStaticSplatRoute
+  ApiDataSplatRoute: typeof ApiDataSplatRoute
+  ApiDataStaticSplatRoute: typeof ApiDataStaticSplatRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -149,11 +149,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthAppIndexRouteImport
       parentRoute: typeof AuthRouteRoute
     }
-    '/api/config/$': {
-      id: '/api/config/$'
-      path: '/api/config/$'
-      fullPath: '/api/config/$'
-      preLoaderRoute: typeof ApiConfigSplatRouteImport
+    '/api/data/$': {
+      id: '/api/data/$'
+      path: '/api/data/$'
+      fullPath: '/api/data/$'
+      preLoaderRoute: typeof ApiDataSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/auth/$': {
@@ -177,11 +177,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthAppAdvancedIndexRouteImport
       parentRoute: typeof AuthRouteRoute
     }
-    '/api/config/static/$': {
-      id: '/api/config/static/$'
-      path: '/api/config/static/$'
-      fullPath: '/api/config/static/$'
-      preLoaderRoute: typeof ApiConfigStaticSplatRouteImport
+    '/api/data/static/$': {
+      id: '/api/data/static/$'
+      path: '/api/data/static/$'
+      fullPath: '/api/data/static/$'
+      preLoaderRoute: typeof ApiDataStaticSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -207,8 +207,8 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRouteRoute: AuthRouteRouteWithChildren,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
-  ApiConfigSplatRoute: ApiConfigSplatRoute,
-  ApiConfigStaticSplatRoute: ApiConfigStaticSplatRoute,
+  ApiDataSplatRoute: ApiDataSplatRoute,
+  ApiDataStaticSplatRoute: ApiDataStaticSplatRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

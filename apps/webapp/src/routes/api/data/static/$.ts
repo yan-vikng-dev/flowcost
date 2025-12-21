@@ -10,7 +10,7 @@ const handle = ({
 }) =>
 	proxyPosthog(request, params._splat ? `static/${params._splat}` : "static")
 
-export const Route = createFileRoute("/api/config/static/$")({
+export const Route = createFileRoute("/api/data/static/$")({
 	server: {
 		handlers: {
 			GET: handle,

@@ -14,7 +14,9 @@ export function PosthogAnalytics() {
 	}, [])
 
 	useEffect(() => {
-		if (!initializedRef.current) return
+		if (!initializedRef.current) {
+			return
+		}
 		posthog.capture("$pageview", { $current_url: location.href })
 	}, [location.href])
 
