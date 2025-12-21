@@ -222,6 +222,7 @@ export function EntriesForm() {
 													autoComplete="off"
 													id={amountId}
 													inputMode="decimal"
+													name="amount"
 													onChange={(e) => {
 														const raw = e.currentTarget.value
 														if (raw === "") {
@@ -283,6 +284,7 @@ export function EntriesForm() {
 												<Input
 													aria-invalid={isInvalid || undefined}
 													id={descriptionId}
+													name="description"
 													onChange={(e) =>
 														field.handleChange(e.currentTarget.value)
 													}
