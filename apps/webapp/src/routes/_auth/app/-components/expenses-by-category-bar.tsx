@@ -93,7 +93,13 @@ function ExpensesChart() {
 		)
 	}, [chartData.length])
 
-	if (isEmpty) return null
+	if (isEmpty) {
+		return (
+			<div className="grid h-[160px] w-full place-items-center text-muted-foreground text-sm">
+				No expenses this month
+			</div>
+		)
+	}
 
 	return (
 		<ChartContainer
