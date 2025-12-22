@@ -23,11 +23,12 @@ export function VirtualBudgetItem({ data }: { data: VirtualItemData }) {
 	const currencyLabel = data.currency
 		? ` ${getCurrencySymbol(data.currency)}`
 		: ""
-	const usageOnly = data.usage
-		? `${formatNumber(data.usage)}${currencyLabel}`
-		: undefined
+	const usageOnly =
+		data.usage !== undefined
+			? `${formatNumber(data.usage)}${currencyLabel}`
+			: undefined
 	const usageWithCap =
-		data.usage && data.cap
+		data.usage !== undefined && data.cap !== undefined
 			? `${formatNumber(data.usage)}/${formatNumber(data.cap)}${currencyLabel}`
 			: usageOnly
 	const right = data.rightLabel ?? usageWithCap
