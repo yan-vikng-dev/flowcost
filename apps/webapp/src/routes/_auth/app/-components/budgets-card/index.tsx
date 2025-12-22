@@ -129,37 +129,31 @@ function BudgetsContent({
 			entries,
 			displayCurrency,
 		)
-		const recurringBudget = recurringExpensesData
-			? {
-					label: "Recurring expenses" as const,
-					percent: 100,
-					usage: recurringExpensesData.usage,
-					currency: displayCurrency,
-					showPercentLabel: false,
-				}
-			: null
+		const recurringBudget = {
+			label: "Recurring expenses" as const,
+			percent: recurringExpensesData ? 100 : 0,
+			usage: recurringExpensesData?.usage ?? 0,
+			currency: displayCurrency,
+			showPercentLabel: false,
+		}
 
 		const freeBudgetData = calculateFreeBudget(
 			entries,
 			budgetsWithProgress,
 			displayCurrency,
 		)
-		const freeBudget = freeBudgetData
-			? {
-					label: "Free budget" as const,
-					percent: freeBudgetData.percent,
-					usage: freeBudgetData.usage,
-					cap: freeBudgetData.cap,
-					currency: displayCurrency,
-					freeBudgetCalculation: freeBudgetData.calculation,
-				}
-			: null
+		const freeBudget = {
+			label: "Free budget" as const,
+			percent: freeBudgetData?.percent ?? 0,
+			usage: freeBudgetData?.usage ?? 0,
+			cap: freeBudgetData?.cap ?? 0,
+			currency: displayCurrency,
+			...(freeBudgetData?.calculation && {
+				freeBudgetCalculation: freeBudgetData.calculation,
+			}),
+		}
 
-		return [
-			monthProgress,
-			...(recurringBudget ? [recurringBudget] : []),
-			...(freeBudget ? [freeBudget] : []),
-		]
+		return [monthProgress, recurringBudget, freeBudget]
 	}, [monthlyQuery.data, budgetsWithProgress, prefsQuery.data])
 
 	const realBudgets = budgetsWithProgress
