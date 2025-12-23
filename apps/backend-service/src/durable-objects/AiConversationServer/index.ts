@@ -95,7 +95,7 @@ export class AiConversationServer extends DurableObject {
 		messageContext: MessageContext,
 	) {
 		try {
-			const baseModel = this.googleProvider("gemini-3-flash-preview")
+			const baseModel = this.googleProvider("gemini-2.5-flash-preview-09-2025")
 			if (!this.posthogClient) throw new Error("Posthog client not initialized")
 			if (!this.traceId) throw new Error("Trace ID not initialized")
 			this.posthogClient.identify({ distinctId: messageContext.userId })
