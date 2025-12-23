@@ -1,4 +1,5 @@
 import { Link } from "@tanstack/react-router"
+import * as React from "react"
 import { Button } from "@/components/ui/button"
 import { UserAvatar } from "@/components/user-avatar"
 import {
@@ -6,17 +7,34 @@ import {
 	useConnectionState,
 } from "@/hooks/use-connection-state"
 import { authClient } from "@/lib/auth-client"
+import { cn } from "@/lib/utils"
 
 export function DesktopAppNav() {
 	const { data: session } = authClient.useSession()
+	const [isScrolled, setIsScrolled] = React.useState(false)
 
 	const user = session?.user
 
 	const connectionStateQuery = useConnectionState()
 	const hasIncoming = hasIncomingInvites(connectionStateQuery)
 
+	React.useEffect(() => {
+		const handleScroll = () => {
+			setIsScrolled(window.scrollY > 0)
+		}
+
+		handleScroll()
+		window.addEventListener("scroll", handleScroll, { passive: true })
+		return () => window.removeEventListener("scroll", handleScroll)
+	}, [])
+
 	return (
-		<header className="fixed top-0 z-20 flex h-16 w-full items-center justify-between bg-background/80 px-6 backdrop-blur-xl">
+		<header
+			className={cn(
+				"fixed top-0 z-20 flex h-16 w-full items-center justify-between px-6 transition-all duration-300",
+				isScrolled ? "bg-background/80 backdrop-blur-xl" : "bg-transparent",
+			)}
+		>
 			<Link to="/app">
 				<img
 					alt="Flowcost"

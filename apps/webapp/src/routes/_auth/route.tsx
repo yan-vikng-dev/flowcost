@@ -4,8 +4,8 @@ import { FloatingWaves } from "@/components/bg/floating-waves"
 import { useIsDesktop } from "@/hooks/use-is-desktop"
 import { authClient } from "@/lib/auth-client"
 import { OnboardingTourProvider } from "@/onboarding/provider"
-import { DesktopAppNav } from "./-components/desktop-app-nav"
-import { MobileAppNav } from "./-components/mobile-app-nav"
+import { DesktopAppNav } from "./-components/desktop-nav"
+import { MobileAppNav } from "./-components/mobile-nav"
 
 export const Route = createFileRoute("/_auth")({
 	component: RouteComponent,

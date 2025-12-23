@@ -67,7 +67,7 @@ function ChecklistBody({
 	return (
 		<div className="flex flex-col gap-3">
 			<div className="flex items-center justify-between">
-					<p className="font-semibold text-sm">Bob&apos;s setup checklist</p>
+				<p className="font-semibold text-sm">Bob&apos;s setup checklist</p>
 				<Button onClick={onDismiss} size="icon-sm" variant="ghost">
 					<XIcon className="size-4" />
 				</Button>
