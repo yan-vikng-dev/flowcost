@@ -1,11 +1,9 @@
-import { CheckCircle2Icon, CircleIcon, XIcon } from "lucide-react"
+import { CheckCircle2Icon, CircleIcon, MinusIcon, XIcon } from "lucide-react"
 import * as React from "react"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
-import { Sheet, SheetContent } from "@/components/ui/sheet"
 import type { OnboardingStatus } from "@/core/functions/onboarding"
-import { useIsDesktop } from "@/hooks/use-is-desktop"
+import { cn } from "@/lib/utils"
 import { useOnboardingTour } from "./provider"
 import {
 	completionByStep,
@@ -55,22 +53,43 @@ function ChecklistBody({
 	onSelectStep,
 	selectedStepId,
 	onDismiss,
+	onMinimize,
 	status,
 }: {
 	onSelectStep: (id: OnboardingStepId) => void
 	selectedStepId: OnboardingStepId | null
 	onDismiss: () => void
+	onMinimize: () => void
 	status: OnboardingStatus
 }) {
 	const ordered = onboardingSteps.map((step) => step.id)
 
 	return (
-		<div className="flex flex-col gap-3">
+		<div className="flex flex-col gap-3 p-4">
 			<div className="flex items-center justify-between">
 				<p className="font-semibold text-sm">Bob&apos;s setup checklist</p>
-				<Button onClick={onDismiss} size="icon-sm" variant="ghost">
-					<XIcon className="size-4" />
-				</Button>
+				<div className="flex items-center gap-1">
+					<Button
+						onClick={(e) => {
+							e.stopPropagation()
+							onMinimize()
+						}}
+						size="icon-sm"
+						variant="ghost"
+					>
+						<MinusIcon className="size-4" />
+					</Button>
+					<Button
+						onClick={(e) => {
+							e.stopPropagation()
+							onDismiss()
+						}}
+						size="icon-sm"
+						variant="ghost"
+					>
+						<XIcon className="size-4" />
+					</Button>
+				</div>
 			</div>
 			<Separator />
 			<div className="space-y-1">
@@ -91,19 +110,6 @@ function ChecklistBody({
 					)
 				})}
 			</div>
-			<Separator />
-			<div className="flex items-center justify-between gap-2">
-				<Button
-					onClick={() => onSelectStep(getFirstIncompleteStep(status))}
-					size="sm"
-					variant="secondary"
-				>
-					Next focus
-				</Button>
-				<Button onClick={onDismiss} size="sm" variant="ghost">
-					Dismiss tour
-				</Button>
-			</div>
 		</div>
 	)
 }
@@ -117,7 +123,7 @@ export function OnboardingChecklist() {
 		selectedStepId,
 		dismissTour,
 	} = useOnboardingTour()
-	const isDesktop = useIsDesktop()
+	const [isMinimized, setIsMinimized] = React.useState(false)
 
 	React.useEffect(() => {
 		if (isChecklistOpen && status && !selectedStepId) {
@@ -127,42 +133,71 @@ export function OnboardingChecklist() {
 
 	if (!status?.isMissingSetup || !isChecklistOpen) return null
 
-	const checklist = (
-		<ChecklistBody
-			onDismiss={() => {
-				dismissTour()
-				setChecklistOpen(false)
-			}}
-			onSelectStep={(stepId) => {
-				selectStep(stepId)
-				setChecklistOpen(true)
-			}}
-			selectedStepId={selectedStepId}
-			status={status}
-		/>
-	)
-
-	if (isDesktop) {
-		return (
-			<Card className="fixed right-4 bottom-4 z-50 w-80 shadow-lg">
-				<CardContent>{checklist}</CardContent>
-			</Card>
-		)
-	}
-
 	return (
-		<Sheet
-			onOpenChange={(open) => {
-				if (!open) {
-					dismissTour()
-				}
-				setChecklistOpen(open)
-			}}
-			open={isChecklistOpen}
+		// biome-ignore lint/a11y/noStaticElementInteractions: same container used for both states
+		<div
+			className={cn(
+				"fixed right-4 bottom-4 z-50 flex flex-col overflow-hidden border bg-background shadow-lg transition-all duration-500 ease-in-out",
+
+				isMinimized
+					? "max-h-12 w-12 cursor-pointer rounded-3xl hover:scale-110 active:scale-95"
+					: "max-h-[600px] w-80 rounded-xl",
+			)}
+			onClick={isMinimized ? () => setIsMinimized(false) : undefined}
+			onKeyDown={
+				isMinimized
+					? (e) => {
+							if (e.key === "Enter" || e.key === " ") {
+								e.preventDefault()
+
+								setIsMinimized(false)
+							}
+						}
+					: undefined
+			}
+			tabIndex={isMinimized ? 0 : undefined}
 		>
-			<SheetContent className="p-0" side="bottom">
-				{checklist}
-			</SheetContent>
-		</Sheet>
+			<div
+				className={cn(
+					"absolute inset-0 flex items-center justify-center transition-opacity",
+
+					isMinimized
+						? "opacity-100 delay-500 duration-300"
+						: "pointer-events-none opacity-0 delay-0 duration-0",
+				)}
+			>
+				<img
+					alt="Open checklist"
+					className="h-12 w-12 object-cover"
+					src="/logo/logo-bg-64.webp"
+				/>
+			</div>
+
+			<div
+				className={cn(
+					"flex w-80 flex-col transition-opacity",
+
+					isMinimized
+						? "pointer-events-none opacity-0 delay-0 duration-0"
+						: "opacity-100 delay-500 duration-300",
+				)}
+			>
+				<ChecklistBody
+					onDismiss={() => {
+						dismissTour()
+
+						setChecklistOpen(false)
+					}}
+					onMinimize={() => setIsMinimized(true)}
+					onSelectStep={(stepId) => {
+						selectStep(stepId)
+
+						setChecklistOpen(true)
+					}}
+					selectedStepId={selectedStepId}
+					status={status}
+				/>
+			</div>
+		</div>
 	)
 }
