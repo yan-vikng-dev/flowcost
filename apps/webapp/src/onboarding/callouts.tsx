@@ -139,12 +139,20 @@ export function OnboardingCallouts() {
 	React.useEffect(() => {
 		if (typeof document === "undefined") return
 		let node = document.getElementById("onboarding-callouts")
+		let created = false
 		if (!node) {
 			node = document.createElement("div")
 			node.id = "onboarding-callouts"
 			document.body.appendChild(node)
+			created = true
 		}
 		setPortalEl(node)
+
+		return () => {
+			if (created && node?.parentNode) {
+				node.parentNode.removeChild(node)
+			}
+		}
 	}, [])
 
 	const step = onboardingSteps.find(

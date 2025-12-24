@@ -11,6 +11,7 @@ import { Calendar } from "@/components/ui/calendar"
 import {
 	Dialog,
 	DialogContent,
+	DialogDescription,
 	DialogFooter,
 	DialogHeader,
 	DialogTitle,
@@ -162,6 +163,9 @@ export function EntryDialog({
 			<DialogContent>
 				<DialogHeader>
 					<DialogTitle>New Entry</DialogTitle>
+					<DialogDescription>
+						Add a new expense or income entry to track your finances.
+					</DialogDescription>
 				</DialogHeader>
 				<div className="space-y-6">
 					<FieldGroup>

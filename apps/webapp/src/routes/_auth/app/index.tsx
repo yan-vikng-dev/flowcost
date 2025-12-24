@@ -58,13 +58,13 @@ export const Route = createFileRoute("/_auth/app/")({
 
 function RouteComponent() {
 	return (
-		<div className="flex flex-col gap-4 md:flex-row md:items-start">
-			<div className="flex flex-1 flex-col gap-4">
+		<div className="grid gap-4 md:grid-cols-2">
+			<div className="flex flex-col gap-4">
 				<BudgetsCard />
-				<ExpensesCard />
 				<AddEntryButton />
+				<ExpensesCard />
 			</div>
-			<div className="flex flex-1 flex-col gap-4">
+			<div className="flex flex-col gap-4">
 				<SummaryCard />
 				<RecurringCard />
 			</div>

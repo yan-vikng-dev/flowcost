@@ -137,7 +137,7 @@ export function OnboardingChecklist() {
 		// biome-ignore lint/a11y/noStaticElementInteractions: same container used for both states
 		<div
 			className={cn(
-				"fixed right-4 bottom-4 z-50 flex flex-col overflow-hidden border bg-background shadow-lg transition-all duration-500 ease-in-out",
+				"fixed right-4 bottom-4 z-50 flex flex-col overflow-hidden border bg-background shadow-lg transition-all duration-300 ease-out",
 
 				isMinimized
 					? "max-h-12 w-12 cursor-pointer rounded-3xl hover:scale-110 active:scale-95"
@@ -162,7 +162,7 @@ export function OnboardingChecklist() {
 					"absolute inset-0 flex items-center justify-center transition-opacity",
 
 					isMinimized
-						? "opacity-100 delay-500 duration-300"
+						? "opacity-100 delay-300 duration-300"
 						: "pointer-events-none opacity-0 delay-0 duration-0",
 				)}
 			>
@@ -179,7 +179,7 @@ export function OnboardingChecklist() {
 
 					isMinimized
 						? "pointer-events-none opacity-0 delay-0 duration-0"
-						: "opacity-100 delay-500 duration-300",
+						: "opacity-100 delay-300 duration-300",
 				)}
 			>
 				<ChecklistBody

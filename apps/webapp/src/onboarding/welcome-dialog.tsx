@@ -28,7 +28,8 @@ export function WelcomeDialog() {
 				<DialogHeader>
 					<DialogTitle>Welcome to Flowcost!</DialogTitle>
 					<DialogDescription>
-						Let's get you set up with the basics. You can always come back to this tour later from Settings.
+						Let's get you set up with the basics. You can always come back to
+						this tour later from Settings.
 					</DialogDescription>
 				</DialogHeader>
 				<DialogFooter className="gap-2">
