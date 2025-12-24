@@ -66,7 +66,7 @@ export function SummaryCard() {
 			<CardHeader>
 				<CardTitle>Summary</CardTitle>
 			</CardHeader>
-			<CardContent className="flex-1">
+			<CardContent>
 				<React.Suspense
 					fallback={
 						<div className="mt-2 flex flex-col items-end justify-center gap-2">

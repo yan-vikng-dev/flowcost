@@ -8,5 +8,5 @@ export const checkAuthSession = createServerFn().handler(async () => {
 	const auth = getAuth()
 	const req = getRequest()
 	const session = await auth.api.getSession(req)
-	return { hasSession: !!session }
+	return session
 })

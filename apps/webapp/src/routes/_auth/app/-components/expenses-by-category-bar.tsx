@@ -2,13 +2,7 @@ import { formatCurrency } from "@repo/shared-lib"
 import { useSuspenseQuery } from "@tanstack/react-query"
 import * as React from "react"
 import { Bar, BarChart, Cell, LabelList, XAxis, YAxis } from "recharts"
-import {
-	Card,
-	CardContent,
-	CardDescription,
-	CardHeader,
-	CardTitle,
-} from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
 	type ChartConfig,
 	ChartContainer,
@@ -160,14 +154,13 @@ function ExpensesChart() {
 export function ExpensesCard() {
 	return (
 		<Card>
-			<CardHeader className="items-center pb-0">
+			<CardHeader>
 				<CardTitle>Expenses</CardTitle>
-				<CardDescription>By category</CardDescription>
 			</CardHeader>
-			<CardContent className="min-w-0 flex-1 pb-0">
+			<CardContent>
 				<React.Suspense
 					fallback={
-						<div className="space-y-2 pt-6">
+						<div className="space-y-2">
 							{[
 								{ key: "skeleton-bar-1", barWidth: "85%" },
 								{ key: "skeleton-bar-2", barWidth: "45%" },
