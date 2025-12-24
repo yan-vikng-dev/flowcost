@@ -26,10 +26,9 @@ export function WelcomeDialog() {
 		<Dialog onOpenChange={setIsOpen} open={isOpen}>
 			<DialogContent className="sm:max-w-[425px]">
 				<DialogHeader>
-					<DialogTitle>Meet Bob, your tour guide</DialogTitle>
+					<DialogTitle>Welcome to Flowcost!</DialogTitle>
 					<DialogDescription>
-						We noticed a few setup steps still need love. Bob can walk you
-						through them, and you can always come back from Settings later.
+						Let's get you set up with the basics. You can always come back to this tour later from Settings.
 					</DialogDescription>
 				</DialogHeader>
 				<DialogFooter className="gap-2">
@@ -40,7 +39,7 @@ export function WelcomeDialog() {
 						}}
 						variant="outline"
 					>
-						Skip tour
+						Skip for now
 					</Button>
 					<Button
 						onClick={() => {

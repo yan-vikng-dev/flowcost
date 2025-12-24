@@ -1,6 +1,5 @@
 import { createFileRoute, Outlet, redirect } from "@tanstack/react-router"
 import { FloatingWaves } from "@/components/bg/floating-waves"
-import { useIsDesktop } from "@/hooks/use-is-desktop"
 import { OnboardingTourProvider } from "@/onboarding/provider"
 import { checkAuthSession } from "@/server/check-auth-session"
 import { DesktopAppNav } from "./-components/desktop-nav"
@@ -18,8 +17,6 @@ export const Route = createFileRoute("/_auth")({
 })
 
 function RouteComponent() {
-	const isDesktop = useIsDesktop()
-
 	return (
 		<div>
 			<FloatingWaves
@@ -33,11 +30,15 @@ function RouteComponent() {
 				waveSpeedY={0.0015}
 			/>
 			<OnboardingTourProvider>
-				{isDesktop && <DesktopAppNav />}
+				<div className="hidden md:block">
+					<DesktopAppNav />
+				</div>
 				<main className="z-10 mt-0 mb-16 px-4 py-6 md:mt-16 md:mb-0">
 					<Outlet />
 				</main>
-				{!isDesktop && <MobileAppNav />}
+				<div className="block md:hidden">
+					<MobileAppNav />
+				</div>
 			</OnboardingTourProvider>
 		</div>
 	)
