@@ -95,7 +95,6 @@ export function CategoryMultiCombobox({
 		</div>
 	)
 
-
 	const list = (
 		<Command className={cn(!isDesktop && "rounded-none")}>
 			<CommandInput
