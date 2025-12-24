@@ -207,6 +207,7 @@ function BudgetsHeaderActions({
 			)}
 			<Button
 				aria-label="New Budget"
+				data-onboarding="add-budget"
 				onClick={() => setCreateOpen(true)}
 				size="icon"
 				variant="default"
@@ -370,16 +371,28 @@ export function BudgetsCard() {
 
 	const createMut = useMutation({
 		mutationFn: (input: CreateBudgetInput) => createBudget({ data: input }),
-		onSuccess: () => queryClient.invalidateQueries({ queryKey: ["budgets"] }),
+		onSuccess: async () => {
+			await Promise.all([
+				queryClient.invalidateQueries({ queryKey: ["budgets"] }),
+				queryClient.invalidateQueries({ queryKey: ["onboardingStatus"] }),
+			])
+		},
 	})
 	const updateMut = useMutation({
 		mutationFn: (vars: { id: string } & Partial<CreateBudgetInput>) =>
 			updateBudget({ data: vars }),
-		onSuccess: () => queryClient.invalidateQueries({ queryKey: ["budgets"] }),
+		onSuccess: async () => {
+			await queryClient.invalidateQueries({ queryKey: ["budgets"] })
+		},
 	})
 	const deleteMut = useMutation({
 		mutationFn: (id: string) => deleteBudget({ data: { id } }),
-		onSuccess: () => queryClient.invalidateQueries({ queryKey: ["budgets"] }),
+		onSuccess: async () => {
+			await Promise.all([
+				queryClient.invalidateQueries({ queryKey: ["budgets"] }),
+				queryClient.invalidateQueries({ queryKey: ["onboardingStatus"] }),
+			])
+		},
 	})
 
 	const [createOpen, setCreateOpen] = React.useState(false)

@@ -34,7 +34,7 @@ function SummaryContent() {
 	}, [data])
 
 	return (
-		<div className="mt-2 flex flex-col items-end justify-center gap-2">
+		<div className="flex flex-col gap-2">
 			<NumberLine
 				color="text-[var(--amount-positive)]"
 				sign="+"
@@ -45,7 +45,7 @@ function SummaryContent() {
 				sign="-"
 				value={expenseTotal}
 			/>
-			<div className="my-2 h-0.5 w-full max-w-[260px] self-end bg-border" />
+			<div className="my-2 h-[2px] w-full bg-border" />
 			<NumberLine
 				color={
 					net >= 0
@@ -66,7 +66,7 @@ export function SummaryCard() {
 			<CardHeader>
 				<CardTitle>Summary</CardTitle>
 			</CardHeader>
-			<CardContent className="flex-1">
+			<CardContent>
 				<React.Suspense
 					fallback={
 						<div className="mt-2 flex flex-col items-end justify-center gap-2">

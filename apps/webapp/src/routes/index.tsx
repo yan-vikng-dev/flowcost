@@ -6,8 +6,8 @@ import { LandingHeader } from "./-components/landing-header"
 
 export const Route = createFileRoute("/")({
 	beforeLoad: async () => {
-		const { hasSession } = await checkAuthSession()
-		if (hasSession) {
+		const session = await checkAuthSession()
+		if (session) {
 			throw redirect({ to: "/app" })
 		}
 	},

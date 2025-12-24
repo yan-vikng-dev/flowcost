@@ -11,6 +11,7 @@ import { Calendar } from "@/components/ui/calendar"
 import {
 	Dialog,
 	DialogContent,
+	DialogDescription,
 	DialogFooter,
 	DialogHeader,
 	DialogTitle,
@@ -162,12 +163,15 @@ export function EntryDialog({
 			<DialogContent>
 				<DialogHeader>
 					<DialogTitle>New Entry</DialogTitle>
+					<DialogDescription>
+						Add a new expense or income entry to track your finances.
+					</DialogDescription>
 				</DialogHeader>
 				<div className="space-y-6">
 					<FieldGroup>
 						<FieldSet>
 							<div className="grid grid-cols-[max-content_1fr] gap-x-4 gap-y-4">
-								<Field>
+								<Field data-onboarding="entry-currency">
 									<FieldLabel>Currency</FieldLabel>
 									<CurrencyCombobox
 										id={currencyId}
@@ -177,7 +181,7 @@ export function EntryDialog({
 										value={state.currency}
 									/>
 								</Field>
-								<Field className="min-w-0">
+								<Field className="min-w-0" data-onboarding="entry-amount">
 									<FieldLabel htmlFor={amountId}>Amount</FieldLabel>
 									<Input
 										id={amountId}
@@ -197,7 +201,7 @@ export function EntryDialog({
 									/>
 								</Field>
 
-								<Field>
+								<Field data-onboarding="entry-category">
 									<FieldLabel>Category</FieldLabel>
 									<CategoryCombobox
 										id={categoryId}
@@ -207,7 +211,7 @@ export function EntryDialog({
 										value={state.category}
 									/>
 								</Field>
-								<Field className="min-w-0">
+								<Field className="min-w-0" data-onboarding="entry-description">
 									<FieldLabel htmlFor={descriptionId}>Description</FieldLabel>
 									<Input
 										id={descriptionId}
@@ -222,7 +226,7 @@ export function EntryDialog({
 									/>
 								</Field>
 
-								<Field>
+								<Field data-onboarding="entry-type">
 									<FieldLabel htmlFor={entryTypeId}>Type</FieldLabel>
 									<EntryTypeSelect
 										id={entryTypeId}
@@ -241,6 +245,7 @@ export function EntryDialog({
 										<PopoverTrigger asChild>
 											<Button
 												className="w-full"
+												data-onboarding="entry-date"
 												id={executedAtId}
 												variant="outline"
 											>
@@ -286,7 +291,11 @@ export function EntryDialog({
 									</Popover>
 								</Field>
 
-								<Field className="min-w-0" orientation="horizontal">
+								<Field
+									className="min-w-0"
+									data-onboarding="recurring-toggle"
+									orientation="horizontal"
+								>
 									<Switch
 										checked={isRecurring}
 										id={recurringId}
@@ -494,6 +503,7 @@ export function EntryDialog({
 						Cancel
 					</Button>
 					<Button
+						data-onboarding="entry-create-button"
 						disabled={!valid || isPending}
 						onClick={() => {
 							if (!valid) return

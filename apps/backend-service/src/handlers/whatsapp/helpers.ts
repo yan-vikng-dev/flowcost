@@ -4,12 +4,14 @@ export type SendTextParams = {
 	text: string
 }
 
+const WHATSAPP_API_URL = `https://graph.facebook.com/v24.0`
+
 export async function sendWhatsAppText({
 	env,
 	waId,
 	text,
 }: SendTextParams): Promise<Response> {
-	const url = `https://graph.facebook.com/v19.0/${env.WHATSAPP_PHONE_NUMBER_ID}/messages`
+	const url = `${WHATSAPP_API_URL}/${env.WHATSAPP_PHONE_NUMBER_ID}/messages`
 	const body = {
 		messaging_product: "whatsapp",
 		to: waId,
@@ -68,7 +70,7 @@ export async function sendTypingIndicator({
 	env,
 	messageId,
 }: SendTypingIndicatorParams): Promise<Response> {
-	const url = `https://graph.facebook.com/v19.0/${env.WHATSAPP_PHONE_NUMBER_ID}/messages`
+	const url = `${WHATSAPP_API_URL}/${env.WHATSAPP_PHONE_NUMBER_ID}/messages`
 	const body = {
 		messaging_product: "whatsapp",
 		status: "read",

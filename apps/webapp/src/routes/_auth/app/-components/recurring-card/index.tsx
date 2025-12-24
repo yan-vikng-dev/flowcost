@@ -199,6 +199,7 @@ export function RecurringCard() {
 			await Promise.all([
 				queryClient.invalidateQueries({ queryKey: ["recurringTemplates"] }),
 				queryClient.invalidateQueries({ queryKey: ["entries"] }),
+				queryClient.invalidateQueries({ queryKey: ["onboardingStatus"] }),
 			])
 		},
 	})
@@ -208,6 +209,7 @@ export function RecurringCard() {
 			await Promise.all([
 				queryClient.invalidateQueries({ queryKey: ["recurringTemplates"] }),
 				queryClient.invalidateQueries({ queryKey: ["entries"] }),
+				queryClient.invalidateQueries({ queryKey: ["onboardingStatus"] }),
 			])
 		},
 	})

@@ -1,5 +1,5 @@
 import type { Table } from "@tanstack/react-table"
-import { ChevronDown, Copy, SearchIcon, Trash } from "lucide-react"
+import { Columns3CogIcon, CopyIcon, SearchIcon, TrashIcon } from "lucide-react"
 import * as React from "react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
@@ -39,10 +39,10 @@ export function TableToolbar({
 							setConfirmIds(ids)
 							setConfirmOpen(true)
 						}}
-						size="sm"
+						size="icon"
 						variant="destructive"
 					>
-						<Trash className="h-4 w-4" /> Delete selected
+						<TrashIcon />
 					</Button>
 					<Button
 						onClick={() => {
@@ -52,13 +52,15 @@ export function TableToolbar({
 								.filter(Boolean) as string[]
 							if (ids.length === 0) return
 							void navigator.clipboard.writeText(ids.join("\n")).then(() => {
-								toast.success(`Copied ${ids.length} id(s)`)
+								toast.success(
+									`Copied ${ids.length} ID${ids.length > 1 ? "s" : ""}`,
+								)
 							})
 						}}
-						size="sm"
+						size="icon"
 						variant="outline"
 					>
-						<Copy className="h-4 w-4" /> Copy selected
+						<CopyIcon />
 					</Button>
 				</>
 			)}
@@ -77,8 +79,8 @@ export function TableToolbar({
 
 			<DropdownMenu>
 				<DropdownMenuTrigger asChild>
-					<Button size="sm" variant="outline">
-						Columns <ChevronDown className="ml-2 h-4 w-4" />
+					<Button size="icon" variant="outline">
+						<Columns3CogIcon />
 					</Button>
 				</DropdownMenuTrigger>
 				<DropdownMenuContent align="end">

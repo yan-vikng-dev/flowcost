@@ -7,7 +7,6 @@ let initPromise: Promise<boolean> | null = null
 
 export const initPosthog = async () => {
 	if (import.meta.env.DEV) {
-		console.info("[PostHog] Disabled in development mode.")
 		return false
 	}
 	if (!isBrowser) return false

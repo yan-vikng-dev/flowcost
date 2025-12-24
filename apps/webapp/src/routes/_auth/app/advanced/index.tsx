@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { createFileRoute } from "@tanstack/react-router"
+import { PlusIcon } from "lucide-react"
 import * as React from "react"
 import { Button } from "@/components/ui/button"
 import { type CreateEntryInput, createEntry } from "@/core/functions/entries"
@@ -69,8 +70,8 @@ function RouteComponent() {
 			<MonthlyEntriesTable
 				headerAction={
 					isDesktop ? (
-						<Button onClick={() => setOpen(true)} size="sm" variant="default">
-							New Entry
+						<Button onClick={() => setOpen(true)} size="icon" variant="default">
+							<PlusIcon />
 						</Button>
 					) : undefined
 				}

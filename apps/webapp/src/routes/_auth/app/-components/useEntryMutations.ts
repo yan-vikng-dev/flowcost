@@ -44,7 +44,10 @@ export function useEntryMutations() {
 	const createMut = useMutation({
 		mutationFn: (input: CreateEntryInput) => createEntry({ data: input }),
 		onSuccess: async () => {
-			await queryClient.invalidateQueries({ queryKey: ["entries"] })
+			await Promise.all([
+				queryClient.invalidateQueries({ queryKey: ["entries"] }),
+				queryClient.invalidateQueries({ queryKey: ["onboardingStatus"] }),
+			])
 		},
 	})
 
@@ -55,6 +58,7 @@ export function useEntryMutations() {
 			await Promise.all([
 				queryClient.invalidateQueries({ queryKey: ["entries"] }),
 				queryClient.invalidateQueries({ queryKey: ["recurringTemplates"] }),
+				queryClient.invalidateQueries({ queryKey: ["onboardingStatus"] }),
 			])
 		},
 	})

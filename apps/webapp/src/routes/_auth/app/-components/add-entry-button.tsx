@@ -35,11 +35,12 @@ export function AddEntryButton() {
 		<>
 			<Button
 				className="w-full justify-center"
+				data-onboarding="add-expense"
 				onClick={() => setOpen(true)}
 				size="lg"
 				variant="default"
 			>
-				<span className="font-medium text-base">Add entry</span>
+				<span className="font-medium text-base">Add expense</span>
 				<PlusIcon className="size-5" />
 			</Button>
 

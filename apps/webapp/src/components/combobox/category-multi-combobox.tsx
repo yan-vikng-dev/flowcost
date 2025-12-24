@@ -95,9 +95,6 @@ export function CategoryMultiCombobox({
 		</div>
 	)
 
-	// No clear-all button (as requested)
-	const ClearButton = null
-
 	const list = (
 		<Command className={cn(!isDesktop && "rounded-none")}>
 			<CommandInput
@@ -166,7 +163,6 @@ export function CategoryMultiCombobox({
 						>
 							{triggerLabel}
 							<ChevronsUpDownIcon className="size-4 opacity-50" />
-							{ClearButton}
 						</Button>
 					)}
 				</PopoverTrigger>
@@ -196,7 +192,6 @@ export function CategoryMultiCombobox({
 					>
 						{triggerLabel}
 						<ChevronsUpDownIcon className="size-4 opacity-50" />
-						{ClearButton}
 					</Button>
 				)}
 			</DrawerTrigger>
