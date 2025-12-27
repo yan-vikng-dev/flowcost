@@ -9,6 +9,10 @@ export const NotificationPayloadSchema = z.object({
 				z.object({
 					field: z.literal("messages"),
 					value: z.object({
+						metadata: z.object({
+							display_phone_number: z.string(),
+							phone_number_id: z.string(),
+						}).optional(),
 						messages: z
 							.array(
 								z.object({

@@ -50,10 +50,22 @@ app.post("/whatsapp/webhook", async (c) => {
 		return c.text("invalid json", 400)
 	}
 	const payload = notificationPayloadSchema.parse(json)
-	const msg = payload.entry[0]?.changes[0]?.value.messages?.[0]
+	const change = payload.entry[0]?.changes[0]
+	const phoneNumberId = change?.value.metadata?.phone_number_id
+	const msg = change?.value.messages?.[0]
 	const waId = msg?.from
 	const text = msg?.text?.body
 	const messageId = msg?.id
+	
+	if (phoneNumberId && phoneNumberId !== c.env.WHATSAPP_PHONE_NUMBER_ID) {
+		console.debug({
+			message: "ignoring webhook for different phone number",
+			receivedPhoneNumberId: phoneNumberId,
+			expectedPhoneNumberId: c.env.WHATSAPP_PHONE_NUMBER_ID,
+		})
+		return c.text("OK")
+	}
+	
 	if (!waId || !text || !messageId) {
 		return c.text("OK")
 	}
