@@ -2,7 +2,7 @@
 	"$schema": "./node_modules/wrangler/config-schema.json",
 	"name": "backend-service",
 	"main": "./src/index.ts",
-	"compatibility_date": "2025-09-02",
+	"compatibility_date": "2025-11-17",
 	"compatibility_flags": ["nodejs_compat", "global_fetch_private_origin"],
 	"observability": {
 		"enabled": true
