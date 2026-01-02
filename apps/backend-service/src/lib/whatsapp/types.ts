@@ -1,6 +1,6 @@
 import { z } from "zod"
 
-export const NotificationPayloadSchema = z.object({
+const NotificationPayloadDataSchema = z.object({
 	object: z.literal("whatsapp_business_account"),
 	entry: z.array(
 		z.object({
@@ -53,5 +53,29 @@ export const NotificationPayloadSchema = z.object({
 		}),
 	),
 })
+
+export const NotificationPayloadSchema =
+	NotificationPayloadDataSchema.transform((payload) => {
+		const change = payload.entry[0]?.changes[0]
+		const msg = change?.value.messages?.[0]
+		const text =
+			msg?.text?.body ?? msg?.image?.caption ?? msg?.document?.caption
+		const media = msg?.image
+			? { kind: "image" as const, ...msg.image }
+			: msg?.audio
+				? { kind: "audio" as const, ...msg.audio }
+				: msg?.document
+					? { kind: "document" as const, ...msg.document }
+					: null
+
+		return {
+			phoneNumberId: change?.value.metadata?.phone_number_id ?? null,
+			waId: msg?.from ?? null,
+			messageId: msg?.id ?? null,
+			messageType: msg?.type ?? null,
+			text: text ?? null,
+			media,
+		}
+	})
 
 export type NotificationPayload = z.infer<typeof NotificationPayloadSchema>

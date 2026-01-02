@@ -40,21 +40,8 @@ whatsappRouter.post("/whatsapp/webhook", async (c) => {
 	} catch {
 		return c.text("invalid json", 400)
 	}
-	const payload = NotificationPayloadSchema.parse(json)
-	const change = payload.entry[0]?.changes[0]
-	const phoneNumberId = change?.value.metadata?.phone_number_id
-	const msg = change?.value.messages?.[0]
-	const waId = msg?.from
-	const text = msg?.text?.body ?? msg?.image?.caption ?? msg?.document?.caption
-	const messageId = msg?.id
-	const messageType = msg?.type ?? null
-	const media = msg?.image
-		? { kind: "image" as const, ...msg.image }
-		: msg?.audio
-			? { kind: "audio" as const, ...msg.audio }
-			: msg?.document
-				? { kind: "document" as const, ...msg.document }
-				: null
+	const { phoneNumberId, waId, text, messageId, messageType, media } =
+		NotificationPayloadSchema.parse(json)
 
 	if (phoneNumberId && phoneNumberId !== c.env.WHATSAPP_PHONE_NUMBER_ID) {
 		console.debug({
