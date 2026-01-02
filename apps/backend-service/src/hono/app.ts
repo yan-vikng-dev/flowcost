@@ -30,8 +30,6 @@ app.get("/whatsapp/webhook", (c) => {
 	}
 })
 
-const notificationPayloadSchema = NotificationPayloadSchema
-
 app.post("/whatsapp/webhook", async (c) => {
 	const signature = c.req.header("x-hub-signature-256") ?? null
 	const raw = await c.req.raw.arrayBuffer()
@@ -49,7 +47,7 @@ app.post("/whatsapp/webhook", async (c) => {
 	} catch {
 		return c.text("invalid json", 400)
 	}
-	const payload = notificationPayloadSchema.parse(json)
+	const payload = NotificationPayloadSchema.parse(json)
 	const change = payload.entry[0]?.changes[0]
 	const phoneNumberId = change?.value.metadata?.phone_number_id
 	const msg = change?.value.messages?.[0]
@@ -79,7 +77,7 @@ app.post("/whatsapp/webhook", async (c) => {
 	return c.text("OK")
 })
 
-const rescheduleReportsSchema = z.object({
+const RescheduleReportsSchema = z.object({
 	userId: z.string().min(1),
 })
 
@@ -91,7 +89,7 @@ app.post("/reports/reschedule", async (c) => {
 		return c.text("Invalid JSON", 400)
 	}
 
-	const parsed = rescheduleReportsSchema.safeParse(body)
+	const parsed = RescheduleReportsSchema.safeParse(body)
 	if (!parsed.success) {
 		return c.text("Invalid request body", 400)
 	}

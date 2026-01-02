@@ -5,8 +5,7 @@
 	"scripts": {
 		"build": "wrangler build",
 		"deploy": "wrangler deploy",
-		"dev": "wrangler dev --x-remote-bindings",
-		"start": "wrangler dev",
+		"dev": "wrangler dev",
 		"test": "vitest",
 		"typecheck": "tsc --noEmit",
 		"cf:types": "wrangler types --env-interface BaseEnv"

@@ -175,7 +175,6 @@ export async function handleIncomingMessage(
 	const id = env.AI_CONVERSATION_SERVER.idFromName(link.user.id)
 	const stub = env.AI_CONVERSATION_SERVER.get(id)
 	if (slashCommands.includes(text)) {
-		console.debug("text included in slash commands", text)
 		switch (text) {
 			case "/new":
 				await stub.reset()
