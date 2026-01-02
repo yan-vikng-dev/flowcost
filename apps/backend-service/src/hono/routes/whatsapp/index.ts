@@ -1,4 +1,5 @@
 import { Hono } from "hono"
+import { sendTypingIndicator, sendWhatsAppText } from "@/lib/whatsapp/messages"
 import { NotificationPayloadSchema } from "@/lib/whatsapp/types"
 import { verifyWhatsAppSignature } from "@/lib/whatsapp/verify-signature"
 import { handleIncomingMessage } from "./handle-incoming-message"
@@ -46,6 +47,7 @@ whatsappRouter.post("/whatsapp/webhook", async (c) => {
 	const waId = msg?.from
 	const text = msg?.text?.body ?? msg?.image?.caption ?? msg?.document?.caption
 	const messageId = msg?.id
+	const messageType = msg?.type ?? null
 	const media = msg?.image
 		? { kind: "image" as const, ...msg.image }
 		: msg?.audio
@@ -64,6 +66,16 @@ whatsappRouter.post("/whatsapp/webhook", async (c) => {
 	}
 
 	if (!waId || !messageId || (!text && !media)) {
+		if (waId && messageId && messageType) {
+			c.executionCtx.waitUntil(sendTypingIndicator({ env: c.env, messageId }))
+			c.executionCtx.waitUntil(
+				sendWhatsAppText({
+					env: c.env,
+					waId,
+					text: "Sorry, I can't read this media type. try a photo?",
+				}),
+			)
+		}
 		return c.text("OK")
 	}
 	console.debug({
