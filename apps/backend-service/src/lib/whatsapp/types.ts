@@ -21,6 +21,27 @@ export const NotificationPayloadSchema = z.object({
 									id: z.string(),
 									from: z.string(),
 									text: z.object({ body: z.string() }).optional(),
+									image: z
+										.object({
+											id: z.string(),
+											mime_type: z.string().optional(),
+											caption: z.string().optional(),
+										})
+										.optional(),
+									audio: z
+										.object({
+											id: z.string(),
+											mime_type: z.string().optional(),
+										})
+										.optional(),
+									document: z
+										.object({
+											id: z.string(),
+											mime_type: z.string().optional(),
+											filename: z.string().optional(),
+											caption: z.string().optional(),
+										})
+										.optional(),
 									type: z.string().optional(),
 									timestamp: z.string().optional(),
 								}),

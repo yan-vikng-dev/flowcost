@@ -22,13 +22,13 @@ export const makeGetEntriesTool = (context: MessageContext, db: DrizzleDb) =>
 			const inputDate = input.date ?? DateTime.now().toISODate()
 			const { start: startDate, end: endDate } = getZonedDayRange(
 				inputDate,
-				context.userTimezone,
+				context.timezone,
 			)
 
 			const result = await fetchConvertedEntriesForRange(db, context.userId, {
 				start: startDate,
 				end: endDate,
-				timezone: context.userTimezone,
+				timezone: context.timezone,
 				displayCurrency: context.displayCurrency,
 				sortBy: "executedAt",
 				sortDir: "desc",
@@ -42,7 +42,7 @@ export const makeGetEntriesTool = (context: MessageContext, db: DrizzleDb) =>
 				entryType: e.entryType,
 				description: e.description,
 				executedAt: DateTime.fromISO(e.executedDate, {
-					zone: context.userTimezone,
+					zone: context.timezone,
 				})
 					.toJSDate()
 					.toISOString(),

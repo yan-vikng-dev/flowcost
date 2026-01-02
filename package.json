@@ -6,11 +6,11 @@
 		"build": "turbo run build",
 		"test": "turbo run test",
 		"ship": "turbo run deploy",
-		"dev": "pnpm run --filter webapp dev",
+		"dev:webapp": "pnpm run --filter webapp dev",
+		"dev:backend": "pnpm run --filter backend-service dev",
 		"studio": "pnpm run --filter data-ops drizzle:studio",
-		"fix": "pnpm exec biome check --write --max-diagnostics 10 --unsafe && turbo typecheck",
-		"db:push": "pnpm run --filter data-ops drizzle:push",
-		"cf:types": "turbo run cf:types"
+		"fix": "pnpm exec biome check --write --max-diagnostics 10 --unsafe && turbo typecheck && turbo cf:types",
+		"db:push": "pnpm run --filter data-ops drizzle:push"
 	},
 	"keywords": [],
 	"author": "",

@@ -2,10 +2,10 @@ import { DurableObject } from "cloudflare:workers"
 import { createGoogleGenerativeAI } from "@ai-sdk/google"
 import { withTracing } from "@posthog/ai"
 import { getDb, initDatabase } from "@repo/data-ops/database/setup"
-import type { Currency } from "@repo/shared-lib"
+import type { SelectUserPreferences } from "@repo/data-ops/drizzle/schemas/index"
 import { type ModelMessage, stepCountIs, ToolLoopAgent } from "ai"
 import { PostHog } from "posthog-node"
-import { sendWhatsAppText } from "@/handlers/whatsapp/helpers"
+import { sendWhatsAppText } from "@/lib/whatsapp/messages"
 import { buildSystemPrompt } from "./systemPrompt"
 import { createTools } from "./tools"
 
@@ -16,17 +16,8 @@ const trimmedPromptMessages = 30
 export type MessageContext = {
 	messageId: string
 	waId: string
-	userId: string
-	defaultEntryCurrency: Currency
-	displayCurrency: Currency
-	userTimezone: string
 	userEmail: string
-	reportsDailyEnabled: boolean
-	reportsWeeklyEnabled: boolean
-	reportsMonthlyEnabled: boolean
-	reportsTime: string
-	reportsWeeklyDay: number
-}
+} & SelectUserPreferences
 
 export class AiConversationServer extends DurableObject {
 	turns: ModelMessage[] = []
@@ -59,7 +50,7 @@ export class AiConversationServer extends DurableObject {
 		})
 	}
 
-	async handleMessage(message: string, messageContext: MessageContext) {
+	async handleMessage(message: UserContent, messageContext: MessageContext) {
 		console.debug("handleMessage called", {
 			userMessage: message,
 			messageContext,
@@ -85,7 +76,7 @@ export class AiConversationServer extends DurableObject {
 	}
 
 	private async processingMessage(
-		message: string,
+		message: UserContent,
 		messageContext: MessageContext,
 	) {
 		try {
@@ -119,10 +110,14 @@ export class AiConversationServer extends DurableObject {
 			this.turns.push(...result.response.messages)
 			await this.ctx.storage.put("conversationHistory", this.turns)
 
-			console.debug("Generated text, logging result", {
-				result,
-				messageContext,
-			})
+			console.dir(
+				{
+					logMessage: "Generated text, logging result",
+					result,
+					messageContext,
+				},
+				{ depth: null },
+			)
 
 			if (result.finishReason === "error" || !result.text) {
 				throw new Error(
@@ -203,3 +198,5 @@ export class AiConversationServer extends DurableObject {
 		)
 	}
 }
+
+type UserContent = Extract<ModelMessage, { role: "user" }>["content"]

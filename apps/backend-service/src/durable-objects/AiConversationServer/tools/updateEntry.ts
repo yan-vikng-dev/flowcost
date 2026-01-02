@@ -89,9 +89,9 @@ export const makeUpdateEntryTool = (context: MessageContext, db: DrizzleDb) =>
 			if (input.executionDate !== undefined) {
 				const executedDate = toIsoDateInTimezone(
 					DateTime.fromISO(input.executionDate, {
-						zone: context.userTimezone,
+						zone: context.timezone,
 					}).toJSDate(),
-					context.userTimezone,
+					context.timezone,
 				)
 				patch.executedDate = executedDate
 			}
@@ -115,7 +115,7 @@ export const makeUpdateEntryTool = (context: MessageContext, db: DrizzleDb) =>
 			}
 
 			const executedAt = DateTime.fromISO(updated.executedDate, {
-				zone: context.userTimezone,
+				zone: context.timezone,
 			})
 				.toJSDate()
 				.toISOString()

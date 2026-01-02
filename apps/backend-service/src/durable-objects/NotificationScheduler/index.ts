@@ -8,7 +8,7 @@ import {
 import type { Currency } from "@repo/shared-lib"
 import { eq } from "drizzle-orm"
 import { DateTime } from "luxon"
-import { sendWhatsAppText } from "@/handlers/whatsapp/helpers"
+import { sendWhatsAppText } from "@/lib/whatsapp/messages"
 import {
 	determineReportType,
 	generateDailyReport,

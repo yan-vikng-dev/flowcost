@@ -4,60 +4,31 @@ import {
 	whatsapp_link_tokens,
 	whatsapp_links,
 } from "@repo/data-ops/drizzle/schemas/index"
-import { sha256Hex, timingSafeEqualHex } from "@repo/shared-lib/crypto"
+import { sha256Hex } from "@repo/shared-lib/crypto"
 import { and, eq, gt, isNull } from "drizzle-orm"
 import type { MessageContext } from "@/durable-objects/AiConversationServer"
-import { sendTypingIndicator, sendWhatsAppText } from "./helpers"
-
-export async function verifyWhatsAppSignature(
-	rawBody: ArrayBuffer,
-	signatureHeader: string | null,
-	appSecret: string,
-): Promise<boolean> {
-	if (!signatureHeader) return false
-	const expected = signatureHeader.replace(/^sha256=/, "")
-	const key = await crypto.subtle.importKey(
-		"raw",
-		new TextEncoder().encode(appSecret),
-		{ name: "HMAC", hash: "SHA-256" },
-		false,
-		["sign"],
-	)
-	const mac = await crypto.subtle.sign("HMAC", key, rawBody)
-	const macHex = Array.from(new Uint8Array(mac))
-		.map((b) => b.toString(16).padStart(2, "0"))
-		.join("")
-	return timingSafeEqualHex(macHex, expected)
-}
-
-const slashCommands: readonly string[] = [
-	"/new",
-	"/help",
-	"/link",
-	"/unlink",
-	"/help",
-]
-
-export type HandleIncomingMessageArgs = {
-	waId: string
-	text: string
-	messageId: string
-}
+import type { WhatsAppMedia } from "@/lib/whatsapp/media"
+import { fetchWhatsAppMedia } from "@/lib/whatsapp/media"
+import { sendTypingIndicator, sendWhatsAppText } from "@/lib/whatsapp/messages"
+import { appendMediaContent } from "./append-media-content"
+import { slashCommands } from "./slash-commands"
+import type { HandleIncomingMessageArgs, UserContentPart } from "./types"
 
 export async function handleIncomingMessage(
 	env: Env,
 	args: HandleIncomingMessageArgs,
 ) {
 	const db = getDb()
-	const { waId, text, messageId } = args
+	const { waId, text, messageId, media } = args
 	console.debug({
 		message: "handling whatsapp webhook message",
 		waId,
 		text,
 		messageId,
+		mediaKind: media?.kind ?? null,
 	})
 
-	const tokenMatch = text.match(/^\/verify\s*([A-Za-z0-9]{4}-[A-Za-z0-9]{4})$/)
+	const tokenMatch = text?.match(/^\/verify\s*([A-Za-z0-9]{4}-[A-Za-z0-9]{4})$/)
 	if (tokenMatch) {
 		const rawToken = tokenMatch[1]
 		if (!rawToken) {
@@ -174,7 +145,7 @@ export async function handleIncomingMessage(
 	}
 	const id = env.AI_CONVERSATION_SERVER.idFromName(link.user.id)
 	const stub = env.AI_CONVERSATION_SERVER.get(id)
-	if (slashCommands.includes(text)) {
+	if (text && slashCommands.includes(text)) {
 		switch (text) {
 			case "/new":
 				await stub.reset()
@@ -196,7 +167,6 @@ export async function handleIncomingMessage(
 				return
 			case "/unlink": {
 				await db.delete(whatsapp_links).where(eq(whatsapp_links.waId, waId))
-				// Revoke scheduler when unlinking
 				const unlinkUserId = link.user.id
 				const unlinkSchedulerId =
 					env.NOTIFICATION_SCHEDULER.idFromName(unlinkUserId)
@@ -212,20 +182,32 @@ export async function handleIncomingMessage(
 	const messageContext: MessageContext = {
 		messageId,
 		waId,
-		userId: link.user.id,
 		userEmail: link.user.email,
-		defaultEntryCurrency: link.user.preferences.defaultEntryCurrency,
-		displayCurrency: link.user.preferences.displayCurrency,
-		userTimezone: link.user.preferences.timezone,
-		reportsDailyEnabled: !!link.user.preferences.reportsDailyEnabled,
-		reportsWeeklyEnabled: !!link.user.preferences.reportsWeeklyEnabled,
-		reportsMonthlyEnabled: !!link.user.preferences.reportsMonthlyEnabled,
-		reportsTime: link.user.preferences.reportsTime,
-		reportsWeeklyDay: link.user.preferences.reportsWeeklyDay,
+		...link.user.preferences,
 	}
 	try {
+		const contentParts: UserContentPart[] = []
+
+		if (text) {
+			contentParts.push({ type: "text", text })
+		}
+
+		if (media) {
+			const fetched = await fetchWhatsAppMedia(env, media.id)
+			const resolvedMedia: WhatsAppMedia = {
+				...fetched,
+				mimeType: fetched.mimeType ?? media.mimeType ?? null,
+				filename: fetched.filename ?? media.filename ?? null,
+			}
+			appendMediaContent(contentParts, media.kind, resolvedMedia)
+		}
+
+		const content =
+			contentParts.length === 1 && contentParts[0]?.type === "text"
+				? contentParts[0].text
+				: contentParts
 		await sendTypingIndicator({ env, messageId })
-		await stub.handleMessage(text, messageContext)
+		await stub.handleMessage(content, messageContext)
 	} catch (error) {
 		console.error("Error handling WhatsApp message", {
 			waId,

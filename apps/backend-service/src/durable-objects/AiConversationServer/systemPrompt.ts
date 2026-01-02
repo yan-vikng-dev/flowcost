@@ -2,7 +2,7 @@ import { DateTime } from "luxon"
 import type { MessageContext } from "./index"
 
 export const buildSystemPrompt = (context: MessageContext): string => {
-	const localNow = DateTime.now().setZone(context.userTimezone)
+	const localNow = DateTime.now().setZone(context.timezone)
 	const localDate = localNow.toISODate()
 	const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"] as const
 	const weeklyDay = dayNames[context.reportsWeeklyDay] ?? "?"
@@ -26,7 +26,7 @@ export const buildSystemPrompt = (context: MessageContext): string => {
 	const contextBlock =
 		`[Context]\n` +
 		`- Local date: ${localDate}\n` +
-		`- Timezone: ${context.userTimezone}\n` +
+		`- Timezone: ${context.timezone}\n` +
 		`- Currencies: display ${context.displayCurrency}, default ${context.defaultEntryCurrency}\n` +
 		`- Reports: ${reports}`
 

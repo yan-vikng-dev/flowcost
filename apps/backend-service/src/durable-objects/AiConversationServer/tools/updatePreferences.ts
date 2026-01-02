@@ -41,7 +41,7 @@ export const makeUpdatePreferencesTool = (
 			const defaultEntryCurrency =
 				(input.defaultEntryCurrency as Currency | undefined) ??
 				context.defaultEntryCurrency
-			const timezone = input.timezone ?? context.userTimezone
+			const timezone = input.timezone ?? context.timezone
 			if (!currencies.includes(displayCurrency))
 				throw new Error(`invalid currency provided ${displayCurrency}`)
 			if (!currencies.includes(defaultEntryCurrency))

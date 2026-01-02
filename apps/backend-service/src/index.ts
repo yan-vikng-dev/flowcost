@@ -1,6 +1,6 @@
 import { WorkerEntrypoint } from "cloudflare:workers"
 import { initDatabase } from "@repo/data-ops/database/setup"
-import { updateExchangeRates } from "@/handlers/updateExchangeRates.js"
+import { updateExchangeRates } from "@/cron/updateExchangeRates.js"
 import { app } from "@/hono/app"
 
 export { AiConversationServer } from "@/durable-objects/AiConversationServer"
