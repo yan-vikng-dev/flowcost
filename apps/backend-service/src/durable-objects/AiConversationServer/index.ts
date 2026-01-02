@@ -3,17 +3,11 @@ import { createGoogleGenerativeAI } from "@ai-sdk/google"
 import { withTracing } from "@posthog/ai"
 import { getDb, initDatabase } from "@repo/data-ops/database/setup"
 import type { Currency } from "@repo/shared-lib"
-import { generateText, type ModelMessage, stepCountIs } from "ai"
+import { type ModelMessage, stepCountIs, ToolLoopAgent } from "ai"
 import { PostHog } from "posthog-node"
 import { sendWhatsAppText } from "@/handlers/whatsapp/helpers"
 import { buildSystemPrompt } from "./systemPrompt"
-import {
-	makeCreateEntryTool,
-	makeDeleteEntryTool,
-	makeGetEntriesTool,
-	makeUpdateEntryTool,
-	makeUpdatePreferencesTool,
-} from "./tools"
+import { createTools } from "./tools"
 
 const contextWindowMs = 1000 * 60 * 60 // 1 hour
 const maxPromptMessages = 40
@@ -95,7 +89,7 @@ export class AiConversationServer extends DurableObject {
 		messageContext: MessageContext,
 	) {
 		try {
-			const baseModel = this.googleProvider("gemini-2.5-flash-preview-09-2025")
+			const baseModel = this.googleProvider("gemini-2.5-flash")
 			if (!this.posthogClient) throw new Error("Posthog client not initialized")
 			if (!this.traceId) throw new Error("Trace ID not initialized")
 			this.posthogClient.identify({ distinctId: messageContext.userId })
@@ -107,34 +101,20 @@ export class AiConversationServer extends DurableObject {
 
 			this.turns.push({ role: "user", content: message })
 			const db = getDb()
-			const tools = {
-				create_entry: makeCreateEntryTool(messageContext, db),
-				get_entries: makeGetEntriesTool(messageContext, db),
-				update_preferences: makeUpdatePreferencesTool(messageContext, db),
-				update_entry: makeUpdateEntryTool(messageContext, db),
-				delete_entry: makeDeleteEntryTool(messageContext, db),
-			}
-
-			const system = buildSystemPrompt(messageContext)
-			const messages = this.turns
-			const result = await generateText({
+			const agent = new ToolLoopAgent({
 				model,
-				tools,
-				system,
-				messages,
-				maxOutputTokens: 512,
-				maxRetries: 3,
-				stopWhen: [
-					({ steps }) => steps.some((step) => step.finishReason === "stop"),
-					stepCountIs(10),
-				],
-				prepareStep: ({ messages: stepMessages }) => {
-					if (stepMessages.length <= maxPromptMessages) return {}
+				tools: createTools(messageContext, db),
+				instructions: buildSystemPrompt(messageContext),
+				stopWhen: stepCountIs(10),
+				prepareStep: ({ messages }) => {
+					if (messages.length <= maxPromptMessages) return {}
 					return {
-						messages: stepMessages.slice(-trimmedPromptMessages),
+						messages: messages.slice(-trimmedPromptMessages),
 					}
 				},
 			})
+			const messages = this.turns
+			const result = await agent.generate({ messages })
 
 			this.turns.push(...result.response.messages)
 			await this.ctx.storage.put("conversationHistory", this.turns)

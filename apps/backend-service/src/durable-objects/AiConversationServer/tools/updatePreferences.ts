@@ -31,7 +31,6 @@ export const makeUpdatePreferencesTool = (
 	db: DrizzleDb,
 ) =>
 	tool({
-		name: "update_preferences",
 		description:
 			"update the user's preferences. any omitted properties will be left unchanged.",
 		inputSchema: updatePreferencesSchema,

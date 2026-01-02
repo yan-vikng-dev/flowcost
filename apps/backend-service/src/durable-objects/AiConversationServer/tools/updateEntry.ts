@@ -49,7 +49,6 @@ const updateEntrySchema = z.object({
 
 export const makeUpdateEntryTool = (context: MessageContext, db: DrizzleDb) =>
 	tool({
-		name: "update_entry",
 		description:
 			"Update an existing financial entry. Only provide fields that should be changed. Omitted fields will remain unchanged. When a user corrects an entry (e.g., 'the breakfast was 360k, not 360'), retrieve entries for the relevant date using get_entries, match the user's description to the correct entry, and use that entry's ID to update it. Never ask the user for entry IDs.",
 		inputSchema: updateEntrySchema,

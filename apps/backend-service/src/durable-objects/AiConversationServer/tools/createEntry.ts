@@ -40,7 +40,6 @@ const createEntrySchema = z.object({
 
 export const makeCreateEntryTool = (context: MessageContext, db: DrizzleDb) =>
 	tool({
-		name: "create_entry",
 		description: "Create a financial entry",
 		inputSchema: createEntrySchema,
 		execute: async (input) => {

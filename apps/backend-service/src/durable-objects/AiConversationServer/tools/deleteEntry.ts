@@ -15,7 +15,6 @@ const deleteEntrySchema = z.object({
 
 export const makeDeleteEntryTool = (context: MessageContext, db: DrizzleDb) =>
 	tool({
-		name: "delete_entry",
 		description:
 			"Delete one or more financial entries. Only entries that belong to the user (or their partner) can be deleted.",
 		inputSchema: deleteEntrySchema,

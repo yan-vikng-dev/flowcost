@@ -56,7 +56,7 @@ app.post("/whatsapp/webhook", async (c) => {
 	const waId = msg?.from
 	const text = msg?.text?.body
 	const messageId = msg?.id
-	
+
 	if (phoneNumberId && phoneNumberId !== c.env.WHATSAPP_PHONE_NUMBER_ID) {
 		console.debug({
 			message: "ignoring webhook for different phone number",
@@ -65,7 +65,7 @@ app.post("/whatsapp/webhook", async (c) => {
 		})
 		return c.text("OK")
 	}
-	
+
 	if (!waId || !text || !messageId) {
 		return c.text("OK")
 	}
