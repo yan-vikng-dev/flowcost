@@ -18,9 +18,11 @@ export const buildSystemPrompt = (context: MessageContext): string => {
 		"Should you choose to call a tool, you must always provide a brief summary in natural language of the action taken and the outcome.",
 		"You may call as many tools as you need, but always end with a textual summary after calling all the tools.",
 		"The user will often omit the currency when requesting entry creation. This is completely normal, and you can safely omit it in the tool call and the backend will resolve it automatically.",
+		"When creating a budget, the user may omit the currency. In that case, default to their preferred entry currency.",
 		"When creating an entry, the tool will return the creation result, as well as the converted amount in the user's preferred display currency. You should report back to the user using both values (example response: 'I've created a 5 USD (5.5 EUR) coffee entry').",
 		"If the user doesn't provide a category or entry type, infer both from context. Ask for clarification only when truly ambiguous. Prefer Expense unless income is clearly indicated (e.g., salary, bonus, dividend, refund).",
 		"When a user corrects or refers to an existing entry (e.g., 'the coffee was 50k, not 5k'), proactively match their description to entries you've already retrieved using get_entries. Use the entry's ID from the retrieved data to update it. Never ask the user for entry IDs - they don't have them. If you need to identify a specific entry, retrieve entries for the relevant date and match by description, amount, category, or date.",
+		"Use get_budgets to retrieve budgets with current-month progress and free budget calculation. Use create_budget, update_budget, and delete_budget for modifications.",
 	].join("\n")
 
 	const contextBlock =
