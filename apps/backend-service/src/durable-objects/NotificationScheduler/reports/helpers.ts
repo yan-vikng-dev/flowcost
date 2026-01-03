@@ -2,6 +2,8 @@ import type { Category } from "@repo/shared-lib"
 import { DateTime } from "luxon"
 import type { ReportType } from "./types"
 
+export const REPORT_SEPARATOR = "━━━━━━━━━━━━━━━"
+
 export function determineReportType(
 	now: DateTime,
 	prefs: import("./types").ReportPreferences,
