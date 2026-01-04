@@ -53,7 +53,8 @@ export const proxyPosthog = (request: Request, path?: string) => {
 	return fetch(target, {
 		method,
 		headers,
-		body: hasBody ? request.body : undefined,
+		body: request.body,
+		...(hasBody ? { body: request.body } : {}),
 		redirect: "manual",
 	})
 }

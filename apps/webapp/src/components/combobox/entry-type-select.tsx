@@ -15,26 +15,20 @@ export function EntryTypeSelect({
 	value,
 	onChange,
 	placeholder = "Select type",
-	disabled,
-	className,
-	id,
-	invalid,
+	disabled = false,
+	className = "",
+	invalid = false,
 }: {
 	value: EntryType
 	onChange: (val: EntryType) => void
 	placeholder?: string
 	disabled?: boolean
 	className?: string
-	id?: string
 	invalid?: boolean
 }) {
 	return (
 		<Select disabled={disabled} onValueChange={onChange} value={value}>
-			<SelectTrigger
-				aria-invalid={invalid || undefined}
-				className={className}
-				id={id}
-			>
+			<SelectTrigger aria-invalid={invalid || undefined} className={className}>
 				<SelectValue placeholder={placeholder} />
 			</SelectTrigger>
 			<SelectContent>

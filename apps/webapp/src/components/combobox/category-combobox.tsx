@@ -5,23 +5,20 @@ import { ResponsiveCombobox } from "./responsive-combobox"
 export function CategoryCombobox({
 	value,
 	onChange,
-	disabled,
-	className,
-	id,
-	invalid,
+	disabled = false,
+	className = "",
+	invalid = false,
 }: {
 	value: Category
 	onChange: (val: Category) => void
 	disabled?: boolean
 	className?: string
-	id?: string
 	invalid?: boolean
 }) {
 	return (
 		<ResponsiveCombobox
 			className={className}
 			disabled={disabled}
-			id={id}
 			invalid={invalid}
 			items={categories.map((cat) => {
 				const Icon = getCategoryIcon(cat)

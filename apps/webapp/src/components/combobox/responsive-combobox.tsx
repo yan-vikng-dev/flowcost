@@ -31,11 +31,10 @@ export function ResponsiveCombobox<T extends string>({
 	onChange,
 	items,
 	placeholder,
-	disabled,
-	className,
+	disabled = false,
+	className = "",
 	contentWidthClass = "w-[220px]",
-	id,
-	invalid,
+	invalid = false,
 }: {
 	value: T
 	onChange: (val: T) => void
@@ -44,7 +43,6 @@ export function ResponsiveCombobox<T extends string>({
 	disabled?: boolean
 	className?: string
 	contentWidthClass?: string
-	id?: string
 	invalid?: boolean
 }) {
 	const [open, setOpen] = React.useState(false)
@@ -72,7 +70,7 @@ export function ResponsiveCombobox<T extends string>({
 					{items.map((item) => (
 						<CommandItem
 							key={item.value}
-							keywords={item.keywords}
+							{...(item.keywords ? { keywords: item.keywords } : {})}
 							onSelect={(val) => {
 								onChange(val as T)
 								setOpen(false)
@@ -108,7 +106,6 @@ export function ResponsiveCombobox<T extends string>({
 						className={triggerClass}
 						data-placeholder={current ? undefined : true}
 						disabled={disabled}
-						id={id}
 						role="combobox"
 						type="button"
 						variant="outline"
@@ -136,7 +133,6 @@ export function ResponsiveCombobox<T extends string>({
 					className={triggerClass}
 					data-placeholder={current ? undefined : true}
 					disabled={disabled}
-					id={id}
 					role="combobox"
 					type="button"
 					variant="outline"

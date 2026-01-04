@@ -60,13 +60,15 @@ export const getConnectionState = createServerFn()
 			const user = await db.query.auth_users.findFirst({
 				where: eq(auth_users.id, partnerId),
 			})
-			if (user)
+			if (user) {
+				const image = user.image
 				partner = {
 					id: user.id,
 					name: user.name,
 					email: user.email,
-					image: (user as { image?: string | null }).image ?? undefined,
+					...(image ? { image } : {}),
 				}
+			}
 		}
 
 		// Outgoing pending invites
@@ -125,7 +127,7 @@ export const getConnectionState = createServerFn()
 					id: u.id,
 					name: u.name,
 					email: u.email,
-					image: (u as { image?: string | null }).image ?? undefined,
+					...(u.image ? { image: u.image } : {}),
 				})
 		}
 

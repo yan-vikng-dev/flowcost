@@ -7,7 +7,7 @@ export function TimezoneCombobox({
 	onChange,
 	options,
 	placeholder = "Select timezone",
-	disabled,
+	disabled = false,
 }: {
 	value: string
 	onChange: (val: string) => void

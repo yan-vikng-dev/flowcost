@@ -5,11 +5,7 @@ import {
 	getAllowedUserIds,
 	getUserTimezoneAndCurrency,
 } from "@repo/data-ops/drizzle/queries/helpers"
-import {
-	entries,
-	entryTypes,
-	type InsertEntry,
-} from "@repo/data-ops/drizzle/schemas/index"
+import { entries, entryTypes } from "@repo/data-ops/drizzle/schemas/index"
 import { categories, currencies, toIsoDateInTimezone } from "@repo/shared-lib"
 import { createServerFn } from "@tanstack/react-start"
 import { and, eq, inArray } from "drizzle-orm"
@@ -60,7 +56,7 @@ export const updateEntryInput = z.object({
 	category: z.enum(categories).optional(),
 	entryType: z.enum(entryTypes).optional(),
 	description: z.string().optional(),
-	executedAt: z.date().optional(),
+	executedDate: z.string().optional(),
 })
 
 export type UpdateEntryInput = z.infer<typeof updateEntryInput>
@@ -78,18 +74,9 @@ export const updateEntry = createServerFn({ method: "POST" })
 			throw new Error("Entry not found")
 		}
 
-		const patch: Partial<InsertEntry> = { ...updates }
-
-		if (updates.executedAt) {
-			const { timezone } = await getUserTimezoneAndCurrency(
-				db,
-				ctx.context.userId,
-			)
-			patch.executedDate = toIsoDateInTimezone(updates.executedAt, timezone)
-		}
-
-		if (row.recurringTemplateId) {
-			patch.isOverridden = true
+		const patch = {
+			...updates,
+			isOverridden: Boolean(row.recurringTemplateId),
 		}
 
 		await db.update(entries).set(patch).where(eq(entries.id, id))
