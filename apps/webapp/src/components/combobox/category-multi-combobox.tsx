@@ -25,6 +25,7 @@ export function CategoryMultiCombobox({
 	value,
 	onChange,
 	placeholder = "Select categories",
+	id,
 	className = "",
 	invalid = false,
 	contentWidthClass = "w-[280px]",
@@ -38,6 +39,7 @@ export function CategoryMultiCombobox({
 	value: Category[]
 	onChange: (next: Category[]) => void
 	placeholder?: string
+	id?: string
 	className?: string
 	invalid?: boolean
 	contentWidthClass?: string
@@ -155,6 +157,7 @@ export function CategoryMultiCombobox({
 							aria-invalid={invalid || undefined}
 							className={triggerClass}
 							data-placeholder={value.length ? undefined : true}
+							id={id}
 							type="button"
 							variant="outline"
 						>
@@ -183,6 +186,7 @@ export function CategoryMultiCombobox({
 						aria-expanded={open}
 						aria-invalid={invalid || undefined}
 						className={triggerClass}
+						id={id}
 						type="button"
 						variant="outline"
 					>

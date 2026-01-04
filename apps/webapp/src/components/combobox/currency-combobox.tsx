@@ -10,6 +10,7 @@ export function CurrencyCombobox({
 	value,
 	onChange,
 	placeholder = "Select currency",
+	id,
 	disabled = false,
 	className = "",
 	invalid = false,
@@ -17,6 +18,7 @@ export function CurrencyCombobox({
 	value: Currency
 	onChange: (val: Currency) => void
 	placeholder?: string
+	id?: string
 	disabled?: boolean
 	className?: string
 	invalid?: boolean
@@ -25,6 +27,7 @@ export function CurrencyCombobox({
 		<ResponsiveCombobox
 			className={className}
 			disabled={disabled}
+			id={id}
 			invalid={invalid}
 			items={currencies.map((c) => ({
 				value: c,

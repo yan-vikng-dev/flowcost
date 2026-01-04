@@ -16,6 +16,9 @@
 	},
 	"linter": {
 		"rules": {
+			"complexity": {
+				"useLiteralKeys": "off"
+			},
 			"nursery": {
 				"useSortedClasses": {
 					"level": "error",

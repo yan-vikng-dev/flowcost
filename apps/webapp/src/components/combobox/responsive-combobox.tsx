@@ -31,6 +31,7 @@ export function ResponsiveCombobox<T extends string>({
 	onChange,
 	items,
 	placeholder,
+	id,
 	disabled = false,
 	className = "",
 	contentWidthClass = "w-[220px]",
@@ -40,6 +41,7 @@ export function ResponsiveCombobox<T extends string>({
 	onChange: (val: T) => void
 	items: Array<ComboItem<T>>
 	placeholder: string
+	id?: string
 	disabled?: boolean
 	className?: string
 	contentWidthClass?: string
@@ -106,6 +108,7 @@ export function ResponsiveCombobox<T extends string>({
 						className={triggerClass}
 						data-placeholder={current ? undefined : true}
 						disabled={disabled}
+						id={id}
 						role="combobox"
 						type="button"
 						variant="outline"
@@ -133,6 +136,7 @@ export function ResponsiveCombobox<T extends string>({
 					className={triggerClass}
 					data-placeholder={current ? undefined : true}
 					disabled={disabled}
+					id={id}
 					role="combobox"
 					type="button"
 					variant="outline"

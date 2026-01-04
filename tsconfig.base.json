@@ -13,7 +13,7 @@
 		"noUnusedParameters": true,
 		"noFallthroughCasesInSwitch": true,
 		"noUncheckedSideEffectImports": true,
-		"exactOptionalPropertyTypes": true,
+		// "exactOptionalPropertyTypes": true, //disabled, crazy ahh rule
 		"noImplicitOverride": true,
 		"noPropertyAccessFromIndexSignature": true
 	}

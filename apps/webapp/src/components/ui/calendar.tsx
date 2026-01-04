@@ -30,7 +30,7 @@ function Calendar({
 		<DayPicker
 			captionLayout={captionLayout}
 			className={cn(
-				"group/calendar bg-background p-3 [--cell-size:--spacing(8)] [[data-slot=card-content]_&]:bg-transparent [[data-slot=popover-content]_&]:bg-transparent",
+				"group/calendar bg-background in-data-[slot=card-content]:bg-transparent in-data-[slot=popover-content]:bg-transparent p-3 [--cell-size:--spacing(8)]",
 				String.raw`rtl:**:[.rdp-button\_next>svg]:rotate-180`,
 				String.raw`rtl:**:[.rdp-button\_previous>svg]:rotate-180`,
 				className,
@@ -186,8 +186,8 @@ function CalendarDayButton({
 
 	const ref = React.useRef<HTMLButtonElement>(null)
 	React.useEffect(() => {
-		if (modifiers.focused) ref.current?.focus()
-	}, [modifiers.focused])
+		if (modifiers["focused"]) ref.current?.focus()
+	}, [modifiers])
 
 	return (
 		<Button
@@ -197,14 +197,14 @@ function CalendarDayButton({
 				className,
 			)}
 			data-day={day.date.toLocaleDateString()}
-			data-range-end={modifiers.range_end}
-			data-range-middle={modifiers.range_middle}
-			data-range-start={modifiers.range_start}
+			data-range-end={modifiers["range_end"]}
+			data-range-middle={modifiers["range_middle"]}
+			data-range-start={modifiers["range_start"]}
 			data-selected-single={
-				modifiers.selected &&
-				!modifiers.range_start &&
-				!modifiers.range_end &&
-				!modifiers.range_middle
+				modifiers["selected"] &&
+				!modifiers["range_start"] &&
+				!modifiers["range_end"] &&
+				!modifiers["range_middle"]
 			}
 			ref={ref}
 			size="icon"

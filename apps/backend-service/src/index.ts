@@ -7,12 +7,12 @@ export { AiConversationServer } from "@/durable-objects/AiConversationServer"
 export { NotificationScheduler } from "@/durable-objects/NotificationScheduler"
 
 export default class DataService extends WorkerEntrypoint<Env> {
-	fetch(request: Request) {
+	override fetch(request: Request) {
 		initDatabase(this.env.DB)
 		return app.fetch(request, this.env, this.ctx)
 	}
 
-	scheduled(controller: ScheduledController) {
+	override scheduled(controller: ScheduledController) {
 		initDatabase(this.env.DB)
 		switch (controller.cron) {
 			case "0 0 * * *":

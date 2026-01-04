@@ -49,7 +49,7 @@ export class NotificationScheduler extends DurableObject {
 		})
 	}
 
-	async alarm() {
+	override async alarm() {
 		console.debug("NotificationScheduler alarm triggered", {
 			userId: this.userId,
 			timestamp: new Date().toISOString(),

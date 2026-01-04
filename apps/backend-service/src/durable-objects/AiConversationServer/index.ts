@@ -180,7 +180,7 @@ export class AiConversationServer extends DurableObject {
 		}
 	}
 
-	async alarm() {
+	override async alarm() {
 		await this.reset()
 	}
 

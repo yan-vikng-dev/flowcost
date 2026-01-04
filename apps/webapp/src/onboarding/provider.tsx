@@ -14,7 +14,7 @@ import {
 import { useOnboardingDismissal } from "./utils"
 import { WelcomeDialog } from "./welcome-dialog"
 
-const ONBOARDING_ENABLED = import.meta.env.VITE_ONBOARDING_ENABLED === "true"
+const ONBOARDING_ENABLED = import.meta.env["VITE_ONBOARDING_ENABLED"] === "true"
 
 type OnboardingTourContextType = {
 	status: OnboardingStatus | undefined
