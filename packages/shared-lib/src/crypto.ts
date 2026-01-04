@@ -10,6 +10,7 @@ export function token44(): string {
 	const getRand = (arr: Uint8Array) => globalThis.crypto.getRandomValues(arr)
 	while (s.length < 8) {
 		const b = getRand(new Uint8Array(1))[0]
+		if (b === undefined) continue
 		if (b < 252) s += A[b % 36]
 	}
 	return `${s.slice(0, 4)}-${s.slice(4)}`

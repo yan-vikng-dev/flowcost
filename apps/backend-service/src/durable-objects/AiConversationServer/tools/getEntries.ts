@@ -25,14 +25,18 @@ export const makeGetEntriesTool = (context: MessageContext, db: DrizzleDb) =>
 				context.timezone,
 			)
 
-			const {entries} = await fetchConvertedEntriesForRange(db, context.userId, {
-				start: startDate,
-				end: endDate,
-				timezone: context.timezone,
-				displayCurrency: context.displayCurrency,
-				sortBy: "executedAt",
-				sortDir: "desc",
-			})
+			const { entries } = await fetchConvertedEntriesForRange(
+				db,
+				context.userId,
+				{
+					start: startDate,
+					end: endDate,
+					timezone: context.timezone,
+					displayCurrency: context.displayCurrency,
+					sortBy: "executedAt",
+					sortDir: "desc",
+				},
+			)
 			return { result: entries, targetCurrency: context.displayCurrency }
 		},
 	})

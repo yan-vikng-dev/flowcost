@@ -3,7 +3,6 @@ import { fetchBudgetById } from "@repo/data-ops/drizzle/queries"
 import {
 	budgets,
 	type InsertBudget,
-	type SelectBudget,
 } from "@repo/data-ops/drizzle/schemas/index"
 import { type Currency, categories, currencies } from "@repo/shared-lib"
 import { tool } from "ai"

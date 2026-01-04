@@ -1,5 +1,8 @@
 import { DurableObject } from "cloudflare:workers"
-import { createGoogleGenerativeAI, GoogleGenerativeAIProviderOptions } from "@ai-sdk/google"
+import {
+	createGoogleGenerativeAI,
+	type GoogleGenerativeAIProviderOptions,
+} from "@ai-sdk/google"
 import { withTracing } from "@posthog/ai"
 import { getDb, initDatabase } from "@repo/data-ops/database/setup"
 import type { SelectUserPreferences } from "@repo/data-ops/drizzle/schemas/index"
@@ -99,12 +102,12 @@ export class AiConversationServer extends DurableObject {
 				instructions: buildSystemPrompt(messageContext),
 				stopWhen: stepCountIs(10),
 				providerOptions: {
-					google:{
+					google: {
 						thinkingConfig: {
-							thinkingLevel: 'medium',
-							includeThoughts: false
-						}
-					} satisfies GoogleGenerativeAIProviderOptions
+							thinkingLevel: "medium",
+							includeThoughts: false,
+						},
+					} satisfies GoogleGenerativeAIProviderOptions,
 				},
 				prepareStep: ({ messages }) => {
 					if (messages.length <= maxPromptMessages)

@@ -1,7 +1,5 @@
 import type { DrizzleDb } from "@repo/data-ops/database/setup"
-import {
-	budgets,
-} from "@repo/data-ops/drizzle/schemas/index"
+import { budgets } from "@repo/data-ops/drizzle/schemas/index"
 import { type Currency, categories, currencies } from "@repo/shared-lib"
 import { tool } from "ai"
 import { z } from "zod"
