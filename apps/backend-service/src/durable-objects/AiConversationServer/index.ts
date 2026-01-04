@@ -24,34 +24,6 @@ export type MessageContext = {
 	userEmail: string
 } & SelectUserPreferences
 
-function sanitizeMessages(messages: ModelMessage[]): ModelMessage[] {
-	return messages.flatMap((message) => {
-		if (message.role === "tool") return []
-
-		if (message.role === "assistant" && Array.isArray(message.content)) {
-			const textParts = message.content.filter((part): part is TextPart => {
-				if (!part || typeof part !== "object") return false
-				if (!("type" in part)) return false
-				return part.type === "text" && typeof part.text === "string"
-			})
-
-			const [first, ...rest] = textParts
-			if (!first) return []
-
-			const content =
-				rest.length === 0
-					? first.text
-					: [first, ...rest].map(
-							(part): TextPart => ({ type: "text", text: part.text }),
-						)
-
-			return [{ ...message, content }]
-		}
-
-		return [message]
-	})
-}
-
 export class AiConversationServer extends DurableObject {
 	turns: ModelMessage[] = []
 	posthogClient: PostHog | null = null
@@ -139,10 +111,6 @@ export class AiConversationServer extends DurableObject {
 			})
 			const messages = this.turns
 			const result = await agent.generate({ messages })
-
-			this.turns.push(...sanitizeMessages(result.response.messages))
-			await this.ctx.storage.put("conversationHistory", this.turns)
-
 			console.dir(
 				{
 					logMessage: "Generated text, logging result",
@@ -151,6 +119,10 @@ export class AiConversationServer extends DurableObject {
 				},
 				{ depth: null },
 			)
+
+			this.turns.push(...result.response.messages)
+			await this.ctx.storage.put("conversationHistory", this.turns)
+
 
 			if (result.finishReason === "error" || !result.text) {
 				throw new Error(
