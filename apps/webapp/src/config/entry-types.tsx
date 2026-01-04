@@ -1,4 +1,4 @@
-import type { EntryType } from "@repo/data-ops/drizzle/schemas/index"
+import type { EntryType } from "@repo/db/drizzle/schemas/index"
 import { ArrowDownIcon, ArrowUpIcon, type LucideIcon } from "lucide-react"
 
 export const entryTypeIcons: Record<EntryType, LucideIcon> = {

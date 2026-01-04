@@ -1,9 +1,9 @@
 import { env } from "cloudflare:workers"
-import { getDb } from "@repo/data-ops/database/setup"
+import { getDb } from "@repo/db/database/setup"
 import {
 	whatsapp_link_tokens,
 	whatsapp_links,
-} from "@repo/data-ops/drizzle/schemas/index"
+} from "@repo/db/drizzle/schemas/index"
 import { sha256Hex, token44 } from "@repo/shared-lib/crypto"
 import { createServerFn } from "@tanstack/react-start"
 import { eq } from "drizzle-orm"

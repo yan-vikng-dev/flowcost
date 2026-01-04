@@ -1,6 +1,6 @@
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
-	"name": "flowcost",
+	"name": "flowcost-webapp",
 	"compatibility_date": "2025-11-17",
 	"compatibility_flags": ["nodejs_compat", "global_fetch_private_origin"],
 	"main": "./src/server.ts",

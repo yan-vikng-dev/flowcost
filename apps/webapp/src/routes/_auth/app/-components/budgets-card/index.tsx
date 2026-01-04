@@ -3,7 +3,7 @@ import {
 	calculateFreeBudget,
 	calculateMonthProgress,
 	calculateRecurringExpenses,
-} from "@repo/data-ops/drizzle/queries"
+} from "@repo/db/drizzle/queries"
 import type { Category, Currency } from "@repo/shared-lib"
 import {
 	useMutation,

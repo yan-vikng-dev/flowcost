@@ -1,4 +1,4 @@
-import { getDb } from "@repo/data-ops/database/setup"
+import { getDb } from "@repo/db/database/setup"
 import {
 	type BudgetWithProgress,
 	calculateBudgetsWithProgress,
@@ -6,9 +6,9 @@ import {
 	fetchBudgetsForUser,
 	fetchConvertedEntriesForRange,
 	getLatestExchangeRates,
-} from "@repo/data-ops/drizzle/queries"
-import { getUserTimezoneAndCurrency } from "@repo/data-ops/drizzle/queries/helpers"
-import { budgets } from "@repo/data-ops/drizzle/schemas/index"
+} from "@repo/db/drizzle/queries"
+import { getUserTimezoneAndCurrency } from "@repo/db/drizzle/queries/helpers"
+import { budgets } from "@repo/db/drizzle/schemas/index"
 import { categories, currencies, getCurrentMonthRange } from "@repo/shared-lib"
 import { createServerFn } from "@tanstack/react-start"
 import { eq } from "drizzle-orm"
@@ -103,7 +103,7 @@ export const deleteBudget = createServerFn({ method: "POST" })
 		return { id: ctx.data.id }
 	})
 
-export type { BudgetWithProgress } from "@repo/data-ops/drizzle/queries"
+export type { BudgetWithProgress } from "@repo/db/drizzle/queries"
 
 export const listBudgetsWithProgress = createServerFn()
 	.middleware([protectedFunctionMiddleware])

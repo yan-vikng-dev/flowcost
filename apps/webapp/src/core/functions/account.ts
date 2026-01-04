@@ -1,5 +1,5 @@
-import { getDb } from "@repo/data-ops/database/setup"
-import { auth_users } from "@repo/data-ops/drizzle/schemas/index"
+import { getDb } from "@repo/db/database/setup"
+import { auth_users } from "@repo/db/drizzle/schemas/index"
 import { createServerFn } from "@tanstack/react-start"
 import { eq } from "drizzle-orm"
 import { protectedFunctionMiddleware } from "@/core/middleware/auth"

@@ -1,14 +1,11 @@
-import { getDb } from "@repo/data-ops/database/setup"
-import {
-	getRecurringTemplates,
-	parseRRULE,
-} from "@repo/data-ops/drizzle/queries"
-import { getUserTimezoneAndCurrency } from "@repo/data-ops/drizzle/queries/helpers"
+import { getDb } from "@repo/db/database/setup"
+import { getRecurringTemplates, parseRRULE } from "@repo/db/drizzle/queries"
+import { getUserTimezoneAndCurrency } from "@repo/db/drizzle/queries/helpers"
 import {
 	entries,
 	entryTypes,
 	recurring_entry_templates,
-} from "@repo/data-ops/drizzle/schemas/index"
+} from "@repo/db/drizzle/schemas/index"
 import {
 	categories,
 	currencies,

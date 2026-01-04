@@ -3,8 +3,8 @@
 ## Project Structure
 
 - `apps/webapp/`: user-facing web app (Vite + React/TanStack), static assets in `apps/webapp/public/`.
-- `apps/backend-service/`: Cloudflare Worker backend (Wrangler), source in `apps/backend-service/src/`.
-- `packages/data-ops/`: database/auth/schema layer (Drizzle + shared queries), source in `packages/data-ops/src/`.
+- `apps/backend/`: Cloudflare Worker backend (Wrangler), source in `apps/backend/src/`.
+- `packages/db/`: database/auth/schema layer (Drizzle + shared queries), source in `packages/db/src/`.
 - `packages/shared-lib/`: shared types and utilities, source in `packages/shared-lib/src/`.
 - Build outputs: `dist/` folders inside each package/app.
 - each app's and package's README.md should be updated with the latest context of that project.
@@ -17,8 +17,8 @@ From the repo root:
 - `pnpm build`: build all packages/apps via Turbo.
 - `pnpm ship`: deploy via Turbo (runs each app’s `deploy` script).
 - `pnpm fix`: format + lint with Biome, then `turbo typecheck`.
-- `pnpm cf:types`: generate Cloudflare env types (runs `wrangler types` in `apps/webapp/` and `apps/backend-service/`).
-- `pnpm studio`: open Drizzle Studio for `packages/data-ops/`.
+- `pnpm cf:types`: generate Cloudflare env types (runs `wrangler types` in `apps/webapp/` and `apps/backend/`).
+- `pnpm studio`: open Drizzle Studio for `packages/db/`.
 - `pnpm db:push`: push schema changes using Drizzle Kit (D1/DB config required).
 
 ## Coding Style & Naming Conventions

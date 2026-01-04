@@ -1,5 +1,5 @@
-import { parseRRULE } from "@repo/data-ops/drizzle/queries"
-import type { SelectRecurringEntryTemplate } from "@repo/data-ops/drizzle/schemas/index"
+import { parseRRULE } from "@repo/db/drizzle/queries"
+import type { SelectRecurringEntryTemplate } from "@repo/db/drizzle/schemas/index"
 import {
 	formatCurrency,
 	getCurrentMonthRange,

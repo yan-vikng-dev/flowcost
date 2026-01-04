@@ -12,7 +12,7 @@ This doc covers the automated expense reports system that sends daily, weekly, a
 **Data Model**
 
 Report preferences are stored in `user_preferences` table:
-- `packages/data-ops/src/drizzle/schemas/user_preferences.ts:14-18`
+- `packages/db/src/drizzle/schemas/user_preferences.ts:14-18`
   - `reportsDailyEnabled`: boolean (default false)
   - `reportsWeeklyEnabled`: boolean (default false)
   - `reportsMonthlyEnabled`: boolean (default false)
@@ -28,8 +28,8 @@ Reports use a cascading hierarchy at send-time:
 - Daily reports sent every day (if enabled)
 - All reports use the same delivery time (`reportsTime`)
 
-Implementation: `apps/backend-service/src/durable-objects/NotificationScheduler.ts:79-102`
-```79:102:apps/backend-service/src/durable-objects/NotificationScheduler.ts
+Implementation: `apps/backend/src/durable-objects/NotificationScheduler.ts:79-102`
+```79:102:apps/backend/src/durable-objects/NotificationScheduler.ts
 	private determineReportType(
 		now: DateTime,
 		prefs: {
@@ -59,7 +59,7 @@ Implementation: `apps/backend-service/src/durable-objects/NotificationScheduler.
 **Durable Object**
 
 `NotificationScheduler` handles scheduling and report generation:
-- `apps/backend-service/src/durable-objects/NotificationScheduler.ts:16-588`
+- `apps/backend/src/durable-objects/NotificationScheduler.ts:16-588`
 - Uses Cloudflare Durable Object alarms for time-based scheduling
 - Initializes on first access via `constructor` or explicit `initialize()` call
 - Self-perpetuating: reschedules itself after each report send
@@ -86,20 +86,20 @@ Data inclusion:
 
 Budget progress bars:
 - Visual bars with filled/empty blocks: `■■■■■■■■□□ 80%` (10 blocks total)
-- Implementation: `apps/backend-service/src/durable-objects/NotificationScheduler.ts:429-433`
+- Implementation: `apps/backend/src/durable-objects/NotificationScheduler.ts:429-433`
 
 Report content structure:
 - Daily: Today's spending by category, budget progress for used categories
 - Weekly: Week's spending, budget progress, comparison to previous week
 - Monthly: Full month spending, all budgets, top spending day, most used category
 
-Implementation: `apps/backend-service/src/durable-objects/NotificationScheduler.ts:104-336`
+Implementation: `apps/backend/src/durable-objects/NotificationScheduler.ts:104-336`
 
 **Delivery & Storage**
 
 - Reports sent via WhatsApp using existing `sendWhatsAppText()` helper
 - Each report appended to AI conversation history with deterministic message ID: `report:{type}:{YYYY-MM-DD}`
-- Implementation: `apps/backend-service/src/durable-objects/NotificationScheduler.ts:574-587`
+- Implementation: `apps/backend/src/durable-objects/NotificationScheduler.ts:574-587`
 
 **Settings UI**
 
@@ -132,7 +132,7 @@ Rescheduling and revocation:
 
 **Backend Endpoints**
 
-- `apps/backend-service/src/hono/app.ts:74-118`
+- `apps/backend/src/hono/app.ts:74-118`
   - `POST /reports/reschedule`: Accepts `{ userId }`, initializes NotificationScheduler DO
   - `POST /reports/revoke`: Accepts `{ userId }`, revokes NotificationScheduler DO (cancels alarms)
 
@@ -142,13 +142,13 @@ WhatsApp link is source of truth:
 - When user links WhatsApp, NotificationScheduler DO is initialized immediately
 - Report settings UI becomes visible (if previously hidden)
 - Report preferences in database remain unchanged (not auto-enabled)
-- Implementation: `apps/backend-service/src/handlers/whatsapp/index.ts:124-127`
+- Implementation: `apps/backend/src/handlers/whatsapp/index.ts:124-127`
 
 When unlinking:
 - NotificationScheduler DO is revoked (alarms cancelled)
 - Report settings UI is hidden
 - Report preferences in database remain unchanged
-- Implementation: `apps/backend-service/src/handlers/whatsapp/index.ts:189-196` (backend), `apps/webapp/src/core/functions/whatsapp.ts:53-65` (webapp)
+- Implementation: `apps/backend/src/handlers/whatsapp/index.ts:189-196` (backend), `apps/webapp/src/core/functions/whatsapp.ts:53-65` (webapp)
 
 Welcome message:
 - Sent after successful WhatsApp link
@@ -169,10 +169,10 @@ Welcome message:
 
 **File Locations**
 
-- DO Implementation: `apps/backend-service/src/durable-objects/NotificationScheduler.ts` (includes `revoke()` method)
-- Schema: `packages/data-ops/src/drizzle/schemas/user_preferences.ts`
+- DO Implementation: `apps/backend/src/durable-objects/NotificationScheduler.ts` (includes `revoke()` method)
+- Schema: `packages/db/src/drizzle/schemas/user_preferences.ts`
 - Settings UI: `apps/webapp/src/routes/_auth/app/settings/index.tsx`
 - Server Functions: `apps/webapp/src/core/functions/preferences.ts`, `apps/webapp/src/core/functions/reports.ts`
-- Backend Endpoint: `apps/backend-service/src/hono/app.ts`
-- WhatsApp Handler: `apps/backend-service/src/handlers/whatsapp/index.ts`
+- Backend Endpoint: `apps/backend/src/hono/app.ts`
+- WhatsApp Handler: `apps/backend/src/handlers/whatsapp/index.ts`
 

@@ -1,5 +1,3 @@
-import { createHash, randomBytes } from "node:crypto"
-
 /**
  * Generate a human-friendly verification token like 'ABCD-EFGH'.
  * - Uses uppercase A–Z and digits 0–9.
@@ -7,8 +5,15 @@ import { createHash, randomBytes } from "node:crypto"
  * @returns {string} Token in the form 'XXXX-XXXX'.
  */
 export function token44(): string {
-	const hexString = randomBytes(4).toString("hex")
-	return `${hexString.slice(0, 4)}-${hexString.slice(4, 8)}`
+	const A = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+	let s = ""
+	const getRand = (arr: Uint8Array) => globalThis.crypto.getRandomValues(arr)
+	while (s.length < 8) {
+		const b = getRand(new Uint8Array(1))[0]
+		if (b === undefined) continue
+		if (b < 252) s += A[b % 36]
+	}
+	return `${s.slice(0, 4)}-${s.slice(4)}`
 }
 
 /**
@@ -26,10 +31,15 @@ export function timingSafeEqualHex(a: string, b: string): boolean {
 }
 
 /**
- * Compute the SHA-256 hash of a UTF-8 string.
+ * Compute the SHA-256 hash of a UTF-8 string using Web Crypto.
+ * Browser/Workers-safe (no Node dependencies).
  * @param {string} input Input text to hash.
  * @returns {Promise<string>} Hex-encoded SHA-256 digest.
  */
 export async function sha256Hex(input: string): Promise<string> {
-	return createHash("sha256").update(input).digest("hex")
+	const u8 = new TextEncoder().encode(input)
+	const digest = await globalThis.crypto.subtle.digest("SHA-256", u8.buffer)
+	return Array.from(new Uint8Array(digest))
+		.map((b) => b.toString(16).padStart(2, "0"))
+		.join("")
 }

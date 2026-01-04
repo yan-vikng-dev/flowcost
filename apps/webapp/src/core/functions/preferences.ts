@@ -1,5 +1,5 @@
-import { type DrizzleDb, getDb } from "@repo/data-ops/database/setup"
-import { user_preferences } from "@repo/data-ops/drizzle/schemas/index"
+import { type DrizzleDb, getDb } from "@repo/db/database/setup"
+import { user_preferences } from "@repo/db/drizzle/schemas/index"
 import { currencies, isValidTimeZone } from "@repo/shared-lib"
 import { createServerFn } from "@tanstack/react-start"
 import { getRequest } from "@tanstack/react-start/server"

@@ -7,10 +7,10 @@
 		"test": "turbo run test",
 		"ship": "turbo run deploy",
 		"dev:webapp": "pnpm run --filter webapp dev",
-		"dev:backend": "pnpm run --filter backend-service dev",
-		"studio": "pnpm run --filter data-ops drizzle:studio",
+		"dev:backend": "pnpm run --filter backend dev",
+		"studio": "pnpm run --filter db db:studio",
 		"fix": "pnpm exec biome check --write --max-diagnostics 10 --unsafe && turbo typecheck && turbo cf:types",
-		"db:push": "pnpm run --filter data-ops drizzle:push"
+		"db:push": "pnpm run --filter db db:push"
 	},
 	"keywords": [],
 	"author": "",

@@ -1,4 +1,4 @@
-import { parseRRULE } from "@repo/data-ops/drizzle/queries"
+import { parseRRULE } from "@repo/db/drizzle/queries"
 import { type Category, type Currency, categories } from "@repo/shared-lib"
 import { useQuery } from "@tanstack/react-query"
 import { CalendarIcon } from "lucide-react"

@@ -9,13 +9,13 @@ This doc covers the data model and flows for connecting exactly two users to sha
 - No soft deletes; keep history by status changes when useful.
 
 **Tables**
-- `packages/data-ops/src/drizzle/schemas/user_connections.ts:1`
+- `packages/db/src/drizzle/schemas/user_connections.ts:1`
   - Row-per-pair model using ordered IDs
   - Columns: `id`, `userIdLow`, `userIdHigh`, `createdAt`, `updatedAt`
   - Constraints: unique pair `(userIdLow, userIdHigh)`; insertion must normalize pair via `min/max` to prevent reversed duplicates
   - Notes: We enforce “one connection per user” in server code (no triggers with push-only workflow)
 
-- `packages/data-ops/src/drizzle/schemas/user_connection_invitations.ts:1`
+- `packages/db/src/drizzle/schemas/user_connection_invitations.ts:1`
   - Columns: `id`, `inviterUserId`, `inviteeEmail`, optional `inviteeUserId`, `status` (`pending|accepted|declined|expired`), `expiresAt`, timestamps
   - Works for non-registered invitees (identified by `inviteeEmail`) and can backfill `inviteeUserId` once they register
 
@@ -73,7 +73,7 @@ All functions use `protectedFunctionMiddleware` and Zod validation, and are desi
 **Operational Notes**
 - We use Drizzle “schema-first” with push/migrate; avoid custom triggers for portability
 - Normalize pair ordering server-side to satisfy the unique index
-- Prefer queries via the aggregator import: `@repo/data-ops/drizzle/schemas/index:1`
+- Prefer queries via the aggregator import: `@repo/db/drizzle/schemas/index:1`
 
 **Open Items**
 - Optional: add rate limits or spam mitigation for `sendInvitation`

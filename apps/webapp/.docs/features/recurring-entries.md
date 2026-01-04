@@ -775,7 +775,7 @@ We do not use `COUNT` in stored RRULE. Bound generation with `endAt` (optional) 
 2. Modify `entries`: add optional `recurringTemplateId` and `isOverridden` (boolean)
 3. Add indexes in table callbacks, including unique(recurringTemplateId, executedAt)
 4. Update relations
-5. Run `pnpm --filter data-ops run drizzle:push`
+5. Run `pnpm --filter db run drizzle:push`
 
 ### Phase 2: Core Generation Logic
 
@@ -813,10 +813,10 @@ We do not use `COUNT` in stored RRULE. Bound generation with `endAt` (optional) 
 
 ## Drizzle Push Notes
 
-- We use schema-first with Drizzle and push to D1 via the configured HTTP driver (`packages/data-ops/drizzle-kit.config.ts`).
+- We use schema-first with Drizzle and push to D1 via the configured HTTP driver (`packages/db/drizzle-kit.config.ts`).
 - After updating schemas:
-  - Run `pnpm --filter data-ops run drizzle:push`
-  - Build `@repo/data-ops` if needed by dependents
+  - Run `pnpm --filter db run drizzle:push`
+  - Build `@repo/db` if needed by dependents
 
 ## UI & UX Components
 

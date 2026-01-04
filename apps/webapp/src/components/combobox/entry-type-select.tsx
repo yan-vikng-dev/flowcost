@@ -1,7 +1,4 @@
-import {
-	type EntryType,
-	entryTypes,
-} from "@repo/data-ops/drizzle/schemas/index"
+import { type EntryType, entryTypes } from "@repo/db/drizzle/schemas/index"
 import {
 	Select,
 	SelectContent,

@@ -1,9 +1,9 @@
-import { getDb } from "@repo/data-ops/database/setup"
+import { getDb } from "@repo/db/database/setup"
 import {
 	auth_users,
 	user_connection_invitations,
 	user_connections,
-} from "@repo/data-ops/drizzle/schemas/index"
+} from "@repo/db/drizzle/schemas/index"
 import { createServerFn } from "@tanstack/react-start"
 import { and, eq, or } from "drizzle-orm"
 import { z } from "zod"

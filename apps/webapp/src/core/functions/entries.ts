@@ -1,11 +1,11 @@
-import { getDb } from "@repo/data-ops/database/setup"
-import { getEntryForUser } from "@repo/data-ops/drizzle/queries"
-import type { ConvertedEntry } from "@repo/data-ops/drizzle/queries/entries"
+import { getDb } from "@repo/db/database/setup"
+import { getEntryForUser } from "@repo/db/drizzle/queries"
+import type { ConvertedEntry } from "@repo/db/drizzle/queries/entries"
 import {
 	getAllowedUserIds,
 	getUserTimezoneAndCurrency,
-} from "@repo/data-ops/drizzle/queries/helpers"
-import { entries, entryTypes } from "@repo/data-ops/drizzle/schemas/index"
+} from "@repo/db/drizzle/queries/helpers"
+import { entries, entryTypes } from "@repo/db/drizzle/schemas/index"
 import { categories, currencies, toIsoDateInTimezone } from "@repo/shared-lib"
 import { createServerFn } from "@tanstack/react-start"
 import { and, eq, inArray } from "drizzle-orm"

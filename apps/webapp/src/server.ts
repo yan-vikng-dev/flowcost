@@ -1,8 +1,8 @@
 // src/server.ts - TanStack Start Server Entry for cloudflare worker
 
 import { env } from "cloudflare:workers"
-import { setAuth } from "@repo/data-ops/auth/server"
-import { initDatabase } from "@repo/data-ops/database/setup"
+import { setAuth } from "@repo/db/auth/server"
+import { initDatabase } from "@repo/db/database/setup"
 import handler from "@tanstack/react-start/server-entry"
 
 export default {
