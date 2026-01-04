@@ -1,5 +1,7 @@
 import type { Config } from "drizzle-kit"
 
+process.loadEnvFile(".env.local")
+
 const config: Config = {
 	// Use a single entry to avoid duplicate evaluation across multiple files
 	schema: "./src/drizzle/schemas/index.ts",
