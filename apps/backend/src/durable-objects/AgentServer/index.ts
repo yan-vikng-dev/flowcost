@@ -27,7 +27,7 @@ export type MessageContext = {
 	userEmail: string
 } & SelectUserPreferences
 
-export class AiConversationServer extends DurableObject {
+export class AgentServer extends DurableObject {
 	turns: ModelMessage[] = []
 	posthogClient: PostHog | null = null
 	seenMessageIds: Set<string> = new Set()
@@ -140,7 +140,7 @@ export class AiConversationServer extends DurableObject {
 				text: result.text,
 			})
 		} catch (error) {
-			console.error("Error in AiConversationServer.handleMessage", {
+			console.error("Error in AgentServer.handleMessage", {
 				userId: messageContext.userId,
 				messageId: messageContext.messageId,
 				traceId: this.traceId,

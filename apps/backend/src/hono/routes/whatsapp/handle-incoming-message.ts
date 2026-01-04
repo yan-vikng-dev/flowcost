@@ -6,7 +6,7 @@ import {
 } from "@repo/db/drizzle/schemas/index"
 import { sha256Hex } from "@repo/shared-lib/crypto"
 import { eq } from "drizzle-orm"
-import type { MessageContext } from "@/durable-objects/AiConversationServer"
+import type { MessageContext } from "@/durable-objects/AgentServer"
 import type { WhatsAppMedia } from "@/lib/whatsapp/media"
 import { fetchWhatsAppMedia } from "@/lib/whatsapp/media"
 import { sendTypingIndicator, sendWhatsAppText } from "@/lib/whatsapp/messages"

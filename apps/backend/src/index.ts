@@ -3,7 +3,7 @@ import { initDatabase } from "@repo/db/database/setup"
 import { updateExchangeRates } from "@/cron/updateExchangeRates.js"
 import { app } from "@/hono/app"
 
-export { AiConversationServer } from "@/durable-objects/AiConversationServer"
+export { AgentServer } from "@/durable-objects/AgentServer"
 export { NotificationScheduler } from "@/durable-objects/NotificationScheduler"
 
 export default class DataService extends WorkerEntrypoint<Env> {

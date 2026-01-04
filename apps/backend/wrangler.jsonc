@@ -40,7 +40,7 @@
 		"bindings": [
 			{
 				"name": "AI_CONVERSATION_SERVER",
-				"class_name": "AiConversationServer"
+				"class_name": "AgentServer"
 			},
 			{
 				"name": "NOTIFICATION_SCHEDULER",
@@ -51,11 +51,20 @@
 	"migrations": [
 		{
 			"tag": "v1",
-			"new_sqlite_classes": ["AiConversationServer"]
+			"new_sqlite_classes": ["AgentServer"]
 		},
 		{
 			"tag": "v2",
 			"new_sqlite_classes": ["NotificationScheduler"]
+		},
+		{
+			"tag": "v3",
+			"renamed_classes": [
+				{
+					"from": "AiConversationServer",
+					"to": "AgentServer"
+				}
+			]
 		}
 	]
 }
