@@ -3,7 +3,6 @@ import { user_preferences } from "@repo/data-ops/drizzle/schemas/index"
 import { currencies, isValidTimeZone } from "@repo/shared-lib"
 import { createServerFn } from "@tanstack/react-start"
 import { getRequest } from "@tanstack/react-start/server"
-import { eq } from "drizzle-orm"
 import { z } from "zod"
 import { protectedFunctionMiddleware } from "@/core/middleware/auth"
 
@@ -12,7 +11,9 @@ export const getUserPreferences = createServerFn()
 	.handler(async (ctx) => {
 		const db = getDb()
 		let preferences = await db.query.user_preferences.findFirst({
-			where: eq(user_preferences.userId, ctx.context.userId),
+			where: {
+				userId: ctx.context.userId,
+			},
 		})
 		if (!preferences) {
 			const req = getRequest()
@@ -89,7 +90,9 @@ export const updateUserPreferences = createServerFn({ method: "POST" })
 
 		if (reportFieldsChanged) {
 			const current = await db.query.user_preferences.findFirst({
-				where: eq(user_preferences.userId, ctx.context.userId),
+				where: {
+					userId: ctx.context.userId,
+				},
 			})
 			const hasAnyReportEnabled =
 				current?.reportsDailyEnabled ||

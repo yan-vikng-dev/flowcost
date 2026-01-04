@@ -58,7 +58,9 @@ export const getConnectionState = createServerFn()
 			const partnerId =
 				conn.userIdLow === ctx.context.userId ? conn.userIdHigh : conn.userIdLow
 			const user = await db.query.auth_users.findFirst({
-				where: eq(auth_users.id, partnerId),
+				where: {
+					id: partnerId,
+				},
 			})
 			if (user) {
 				const image = user.image
@@ -120,7 +122,9 @@ export const getConnectionState = createServerFn()
 		const userMap = new Map<string, DisplayUser>()
 		for (const id of userIdsToFetch) {
 			const u = await db.query.auth_users.findFirst({
-				where: eq(auth_users.id, id),
+				where: {
+					id,
+				},
 			})
 			if (u)
 				userMap.set(id, {
@@ -210,7 +214,9 @@ export const cancelInvitation = createServerFn({ method: "POST" })
 		const id = ctx.data.id
 
 		const invite = await db.query.user_connection_invitations.findFirst({
-			where: eq(user_connection_invitations.id, id),
+			where: {
+				id,
+			},
 		})
 		if (!invite) throw new Error("Invitation not found")
 		if (invite.inviterUserId !== ctx.context.userId)
@@ -236,7 +242,9 @@ export const acceptInvitation = createServerFn({ method: "POST" })
 		const id = ctx.data.id
 
 		const invite = await db.query.user_connection_invitations.findFirst({
-			where: eq(user_connection_invitations.id, id),
+			where: {
+				id,
+			},
 		})
 		if (!invite) throw new Error("Invitation not found")
 		if (invite.status !== "pending")
@@ -282,7 +290,9 @@ export const declineInvitation = createServerFn({ method: "POST" })
 		const id = ctx.data.id
 
 		const invite = await db.query.user_connection_invitations.findFirst({
-			where: eq(user_connection_invitations.id, id),
+			where: {
+				id,
+			},
 		})
 		if (!invite) throw new Error("Invitation not found")
 

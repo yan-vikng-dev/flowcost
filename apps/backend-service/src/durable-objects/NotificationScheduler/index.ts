@@ -1,12 +1,7 @@
 import { DurableObject } from "cloudflare:workers"
 import { getDb, initDatabase } from "@repo/data-ops/database/setup"
 import { getAllowedUserIds } from "@repo/data-ops/drizzle/queries/helpers"
-import {
-	user_preferences,
-	whatsapp_links,
-} from "@repo/data-ops/drizzle/schemas/index"
 import type { Currency } from "@repo/shared-lib"
-import { eq } from "drizzle-orm"
 import { DateTime } from "luxon"
 import { sendWhatsAppText } from "@/lib/whatsapp/messages"
 import {
@@ -65,7 +60,9 @@ export class NotificationScheduler extends DurableObject {
 		const userId = this.userId
 
 		const prefs = await db.query.user_preferences.findFirst({
-			where: eq(user_preferences.userId, userId),
+			where: {
+				userId,
+			},
 		})
 
 		if (!prefs) {
@@ -74,7 +71,9 @@ export class NotificationScheduler extends DurableObject {
 		}
 
 		const whatsappLink = await db.query.whatsapp_links.findFirst({
-			where: eq(whatsapp_links.userId, userId),
+			where: {
+				userId,
+			},
 		})
 
 		if (!whatsappLink) {
@@ -187,7 +186,9 @@ export class NotificationScheduler extends DurableObject {
 		const userId = this.userId
 
 		const prefs = await db.query.user_preferences.findFirst({
-			where: eq(user_preferences.userId, userId),
+			where: {
+				userId,
+			},
 		})
 
 		if (!prefs) {

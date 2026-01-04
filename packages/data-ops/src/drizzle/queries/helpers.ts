@@ -1,8 +1,8 @@
-import type { Currency } from "@repo/shared-lib"
-import { getCurrentMonthRange as getCurrentMonthRangeUtil } from "@repo/shared-lib"
-import { eq } from "drizzle-orm"
+import {
+	type Currency,
+	getCurrentMonthRange as getCurrentMonthRangeUtil,
+} from "@repo/shared-lib"
 import type { DrizzleDb } from "../../database/setup"
-import { user_preferences } from "../schemas/index"
 import { getPartnerUserId } from "./connections"
 
 export async function getAllowedUserIds(
@@ -26,7 +26,9 @@ export async function getUserTimezoneAndCurrency(
 	userId: string,
 ): Promise<{ timezone: string; displayCurrency: Currency }> {
 	const prefs = await db.query.user_preferences.findFirst({
-		where: eq(user_preferences.userId, userId),
+		where: {
+			userId,
+		},
 	})
 	return {
 		timezone: prefs?.timezone || "UTC",

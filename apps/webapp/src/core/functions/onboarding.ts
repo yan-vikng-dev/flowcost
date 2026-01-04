@@ -1,13 +1,6 @@
 import { getDb } from "@repo/data-ops/database/setup"
-import {
-	budgets,
-	type EntryType,
-	entries,
-	recurring_entry_templates,
-	whatsapp_links,
-} from "@repo/data-ops/drizzle/schemas/index"
+import type { EntryType } from "@repo/data-ops/drizzle/schemas/index"
 import { createServerFn } from "@tanstack/react-start"
-import { and, eq, inArray } from "drizzle-orm"
 import { protectedFunctionMiddleware } from "@/core/middleware/auth"
 
 export type OnboardingStatus = {
@@ -24,10 +17,10 @@ const hasEntryForType = async (
 	entryType: EntryType,
 ) =>
 	await db.query.entries.findFirst({
-		where: and(
-			inArray(entries.userId, userIds),
-			eq(entries.entryType, entryType),
-		),
+		where: {
+			userId: { in: userIds },
+			entryType,
+		},
 		columns: {
 			id: true,
 		},
@@ -43,20 +36,24 @@ export const getOnboardingStatus = createServerFn()
 			await Promise.all([
 				hasEntryForType(db, allowedUserIds, "Expense"),
 				db.query.recurring_entry_templates.findFirst({
-					where: and(
-						inArray(recurring_entry_templates.userId, allowedUserIds),
-						eq(recurring_entry_templates.entryType, "Income"),
-					),
+					where: {
+						userId: { in: allowedUserIds },
+						entryType: "Income",
+					},
 					columns: {
 						id: true,
 					},
 				}),
 				db.query.budgets.findFirst({
-					where: inArray(budgets.userId, allowedUserIds),
+					where: {
+						userId: { in: allowedUserIds },
+					},
 					columns: { id: true },
 				}),
 				db.query.whatsapp_links.findFirst({
-					where: eq(whatsapp_links.userId, ctx.context.userId),
+					where: {
+						userId: ctx.context.userId,
+					},
 					columns: { userId: true },
 				}),
 			])

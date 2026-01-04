@@ -1,5 +1,4 @@
 import { categories, currencies } from "@repo/shared-lib"
-import { relations } from "drizzle-orm"
 import {
 	index,
 	integer,
@@ -52,14 +51,3 @@ export const entries = sqliteTable(
 		),
 	],
 )
-
-export const entriesRelations = relations(entries, ({ one }) => ({
-	user: one(auth_users, {
-		fields: [entries.userId],
-		references: [auth_users.id],
-	}),
-	recurringTemplate: one(recurring_entry_templates, {
-		fields: [entries.recurringTemplateId],
-		references: [recurring_entry_templates.id],
-	}),
-}))

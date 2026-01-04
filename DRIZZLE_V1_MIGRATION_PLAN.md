@@ -4,8 +4,9 @@ This document outlines the step-by-step migration plan from Drizzle ORM v0.44.7 
 
 ## Prerequisites
 
-- [ ] Review [Drizzle ORM v1 RC Release Notes](https://orm.drizzle.team/docs/latest-releases/drizzle-orm-v1beta2)
-- [ ] Review [Relational Queries v1 to v2 Migration Guide](https://orm.drizzle.team/docs/relations-v1-v2)
+- [x] Review [Drizzle ORM v1 Upgrade Guide](https://orm.drizzle.team/docs/upgrade-v1)
+- [x] Review [Relational Queries v1 to v2 Migration Guide](https://orm.drizzle.team/docs/relations-v1-v2)
+- [x] Review latest Drizzle ORM v1 beta release notes (all betas referenced by the upgrade guide)
 - [ ] Ensure you have a backup of your database
 - [ ] Ensure all current migrations are applied to your database
 
@@ -14,10 +15,11 @@ This document outlines the step-by-step migration plan from Drizzle ORM v0.44.7 
 ## Phase 1: Dependency Updates
 
 ### Step 1.1: Update Drizzle Packages
-- [ ] **File**: `packages/data-ops/package.json`
-  - [ ] Update `drizzle-orm` from `^0.44.7` to `@beta`
-  - [ ] Update `drizzle-kit` from `^0.31.6` to `@beta` (devDependency)
-  - [ ] Run `pnpm install` to install beta versions
+- [x] **File**: `packages/data-ops/package.json`
+  - [x] Update `drizzle-orm` from `^0.44.7` to a pinned v1 beta version
+  - [x] Update `drizzle-kit` from `^0.31.6` to a pinned v1 beta version (devDependency)
+  - [x] Run `pnpm install` to install beta versions
+  - [x] Pin `drizzle-orm` and `drizzle-kit` across `apps/webapp` and `apps/backend-service`
 
 **Expected changes:**
 ```json
@@ -36,14 +38,14 @@ This document outlines the step-by-step migration plan from Drizzle ORM v0.44.7 
 ## Phase 2: Migrations Folder Structure
 
 ### Step 2.1: Migrate Migrations Folder
-- [ ] **Action**: Run migration command
+- [x] **Action**: Run migration command
   ```bash
   cd packages/data-ops
   pnpm drizzle-kit up
   ```
-- [ ] **Verify**: Check that `journal.json` has been removed (if it existed)
-- [ ] **Verify**: Check that SQL files and snapshots are now grouped in separate folders
-- [ ] **Verify**: Git status shows expected changes to migrations folder
+- [x] **Verify**: Check that `journal.json` has been removed (if it existed)
+- [x] **Verify**: Check that SQL files and snapshots are now grouped in separate folders
+- [x] **Verify**: Git status shows expected changes to migrations folder
 
 **Expected outcome:**
 - Old migrations folder structure updated to v3 format
@@ -55,38 +57,38 @@ This document outlines the step-by-step migration plan from Drizzle ORM v0.44.7 
 ## Phase 3: Relations Schema Migration
 
 ### Step 3.1: Create Consolidated Relations File
-- [ ] **File**: `packages/data-ops/src/drizzle/relations.ts` (NEW FILE)
-  - [ ] Import `defineRelations` from `drizzle-orm/_relations`
-  - [ ] Import all schema tables
-  - [ ] Consolidate all relation definitions from individual schema files
-  - [ ] Use `defineRelations` with the new v2 API
+- [x] **File**: `packages/data-ops/src/drizzle/relations.ts` (NEW FILE)
+  - [x] Import `defineRelations` from `drizzle-orm`
+  - [x] Import all schema tables
+  - [x] Consolidate all relation definitions from individual schema files
+  - [x] Use `defineRelations` with the new v2 API (`r.one.<table>`/`r.many.<table>` with `from`/`to`)
 
 **Schema files with relations to consolidate:**
-- [ ] `packages/data-ops/src/drizzle/schemas/entries.ts` - `entriesRelations`
-- [ ] `packages/data-ops/src/drizzle/schemas/recurring_entry_templates.ts` - `recurringEntryTemplatesRelations`
-- [ ] `packages/data-ops/src/drizzle/schemas/user_connections.ts` - `userConnectionsRelations`
-- [ ] `packages/data-ops/src/drizzle/schemas/user_preferences.ts` - `userPreferencesRelations`
-- [ ] `packages/data-ops/src/drizzle/schemas/budgets.ts` - `budgetsRelations`
-- [ ] `packages/data-ops/src/drizzle/schemas/auth_accounts.ts` - `authAccountsRelations`
-- [ ] `packages/data-ops/src/drizzle/schemas/auth_sessions.ts` - `authSessionsRelations`
-- [ ] `packages/data-ops/src/drizzle/schemas/auth_users.ts` - `authUsersRelations`
-- [ ] `packages/data-ops/src/drizzle/schemas/user_connection_invitations.ts` - `userConnectionInvitationsRelations`
-- [ ] `packages/data-ops/src/drizzle/schemas/whatsapp_links.ts` - `whatsappLinksRelations`
+- [x] `packages/data-ops/src/drizzle/schemas/entries.ts` - `entriesRelations`
+- [x] `packages/data-ops/src/drizzle/schemas/recurring_entry_templates.ts` - `recurringEntryTemplatesRelations`
+- [x] `packages/data-ops/src/drizzle/schemas/user_connections.ts` - `userConnectionsRelations`
+- [x] `packages/data-ops/src/drizzle/schemas/user_preferences.ts` - `userPreferencesRelations`
+- [x] `packages/data-ops/src/drizzle/schemas/budgets.ts` - `budgetsRelations`
+- [x] `packages/data-ops/src/drizzle/schemas/auth_accounts.ts` - `authAccountsRelations`
+- [x] `packages/data-ops/src/drizzle/schemas/auth_sessions.ts` - `authSessionsRelations`
+- [x] `packages/data-ops/src/drizzle/schemas/auth_users.ts` - `authUsersRelations`
+- [x] `packages/data-ops/src/drizzle/schemas/user_connection_invitations.ts` - `userConnectionInvitationsRelations`
+- [x] `packages/data-ops/src/drizzle/schemas/whatsapp_links.ts` - `whatsappLinksRelations`
 
 **Example structure:**
 ```typescript
-import { defineRelations } from "drizzle-orm/_relations"
+import { defineRelations } from "drizzle-orm"
 import * as schema from "./schemas"
 
 export const relations = defineRelations(schema, (r) => ({
   entries: {
-    user: r.one(schema.auth_users, {
-      fields: [schema.entries.userId],
-      references: [schema.auth_users.id],
+    user: r.one.auth_users({
+      from: schema.entries.userId,
+      to: schema.auth_users.id,
     }),
-    recurringTemplate: r.one(schema.recurring_entry_templates, {
-      fields: [schema.entries.recurringTemplateId],
-      references: [schema.recurring_entry_templates.id],
+    recurringTemplate: r.one.recurring_entry_templates({
+      from: schema.entries.recurringTemplateId,
+      to: schema.recurring_entry_templates.id,
     }),
   },
   // ... all other relations
@@ -94,61 +96,61 @@ export const relations = defineRelations(schema, (r) => ({
 ```
 
 ### Step 3.2: Update Schema Files
-- [ ] **File**: `packages/data-ops/src/drizzle/schemas/entries.ts`
-  - [ ] Remove `entriesRelations` export
-  - [ ] Remove `relations` import from `drizzle-orm`
-  - [ ] Keep only table definition
+- [x] **File**: `packages/data-ops/src/drizzle/schemas/entries.ts`
+  - [x] Remove `entriesRelations` export
+  - [x] Remove `relations` import from `drizzle-orm`
+  - [x] Keep only table definition
 
-- [ ] **File**: `packages/data-ops/src/drizzle/schemas/recurring_entry_templates.ts`
-  - [ ] Remove `recurringEntryTemplatesRelations` export
-  - [ ] Remove `relations` import from `drizzle-orm`
+- [x] **File**: `packages/data-ops/src/drizzle/schemas/recurring_entry_templates.ts`
+  - [x] Remove `recurringEntryTemplatesRelations` export
+  - [x] Remove `relations` import from `drizzle-orm`
 
-- [ ] **File**: `packages/data-ops/src/drizzle/schemas/user_connections.ts`
-  - [ ] Remove `userConnectionsRelations` export
-  - [ ] Remove `relations` import from `drizzle-orm`
+- [x] **File**: `packages/data-ops/src/drizzle/schemas/user_connections.ts`
+  - [x] Remove `userConnectionsRelations` export
+  - [x] Remove `relations` import from `drizzle-orm`
 
-- [ ] **File**: `packages/data-ops/src/drizzle/schemas/user_preferences.ts`
-  - [ ] Remove `userPreferencesRelations` export
-  - [ ] Remove `relations` import from `drizzle-orm`
+- [x] **File**: `packages/data-ops/src/drizzle/schemas/user_preferences.ts`
+  - [x] Remove `userPreferencesRelations` export
+  - [x] Remove `relations` import from `drizzle-orm`
 
-- [ ] **File**: `packages/data-ops/src/drizzle/schemas/budgets.ts`
-  - [ ] Remove `budgetsRelations` export
-  - [ ] Remove `relations` import from `drizzle-orm`
+- [x] **File**: `packages/data-ops/src/drizzle/schemas/budgets.ts`
+  - [x] Remove `budgetsRelations` export
+  - [x] Remove `relations` import from `drizzle-orm`
 
-- [ ] **File**: `packages/data-ops/src/drizzle/schemas/auth_accounts.ts`
-  - [ ] Remove `authAccountsRelations` export
-  - [ ] Remove `relations` import from `drizzle-orm`
+- [x] **File**: `packages/data-ops/src/drizzle/schemas/auth_accounts.ts`
+  - [x] Remove `authAccountsRelations` export
+  - [x] Remove `relations` import from `drizzle-orm`
 
-- [ ] **File**: `packages/data-ops/src/drizzle/schemas/auth_sessions.ts`
-  - [ ] Remove `authSessionsRelations` export
-  - [ ] Remove `relations` import from `drizzle-orm`
+- [x] **File**: `packages/data-ops/src/drizzle/schemas/auth_sessions.ts`
+  - [x] Remove `authSessionsRelations` export
+  - [x] Remove `relations` import from `drizzle-orm`
 
-- [ ] **File**: `packages/data-ops/src/drizzle/schemas/auth_users.ts`
-  - [ ] Remove `authUsersRelations` export
-  - [ ] Remove `relations` import from `drizzle-orm`
+- [x] **File**: `packages/data-ops/src/drizzle/schemas/auth_users.ts`
+  - [x] Remove `authUsersRelations` export
+  - [x] Remove `relations` import from `drizzle-orm`
 
-- [ ] **File**: `packages/data-ops/src/drizzle/schemas/user_connection_invitations.ts`
-  - [ ] Remove `userConnectionInvitationsRelations` export
-  - [ ] Remove `relations` import from `drizzle-orm`
+- [x] **File**: `packages/data-ops/src/drizzle/schemas/user_connection_invitations.ts`
+  - [x] Remove `userConnectionInvitationsRelations` export
+  - [x] Remove `relations` import from `drizzle-orm`
 
-- [ ] **File**: `packages/data-ops/src/drizzle/schemas/whatsapp_links.ts`
-  - [ ] Remove `whatsappLinksRelations` export
-  - [ ] Remove `relations` import from `drizzle-orm`
+- [x] **File**: `packages/data-ops/src/drizzle/schemas/whatsapp_links.ts`
+  - [x] Remove `whatsappLinksRelations` export
+  - [x] Remove `relations` import from `drizzle-orm`
 
 ### Step 3.3: Update Schema Index
-- [ ] **File**: `packages/data-ops/src/drizzle/schemas/index.ts`
-  - [ ] Verify all table exports are still present
-  - [ ] Ensure no relation exports remain
+- [x] **File**: `packages/data-ops/src/drizzle/schemas/index.ts`
+  - [x] Verify all table exports are still present
+  - [x] Ensure no relation exports remain
 
 ---
 
 ## Phase 4: Database Setup Migration
 
 ### Step 4.1: Update Database Initialization
-- [ ] **File**: `packages/data-ops/src/database/setup.ts`
-  - [ ] Change import from `* as schema` to `{ relations }` from `@/drizzle/relations`
-  - [ ] Update `drizzle()` call to use `relations` instead of `schema`
-  - [ ] Update type definition if needed
+- [x] **File**: `packages/data-ops/src/database/setup.ts`
+  - [x] Change import from `* as schema` to `{ relations }` from `@/drizzle/relations`
+  - [x] Update `drizzle()` call to use `relations` instead of `schema`
+  - [x] Update `DrizzleD1Database` type args if required by v2 (relations typing)
 
 **Expected changes:**
 ```typescript
@@ -163,50 +165,48 @@ db = drizzle(d1Db, { casing: "snake_case", relations })
 
 ---
 
-## Phase 5: Query API Migration (Optional but Recommended)
+## Phase 5: Query API Migration (Required for v2)
 
 ### Step 5.1: Migrate `where` Clauses to Object Syntax
 
 #### File: `packages/data-ops/src/drizzle/queries/entries.ts`
-- [ ] **Line 187-192**: `getEntryForUser` function
-  - [ ] Convert `where: and(eq(...), inArray(...))` to object syntax
-  - [ ] Use `{ id: entryId, userId: { in: allowedUserIds } }`
+- [x] **Line 187-192**: `getEntryForUser` function
+  - [x] Convert `where: and(eq(...), inArray(...))` to object syntax
+  - [x] Use `{ id: entryId, userId: { in: allowedUserIds } }`
 
 #### File: `packages/data-ops/src/drizzle/queries/budgets.ts`
-- [ ] **Line 60-62**: `fetchBudgetsForUser` function
-  - [ ] Convert `where: inArray(...)` to `{ userId: { in: allowedUserIds } }`
-- [ ] **Line 78-83**: `fetchBudgetById` function
-  - [ ] Convert `where: and(eq(...), inArray(...))` to object syntax
-  - [ ] Use `{ id: budgetId, userId: { in: allowedUserIds } }`
+- [x] **Line 60-62**: `fetchBudgetsForUser` function
+  - [x] Convert `where: inArray(...)` to `{ userId: { in: allowedUserIds } }`
+- [x] **Line 78-83**: `fetchBudgetById` function
+  - [x] Convert `where: and(eq(...), inArray(...))` to object syntax
+  - [x] Use `{ id: budgetId, userId: { in: allowedUserIds } }`
 
 #### File: `packages/data-ops/src/drizzle/queries/recurring-entries.ts`
-- [ ] **Line 210-216**: `materializeTemplateEntries` function
-  - [ ] Convert `where: and(eq(...), inArray(...))` to object syntax
-  - [ ] Use `{ recurringTemplateId: template.id, executedDate: { in: dateBatch } }`
+- [x] **Line 210-216**: `materializeTemplateEntries` function
+  - [x] Convert `where: and(eq(...), inArray(...))` to object syntax
+  - [x] Use `{ recurringTemplateId: template.id, executedDate: { in: dateBatch } }`
 
 #### File: `packages/data-ops/src/drizzle/queries/exchange-rates.ts`
-- [ ] **Line 18-20**: `fetchExchangeRatesForDates` function
-  - [ ] Convert `where: inArray(...)` to `{ date: { in: dateBatch } }`
-- [ ] **Line 25-27**: `fetchExchangeRatesForDates` function
-  - [ ] Keep `orderBy` as-is (already using SQL builder, or convert to object)
-- [ ] **Line 43-45**: `getLatestExchangeRates` function
-  - [ ] Keep `orderBy` as-is (already using SQL builder, or convert to object)
+- [x] **Line 18-20**: `fetchExchangeRatesForDates` function
+  - [x] Convert `where: inArray(...)` to `{ date: { in: dateBatch } }`
+  - [x] **Line 25-27**: Convert `orderBy: desc(exchange_rates.date)` to `{ date: "desc" }`
+  - [x] **Line 43-45**: Convert `orderBy: desc(exchange_rates.date)` to `{ date: "desc" }`
 
 #### File: `packages/data-ops/src/drizzle/queries/connections.ts`
-- [ ] **Line 9-14**: `getPartnerUserId` function
-  - [ ] Convert `where: or(eq(...), eq(...))` to object syntax
-  - [ ] Use `{ OR: [{ userIdLow: userId }, { userIdHigh: userId }] }`
+- [x] **Line 9-14**: `getPartnerUserId` function
+  - [x] Convert `where: or(eq(...), eq(...))` to object syntax
+  - [x] Use `{ OR: [{ userIdLow: userId }, { userIdHigh: userId }] }`
 
 #### File: `packages/data-ops/src/drizzle/queries/helpers.ts`
-- [ ] **Line 28-30**: `getUserTimezoneAndCurrency` function
-  - [ ] Convert `where: eq(...)` to `{ userId: userId }`
+- [x] **Line 28-30**: `getUserTimezoneAndCurrency` function
+  - [x] Convert `where: eq(...)` to `{ userId: userId }`
 
 ### Step 5.2: Migrate `orderBy` Clauses to Object Syntax
 
 #### Files to check for `orderBy`:
-- [ ] **File**: `packages/data-ops/src/drizzle/queries/exchange-rates.ts`
-  - [ ] **Line 25-27**: Convert `orderBy: desc(exchange_rates.date)` to `{ date: "desc" }`
-  - [ ] **Line 43-45**: Convert `orderBy: desc(exchange_rates.date)` to `{ date: "desc" }`
+- [x] **File**: `packages/data-ops/src/drizzle/queries/exchange-rates.ts`
+  - [x] **Line 25-27**: Convert `orderBy: desc(exchange_rates.date)` to `{ date: "desc" }`
+  - [x] **Line 43-45**: Convert `orderBy: desc(exchange_rates.date)` to `{ date: "desc" }`
 
 #### Note: Files using SQL builder `orderBy` (not relational queries)
 These files use `db.select().from().orderBy()` which is the SQL builder API, not relational queries, so they don't need changes:
@@ -218,14 +218,14 @@ These files use `db.select().from().orderBy()` which is the SQL builder API, not
 ## Phase 6: Testing & Verification
 
 ### Step 6.1: Type Checking
-- [ ] Run `pnpm fix` from repo root
-- [ ] Verify no TypeScript errors
-- [ ] Fix any type errors that appear
+- [x] Run `pnpm fix` from repo root
+- [x] Verify no TypeScript errors
+- [x] Fix any type errors that appear
 
 ### Step 6.2: Build Verification
-- [ ] Run `pnpm build` from repo root
-- [ ] Verify all packages build successfully
-- [ ] Check for any runtime import errors
+- [x] Run `pnpm build` from repo root
+- [x] Verify all packages build successfully
+- [x] Check for any runtime import errors
 
 ### Step 6.3: Database Operations Testing
 - [ ] Test basic queries (findMany, findFirst)
@@ -296,15 +296,13 @@ If issues arise during migration:
 
 ## Notes
 
-- The v1 API (`db._query.*`) remains available for backward compatibility
-- You can migrate queries incrementally - not all need to be migrated at once
-- The object syntax for `where` and `orderBy` is optional but recommended for better TypeScript support
-- Complex queries with RAW SQL can still use the `RAW` operator in v2
+- This plan assumes **v2 relational queries**. You must migrate all `db.query.*` usages to v2 object syntax for `where` and `orderBy`.
+- Complex queries with RAW SQL can still use the `RAW` operator in v2.
 
 ---
 
 ## Resources
 
-- [Drizzle ORM v1 RC Release Notes](https://orm.drizzle.team/docs/latest-releases/drizzle-orm-v1beta2)
+- [Drizzle ORM v1 Upgrade Guide](https://orm.drizzle.team/docs/upgrade-v1)
 - [Relational Queries v1 to v2 Migration Guide](https://orm.drizzle.team/docs/relations-v1-v2)
 - [Drizzle ORM v1 Roadmap](https://orm.drizzle.team/roadmap)

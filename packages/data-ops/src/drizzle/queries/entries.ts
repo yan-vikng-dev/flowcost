@@ -1,6 +1,8 @@
-import type { Currency } from "@repo/shared-lib"
-import { toIsoDateInTimezone } from "@repo/shared-lib"
-import { convertCurrency } from "@repo/shared-lib/currency"
+import {
+	type Currency,
+	convertCurrency,
+	toIsoDateInTimezone,
+} from "@repo/shared-lib"
 import { and, asc, desc, eq, gte, inArray, lt } from "drizzle-orm"
 import type { DrizzleDb } from "../../database/setup"
 import { type EntryType, entries, type SelectEntry } from "../schemas/index"
@@ -185,9 +187,9 @@ export async function getEntryForUser(
 		partnerId,
 	)
 	return db.query.entries.findFirst({
-		where: and(
-			eq(entries.id, entryId),
-			inArray(entries.userId, allowedUserIds),
-		),
+		where: {
+			id: entryId,
+			userId: { in: allowedUserIds },
+		},
 	})
 }
