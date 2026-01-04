@@ -1,12 +1,12 @@
 import { DurableObject } from "cloudflare:workers"
-import { createGoogleGenerativeAI } from "@ai-sdk/google"
+import { createGoogleGenerativeAI, GoogleGenerativeAIProviderOptions } from "@ai-sdk/google"
 import { withTracing } from "@posthog/ai"
 import { getDb, initDatabase } from "@repo/data-ops/database/setup"
 import type { SelectUserPreferences } from "@repo/data-ops/drizzle/schemas/index"
 import {
 	type ModelMessage,
+	pruneMessages,
 	stepCountIs,
-	type TextPart,
 	ToolLoopAgent,
 } from "ai"
 import { PostHog } from "posthog-node"
@@ -56,10 +56,6 @@ export class AiConversationServer extends DurableObject {
 	}
 
 	async handleMessage(message: UserContent, messageContext: MessageContext) {
-		console.debug("handleMessage called", {
-			userMessage: message,
-			messageContext,
-		})
 		const { messageId } = messageContext
 		if (
 			this.seenMessageIds.has(messageId) ||
@@ -85,7 +81,7 @@ export class AiConversationServer extends DurableObject {
 		messageContext: MessageContext,
 	) {
 		try {
-			const baseModel = this.googleProvider("gemini-2.5-flash")
+			const baseModel = this.googleProvider("gemini-3-flash-preview")
 			if (!this.posthogClient) throw new Error("Posthog client not initialized")
 			if (!this.traceId) throw new Error("Trace ID not initialized")
 			this.posthogClient.identify({ distinctId: messageContext.userId })
@@ -102,8 +98,17 @@ export class AiConversationServer extends DurableObject {
 				tools: createTools(messageContext, db),
 				instructions: buildSystemPrompt(messageContext),
 				stopWhen: stepCountIs(10),
+				providerOptions: {
+					google:{
+						thinkingConfig: {
+							thinkingLevel: 'medium',
+							includeThoughts: false
+						}
+					} satisfies GoogleGenerativeAIProviderOptions
+				},
 				prepareStep: ({ messages }) => {
-					if (messages.length <= maxPromptMessages) return {}
+					if (messages.length <= maxPromptMessages)
+						return { messages: messages }
 					return {
 						messages: messages.slice(-trimmedPromptMessages),
 					}
@@ -111,18 +116,14 @@ export class AiConversationServer extends DurableObject {
 			})
 			const messages = this.turns
 			const result = await agent.generate({ messages })
-			console.dir(
-				{
-					logMessage: "Generated text, logging result",
-					result,
-					messageContext,
-				},
-				{ depth: null },
-			)
 
-			this.turns.push(...result.response.messages)
+			const prunedMessages = pruneMessages({
+				messages: result.response.messages,
+				toolCalls: "all",
+				emptyMessages: "remove",
+			})
+			this.turns.push(...prunedMessages)
 			await this.ctx.storage.put("conversationHistory", this.turns)
-
 
 			if (result.finishReason === "error" || !result.text) {
 				throw new Error(

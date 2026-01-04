@@ -104,29 +104,16 @@ export const makeUpdateEntryTool = (context: MessageContext, db: DrizzleDb) =>
 				throw new Error("No fields provided to update")
 			}
 
-			const [updated] = await db
+			const [updatedEntry] = await db
 				.update(entries)
 				.set(patch)
 				.where(eq(entries.id, input.id))
 				.returning()
 
-			if (!updated) {
+			if (!updatedEntry) {
 				throw new Error("Failed to update entry")
 			}
 
-			const executedAt = DateTime.fromISO(updated.executedDate, {
-				zone: context.timezone,
-			})
-				.toJSDate()
-				.toISOString()
-
-			const safe = {
-				...updated,
-				executedAt,
-				createdAt: updated.createdAt.toISOString(),
-				updatedAt: updated.updatedAt.toISOString(),
-			}
-
-			return { result: safe }
+			return { result: updatedEntry }
 		},
 	})

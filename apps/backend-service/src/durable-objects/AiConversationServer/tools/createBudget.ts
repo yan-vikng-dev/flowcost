@@ -1,7 +1,6 @@
 import type { DrizzleDb } from "@repo/data-ops/database/setup"
 import {
 	budgets,
-	type SelectBudget,
 } from "@repo/data-ops/drizzle/schemas/index"
 import { type Currency, categories, currencies } from "@repo/shared-lib"
 import { tool } from "ai"
@@ -19,14 +18,6 @@ const createBudgetSchema = z.object({
 		.min(1)
 		.describe("Categories included in this budget"),
 })
-
-function serializeBudget(budget: SelectBudget) {
-	return {
-		...budget,
-		createdAt: budget.createdAt.toISOString(),
-		updatedAt: budget.updatedAt.toISOString(),
-	}
-}
 
 export const makeCreateBudgetTool = (context: MessageContext, db: DrizzleDb) =>
 	tool({
@@ -52,6 +43,6 @@ export const makeCreateBudgetTool = (context: MessageContext, db: DrizzleDb) =>
 
 			if (!inserted) throw new Error("Failed to create budget")
 
-			return { result: serializeBudget(inserted) }
+			return { result: inserted }
 		},
 	})

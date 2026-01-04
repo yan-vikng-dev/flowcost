@@ -29,14 +29,6 @@ const updateBudgetSchema = z.object({
 		.describe("Categories included in this budget"),
 })
 
-function serializeBudget(budget: SelectBudget) {
-	return {
-		...budget,
-		createdAt: budget.createdAt.toISOString(),
-		updatedAt: budget.updatedAt.toISOString(),
-	}
-}
-
 export const makeUpdateBudgetTool = (context: MessageContext, db: DrizzleDb) =>
 	tool({
 		description:
@@ -71,14 +63,14 @@ export const makeUpdateBudgetTool = (context: MessageContext, db: DrizzleDb) =>
 				throw new Error("No fields provided to update")
 			}
 
-			const [updated] = await db
+			const [updatedBudget] = await db
 				.update(budgets)
 				.set(patch)
 				.where(eq(budgets.id, input.id))
 				.returning()
 
-			if (!updated) throw new Error("Failed to update budget")
+			if (!updatedBudget) throw new Error("Failed to update budget")
 
-			return { result: serializeBudget(updated) }
+			return { result: updatedBudget }
 		},
 	})

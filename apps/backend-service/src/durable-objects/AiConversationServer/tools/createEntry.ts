@@ -76,14 +76,8 @@ export const makeCreateEntryTool = (context: MessageContext, db: DrizzleDb) =>
 				context.displayCurrency,
 				rateMap,
 			)
-			const executedAt = isoDateToUtcMidnight(
-				inserted.executedDate,
-			).toISOString()
 			const safe = {
 				...inserted,
-				executedAt,
-				createdAt: inserted.createdAt.toISOString(),
-				updatedAt: inserted.updatedAt.toISOString(),
 				convertedAmount,
 			}
 			return { result: safe, targetCurrency: context.displayCurrency }

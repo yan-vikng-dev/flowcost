@@ -22,7 +22,7 @@ export const makeDeleteBudgetTool = (context: MessageContext, db: DrizzleDb) =>
 			const existing = await fetchBudgetById(db, input.id, context.userId, true)
 
 			if (!existing) {
-				throw new Error("Budget not found or not authorized")
+				throw new Error("Budget not found")
 			}
 
 			await db.delete(budgets).where(eq(budgets.id, input.id))

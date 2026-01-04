@@ -65,10 +65,6 @@ whatsappRouter.post("/whatsapp/webhook", async (c) => {
 		}
 		return c.text("OK")
 	}
-	console.debug({
-		message: "whatsapp webhook raw json",
-		json,
-	})
 	c.executionCtx.waitUntil(
 		handleIncomingMessage(c.env, {
 			waId,
