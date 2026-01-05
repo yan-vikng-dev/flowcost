@@ -1,8 +1,6 @@
 import { defineConfig } from "drizzle-kit"
 
-try {
-	process.loadEnvFile(".env.local")
-} catch {}
+process.loadEnvFile(".env.local")
 
 export default defineConfig({
 	schema: "./src/drizzle/schemas/*.ts",
