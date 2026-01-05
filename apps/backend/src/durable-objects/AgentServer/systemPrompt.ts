@@ -32,13 +32,13 @@ export const buildSystemPrompt = (context: MessageContext): string => {
 	].join("\n")
 
 	const contextBlock = [
-		`<context>`,
+		`<user_context>`,
 		`Local date: ${localDate}`,
 		`Timezone: ${context.timezone}`,
 		`Display currency: ${context.displayCurrency}`,
 		`Default for new entries: ${context.defaultEntryCurrency}`,
 		`Reports: ${reports}`,
-		`</context>`,
+		`</user_context>`,
 	].join("\n")
 
 	return `${basePrompt}\n\n${contextBlock}`
