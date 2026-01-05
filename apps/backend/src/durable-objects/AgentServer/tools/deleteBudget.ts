@@ -16,7 +16,7 @@ const deleteBudgetSchema = z.object({
 
 export const makeDeleteBudgetTool = (context: MessageContext, db: DrizzleDb) =>
 	tool({
-		description: "Delete a budget.",
+		description: "Delete a budget. Use get_budgets to find the budget ID.",
 		inputSchema: deleteBudgetSchema,
 		execute: async (input) => {
 			const existing = await fetchBudgetById(db, input.id, context.userId, true)

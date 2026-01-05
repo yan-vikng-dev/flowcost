@@ -17,7 +17,7 @@ const updateEntrySchema = z.object({
 	id: z
 		.uuid()
 		.describe(
-			"The ID of the entry to update. This ID comes from the 'id' field in entries retrieved via get_entries. When a user corrects an entry, match their description to a previously retrieved entry and use that entry's ID.",
+			"The ID of the entry to update. This ID comes from the 'id' field in entries retrieved via get_entries. When a user corrects an entry, retrieve entries for the relevant date, match by description, amount, category, or date, and use that entry's ID. Never ask the user for entry IDs.",
 		),
 	entryType: z
 		.enum(["Expense", "Income"])
@@ -50,7 +50,7 @@ const updateEntrySchema = z.object({
 export const makeUpdateEntryTool = (context: MessageContext, db: DrizzleDb) =>
 	tool({
 		description:
-			"Update an existing financial entry. Only provide fields that should be changed. Omitted fields will remain unchanged. When a user corrects an entry (e.g., 'the breakfast was 360k, not 360'), retrieve entries for the relevant date using get_entries, match the user's description to the correct entry, and use that entry's ID to update it. Never ask the user for entry IDs.",
+			"Update an existing financial entry. Only provide fields that should be changed; omitted fields remain unchanged.",
 		inputSchema: updateEntrySchema,
 		execute: async (input) => {
 			const entry = await getEntryForUser(db, input.id, context.userId)

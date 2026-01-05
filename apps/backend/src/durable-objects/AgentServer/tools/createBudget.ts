@@ -10,7 +10,9 @@ const createBudgetSchema = z.object({
 	currency: z
 		.enum(currencies)
 		.optional()
-		.describe("Currency code for the budget, e.g. USD, EUR"),
+		.describe(
+			"Currency code for the budget, e.g. USD, EUR. Optional; defaults to the user's preferred entry currency when omitted.",
+		),
 	categories: z
 		.array(z.enum(categories))
 		.min(1)

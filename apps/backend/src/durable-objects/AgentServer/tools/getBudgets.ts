@@ -17,7 +17,7 @@ const getBudgetsSchema = z.object({})
 export const makeGetBudgetsTool = (context: MessageContext, db: DrizzleDb) =>
 	tool({
 		description:
-			"Get budgets with current-month progress and the free budget calculation.",
+			"Get budgets with current-month progress and the free budget calculation. Use create_budget, update_budget, or delete_budget to modify budgets.",
 		inputSchema: getBudgetsSchema,
 		execute: async () => {
 			const timezone = context.timezone

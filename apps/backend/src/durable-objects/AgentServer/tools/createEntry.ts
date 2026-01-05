@@ -16,19 +16,21 @@ import type { MessageContext } from ".."
 const createEntrySchema = z.object({
 	entryType: z
 		.enum(["Expense", "Income"])
-		.describe("Whether the entry is an expense or income"),
+		.describe(
+			"Whether the entry is an expense or income. Infer from context; prefer Expense unless income is clearly indicated (salary, bonus, dividend, refund).",
+		),
 	amount: z.number().gt(0).describe("The absolute amount of the entry"),
 	currency: z
 		.string()
 		.regex(/^[A-Z]{3}$/)
 		.optional()
 		.describe(
-			"The currency code of the entry, e.g. USD, EUR, etc. Optional; backend resolves to the user's preference for new entries if omitted",
+			"The currency code of the entry, e.g. USD, EUR, etc. Optional; if omitted, the backend resolves to the user's preferred entry currency.",
 		),
 	category: z
 		.enum(categories)
 		.describe(
-			"Category of the entry from a pre-defined list. Pick the one that makes the most sense for the user's message.",
+			"Category of the entry from a pre-defined list. Infer from the user's message; ask for clarification only when truly ambiguous.",
 		),
 	description: z.string().describe("Short note describing the entry"),
 	executionDate: z
@@ -39,7 +41,8 @@ const createEntrySchema = z.object({
 
 export const makeCreateEntryTool = (context: MessageContext, db: DrizzleDb) =>
 	tool({
-		description: "Create a financial entry",
+		description:
+			"Create a financial entry. The response includes the created entry plus a converted amount in the user's display currency; report both values back to the user.",
 		inputSchema: createEntrySchema,
 		execute: async (input) => {
 			const executionDate = input.executionDate ?? DateTime.now().toISODate()

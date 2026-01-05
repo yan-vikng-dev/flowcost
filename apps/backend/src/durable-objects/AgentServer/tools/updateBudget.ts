@@ -28,7 +28,7 @@ const updateBudgetSchema = z.object({
 export const makeUpdateBudgetTool = (context: MessageContext, db: DrizzleDb) =>
 	tool({
 		description:
-			"Update an existing budget. Only provide fields that should be changed.",
+			"Update an existing budget. Only provide fields that should be changed; omitted fields remain unchanged. Use get_budgets to find the budget ID.",
 		inputSchema: updateBudgetSchema,
 		execute: async (input) => {
 			const existing = await fetchBudgetById(db, input.id, context.userId, true)
