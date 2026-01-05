@@ -11,7 +11,7 @@
 		"cf:types": "wrangler types --env-interface BaseEnv"
 	},
 	"devDependencies": {
-		"@cloudflare/vitest-pool-workers": "^0.10.5",
+		"@cloudflare/vitest-pool-workers": "^0.11.1",
 		"@types/node": "^24.10.0",
 		"typescript": "^5.9.3",
 		"vitest": "~4.0.8",
