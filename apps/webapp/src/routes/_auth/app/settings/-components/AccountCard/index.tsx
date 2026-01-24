@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { useRouter } from "@tanstack/react-router"
 import { LogOutIcon, MailPlusIcon, Trash2Icon, XIcon } from "lucide-react"
 import * as React from "react"
 import {
@@ -29,6 +30,7 @@ export function AccountCard() {
 	const stateQuery = useConnectionState()
 	const [inviteOpen, setInviteOpen] = React.useState(false)
 	const [logoutOpen, setLogoutOpen] = React.useState(false)
+	const router = useRouter()
 
 	const cancelMutation = useMutation({
 		mutationFn: (id: string) => cancelInvitation({ data: { id } }),
@@ -181,8 +183,11 @@ export function AccountCard() {
 						</AlertDialogCancel>
 						<AlertDialogAction
 							onClick={() => {
-								void authClient.signOut()
 								setLogoutOpen(false)
+								void (async () => {
+									await authClient.signOut()
+									await router.invalidate()
+								})()
 							}}
 						>
 							Log out

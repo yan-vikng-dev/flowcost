@@ -1,5 +1,12 @@
-import { createFileRoute, Outlet, redirect } from "@tanstack/react-router"
+import {
+	createFileRoute,
+	Outlet,
+	redirect,
+	useRouter,
+} from "@tanstack/react-router"
+import * as React from "react"
 import { FloatingWaves } from "@/components/bg/floating-waves"
+import { authClient } from "@/lib/auth-client"
 import { checkAuthSession } from "@/server/check-auth-session"
 import { DesktopAppNav } from "./-components/desktop-nav"
 import { MobileAppNav } from "./-components/mobile-nav"
@@ -16,6 +23,15 @@ export const Route = createFileRoute("/_auth")({
 })
 
 function RouteComponent() {
+	const { data: session } = authClient.useSession()
+	const router = useRouter()
+
+	React.useEffect(() => {
+		if (session === null) {
+			void router.navigate({ to: "/" })
+		}
+	}, [router, session])
+
 	return (
 		<div>
 			<FloatingWaves

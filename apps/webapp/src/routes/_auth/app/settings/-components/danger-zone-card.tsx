@@ -1,4 +1,5 @@
 import { useMutation } from "@tanstack/react-query"
+import { useRouter } from "@tanstack/react-router"
 import { Trash2Icon } from "lucide-react"
 import * as React from "react"
 import { toast } from "sonner"
@@ -25,6 +26,7 @@ import { authClient } from "@/lib/auth-client"
 
 export function DangerZoneCard() {
 	const [open, setOpen] = React.useState(false)
+	const router = useRouter()
 	const deleteMutation = useMutation({
 		mutationFn: () => deleteCurrentUser(),
 	})
@@ -84,7 +86,7 @@ export function DangerZoneCard() {
 										toast.success("Account deleted")
 										setOpen(false)
 										await authClient.signOut()
-										window.location.assign("/")
+										await router.navigate({ to: "/" })
 									} catch {
 										toast.error("Failed to delete account")
 									}
