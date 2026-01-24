@@ -1,6 +1,5 @@
 import { createFileRoute, Outlet, redirect } from "@tanstack/react-router"
 import { FloatingWaves } from "@/components/bg/floating-waves"
-import { OnboardingTourProvider } from "@/onboarding/provider"
 import { checkAuthSession } from "@/server/check-auth-session"
 import { DesktopAppNav } from "./-components/desktop-nav"
 import { MobileAppNav } from "./-components/mobile-nav"
@@ -29,17 +28,15 @@ function RouteComponent() {
 				waveSpeedX={0.0015}
 				waveSpeedY={0.0015}
 			/>
-			<OnboardingTourProvider>
-				<div className="hidden md:block">
-					<DesktopAppNav />
-				</div>
-				<main className="z-10 mt-0 mb-16 px-4 py-6 md:mt-16 md:mb-0">
-					<Outlet />
-				</main>
-				<div className="block md:hidden">
-					<MobileAppNav />
-				</div>
-			</OnboardingTourProvider>
+			<div className="hidden md:block">
+				<DesktopAppNav />
+			</div>
+			<main className="z-10 mt-0 mb-16 px-4 py-6 md:mt-16 md:mb-0">
+				<Outlet />
+			</main>
+			<div className="block md:hidden">
+				<MobileAppNav />
+			</div>
 		</div>
 	)
 }

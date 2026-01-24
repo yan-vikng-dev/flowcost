@@ -47,14 +47,14 @@ export function DesktopAppNav() {
 				/>
 			</Link>
 			<div className="flex items-center gap-2">
-				<Button asChild data-onboarding="nav-dashboard" variant="outline">
+				<Button asChild variant="outline">
 					<Link to="/app">Dashboard</Link>
 				</Button>
 				<Button asChild variant="outline">
 					<Link to="/app/advanced">Advanced</Link>
 				</Button>
 				<div className="relative">
-					<Button asChild data-onboarding="nav-settings" variant="outline">
+					<Button asChild variant="outline">
 						<Link to="/app/settings">Settings</Link>
 					</Button>
 					{hasIncoming && (

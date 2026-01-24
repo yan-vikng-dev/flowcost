@@ -207,7 +207,6 @@ function BudgetsHeaderActions({
 			)}
 			<Button
 				aria-label="New Budget"
-				data-onboarding="add-budget"
 				onClick={() => setCreateOpen(true)}
 				size="icon"
 				variant="default"
@@ -374,7 +373,6 @@ export function BudgetsCard() {
 		onSuccess: async () => {
 			await Promise.all([
 				queryClient.invalidateQueries({ queryKey: ["budgets"] }),
-				queryClient.invalidateQueries({ queryKey: ["onboardingStatus"] }),
 			])
 		},
 	})
@@ -390,7 +388,6 @@ export function BudgetsCard() {
 		onSuccess: async () => {
 			await Promise.all([
 				queryClient.invalidateQueries({ queryKey: ["budgets"] }),
-				queryClient.invalidateQueries({ queryKey: ["onboardingStatus"] }),
 			])
 		},
 	})

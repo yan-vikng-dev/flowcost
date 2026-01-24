@@ -46,7 +46,6 @@ export function useEntryMutations() {
 		onSuccess: async () => {
 			await Promise.all([
 				queryClient.invalidateQueries({ queryKey: ["entries"] }),
-				queryClient.invalidateQueries({ queryKey: ["onboardingStatus"] }),
 			])
 		},
 	})
@@ -58,7 +57,6 @@ export function useEntryMutations() {
 			await Promise.all([
 				queryClient.invalidateQueries({ queryKey: ["entries"] }),
 				queryClient.invalidateQueries({ queryKey: ["recurringTemplates"] }),
-				queryClient.invalidateQueries({ queryKey: ["onboardingStatus"] }),
 			])
 		},
 	})

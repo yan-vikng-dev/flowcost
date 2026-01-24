@@ -35,7 +35,6 @@ export function AddEntryButton() {
 		<>
 			<Button
 				className="w-full justify-center"
-				data-onboarding="add-expense"
 				onClick={() => setOpen(true)}
 				size="lg"
 				variant="default"

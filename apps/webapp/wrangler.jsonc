@@ -14,8 +14,7 @@
 		"BACKEND_URL": "https://backend.flowcost.co",
 		"POSTHOG_HOST": "https://eu.i.posthog.com",
 		"VITE_GTAG_ID": "AW-17572813812",
-		"VITE_POSTHOG_KEY": "phc_h0VnQKH9G4gf7a1qTVSriK4zcQHp9BXmYQElEz6cYD4",
-		"VITE_ONBOARDING_ENABLED": "false"
+		"VITE_POSTHOG_KEY": "phc_h0VnQKH9G4gf7a1qTVSriK4zcQHp9BXmYQElEz6cYD4"
 	},
 	"routes": [
 		{

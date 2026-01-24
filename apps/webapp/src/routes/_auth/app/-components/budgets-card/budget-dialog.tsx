@@ -60,10 +60,7 @@ export function BudgetDialog({
 				</DialogHeader>
 				<div className="space-y-4">
 					<div className="flex gap-4">
-						<Field
-							className="w-auto flex-none shrink-0"
-							data-onboarding="budget-currency"
-						>
+						<Field className="w-auto flex-none shrink-0">
 							<FieldLabel htmlFor={currencyId}>Currency</FieldLabel>
 							<CurrencyCombobox
 								id={currencyId}
@@ -73,7 +70,7 @@ export function BudgetDialog({
 								value={state.currency}
 							/>
 						</Field>
-						<Field className="min-w-0 flex-1" data-onboarding="budget-amount">
+						<Field className="min-w-0 flex-1">
 							<FieldLabel htmlFor={amountId}>Monthly amount</FieldLabel>
 							<Input
 								id={amountId}
@@ -93,7 +90,7 @@ export function BudgetDialog({
 						</Field>
 					</div>
 
-					<Field data-onboarding="budget-categories">
+					<Field>
 						<FieldLabel htmlFor={categoriesId}>Categories</FieldLabel>
 						<CategoryMultiCombobox
 							disabledValues={disabledValues}
@@ -114,7 +111,6 @@ export function BudgetDialog({
 						Cancel
 					</Button>
 					<Button
-						data-onboarding="budget-create-button"
 						disabled={!valid}
 						onClick={() =>
 							valid &&
