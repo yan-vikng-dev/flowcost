@@ -13,6 +13,7 @@ export function FloatingWaves({
 	backgroundColor = "transparent",
 	lineColor = "rgba(255, 255, 255, 0.3)",
 	disableInteraction = false,
+	isPaused = false,
 	style = {},
 	className = "",
 }) {
@@ -49,6 +50,10 @@ export function FloatingWaves({
 		set: false,
 	})
 	const animationFrameRef = useRef<number | null>(null) // Store requestAnimationFrame ID
+	const lastTimeRef = useRef<number | null>(null)
+	const elapsedRef = useRef(0)
+	const isPausedRef = useRef(isPaused)
+	const tickRef = useRef<(time: number) => void>(() => {})
 
 	useEffect(() => {
 		const canvas = canvasRef.current
@@ -197,6 +202,18 @@ export function FloatingWaves({
 		}
 
 		function tick(t: number) {
+			if (isPausedRef.current) {
+				animationFrameRef.current = null
+				lastTimeRef.current = null
+				return
+			}
+			if (lastTimeRef.current === null) {
+				lastTimeRef.current = t
+			}
+			const delta = t - lastTimeRef.current
+			lastTimeRef.current = t
+			elapsedRef.current += delta
+
 			const mouse = mouseRef.current
 
 			mouse.sx += (mouse.x - mouse.sx) * 0.1
@@ -212,7 +229,7 @@ export function FloatingWaves({
 			mouse.sy = mouse.y
 			mouse.a = Math.atan2(dy, dx)
 
-			movePoints(t)
+			movePoints(elapsedRef.current)
 			drawLines()
 			animationFrameRef.current = requestAnimationFrame(tick)
 		}
@@ -252,7 +269,12 @@ export function FloatingWaves({
 
 		setSize()
 		setLines()
-		animationFrameRef.current = requestAnimationFrame(tick)
+		movePoints(elapsedRef.current)
+		drawLines()
+		tickRef.current = tick
+		if (!isPausedRef.current) {
+			animationFrameRef.current = requestAnimationFrame(tick)
+		}
 		window.addEventListener("resize", onResize)
 		window.addEventListener("mousemove", onMouseMove)
 		window.addEventListener("touchmove", onTouchMove)
@@ -280,6 +302,21 @@ export function FloatingWaves({
 		lineColor,
 		disableInteraction,
 	])
+
+	useEffect(() => {
+		isPausedRef.current = isPaused
+		if (isPaused) {
+			if (animationFrameRef.current) {
+				cancelAnimationFrame(animationFrameRef.current)
+				animationFrameRef.current = null
+			}
+			lastTimeRef.current = null
+			return
+		}
+		if (!animationFrameRef.current) {
+			animationFrameRef.current = requestAnimationFrame(tickRef.current)
+		}
+	}, [isPaused])
 
 	return (
 		<div

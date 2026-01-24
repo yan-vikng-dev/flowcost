@@ -11,7 +11,7 @@
 		"crons": ["0 0 * * *"]
 	},
 	"placement": {
-		"mode": "smart",
+		"mode": "smart"
 	},
 	"vars": {
 		"POSTHOG_HOST": "https://eu.i.posthog.com",

@@ -9,7 +9,7 @@
 		"head_sampling_rate": 1
 	},
 	"placement": {
-		"mode": "smart",
+		"mode": "smart"
 	},
 	"vars": {
 		"GOOGLE_CLIENT_ID": "929719393907-apf36l038e899nof9ncpj21vlk92s9ed.apps.googleusercontent.com",

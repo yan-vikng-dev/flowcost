@@ -8,3 +8,8 @@
 - PostHog is used for client-side analytics (pageviews + user identify) via a `/config/*` reverse proxy.
 - Analytics are disabled outside production builds.
 - Env vars: `VITE_POSTHOG_KEY`, `VITE_POSTHOG_HOST`.
+
+## Public pages
+- Landing page: `/`
+- Docs page: `/docs`
+- Pricing page: `/pricing`

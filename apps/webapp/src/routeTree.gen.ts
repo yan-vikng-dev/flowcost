@@ -9,15 +9,34 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as PricingRouteImport } from './routes/pricing'
+import { Route as DocsRouteImport } from './routes/docs'
 import { Route as AuthRouteRouteImport } from './routes/_auth/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as DocsIndexRouteImport } from './routes/docs/index'
+import { Route as DocsGettingStartedRouteImport } from './routes/docs/getting-started'
 import { Route as AuthAppIndexRouteImport } from './routes/_auth/app/index'
+import { Route as DocsFeaturesReportsRouteImport } from './routes/docs/features/reports'
+import { Route as DocsFeaturesEntriesRouteImport } from './routes/docs/features/entries'
+import { Route as DocsFeaturesConnectionsRouteImport } from './routes/docs/features/connections'
+import { Route as DocsFeaturesBudgetsRouteImport } from './routes/docs/features/budgets'
+import { Route as DocsFeaturesAssistantRouteImport } from './routes/docs/features/assistant'
 import { Route as ApiDataSplatRouteImport } from './routes/api/data/$'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as AuthAppSettingsIndexRouteImport } from './routes/_auth/app/settings/index'
 import { Route as AuthAppAdvancedIndexRouteImport } from './routes/_auth/app/advanced/index'
 import { Route as ApiDataStaticSplatRouteImport } from './routes/api/data/static/$'
 
+const PricingRoute = PricingRouteImport.update({
+  id: '/pricing',
+  path: '/pricing',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DocsRoute = DocsRouteImport.update({
+  id: '/docs',
+  path: '/docs',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthRouteRoute = AuthRouteRouteImport.update({
   id: '/_auth',
   getParentRoute: () => rootRouteImport,
@@ -27,10 +46,45 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DocsIndexRoute = DocsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => DocsRoute,
+} as any)
+const DocsGettingStartedRoute = DocsGettingStartedRouteImport.update({
+  id: '/getting-started',
+  path: '/getting-started',
+  getParentRoute: () => DocsRoute,
+} as any)
 const AuthAppIndexRoute = AuthAppIndexRouteImport.update({
   id: '/app/',
   path: '/app/',
   getParentRoute: () => AuthRouteRoute,
+} as any)
+const DocsFeaturesReportsRoute = DocsFeaturesReportsRouteImport.update({
+  id: '/features/reports',
+  path: '/features/reports',
+  getParentRoute: () => DocsRoute,
+} as any)
+const DocsFeaturesEntriesRoute = DocsFeaturesEntriesRouteImport.update({
+  id: '/features/entries',
+  path: '/features/entries',
+  getParentRoute: () => DocsRoute,
+} as any)
+const DocsFeaturesConnectionsRoute = DocsFeaturesConnectionsRouteImport.update({
+  id: '/features/connections',
+  path: '/features/connections',
+  getParentRoute: () => DocsRoute,
+} as any)
+const DocsFeaturesBudgetsRoute = DocsFeaturesBudgetsRouteImport.update({
+  id: '/features/budgets',
+  path: '/features/budgets',
+  getParentRoute: () => DocsRoute,
+} as any)
+const DocsFeaturesAssistantRoute = DocsFeaturesAssistantRouteImport.update({
+  id: '/features/assistant',
+  path: '/features/assistant',
+  getParentRoute: () => DocsRoute,
 } as any)
 const ApiDataSplatRoute = ApiDataSplatRouteImport.update({
   id: '/api/data/$',
@@ -60,8 +114,17 @@ const ApiDataStaticSplatRoute = ApiDataStaticSplatRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/docs': typeof DocsRouteWithChildren
+  '/pricing': typeof PricingRoute
+  '/docs/getting-started': typeof DocsGettingStartedRoute
+  '/docs/': typeof DocsIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/data/$': typeof ApiDataSplatRoute
+  '/docs/features/assistant': typeof DocsFeaturesAssistantRoute
+  '/docs/features/budgets': typeof DocsFeaturesBudgetsRoute
+  '/docs/features/connections': typeof DocsFeaturesConnectionsRoute
+  '/docs/features/entries': typeof DocsFeaturesEntriesRoute
+  '/docs/features/reports': typeof DocsFeaturesReportsRoute
   '/app': typeof AuthAppIndexRoute
   '/api/data/static/$': typeof ApiDataStaticSplatRoute
   '/app/advanced': typeof AuthAppAdvancedIndexRoute
@@ -69,8 +132,16 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/pricing': typeof PricingRoute
+  '/docs/getting-started': typeof DocsGettingStartedRoute
+  '/docs': typeof DocsIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/data/$': typeof ApiDataSplatRoute
+  '/docs/features/assistant': typeof DocsFeaturesAssistantRoute
+  '/docs/features/budgets': typeof DocsFeaturesBudgetsRoute
+  '/docs/features/connections': typeof DocsFeaturesConnectionsRoute
+  '/docs/features/entries': typeof DocsFeaturesEntriesRoute
+  '/docs/features/reports': typeof DocsFeaturesReportsRoute
   '/app': typeof AuthAppIndexRoute
   '/api/data/static/$': typeof ApiDataStaticSplatRoute
   '/app/advanced': typeof AuthAppAdvancedIndexRoute
@@ -80,8 +151,17 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_auth': typeof AuthRouteRouteWithChildren
+  '/docs': typeof DocsRouteWithChildren
+  '/pricing': typeof PricingRoute
+  '/docs/getting-started': typeof DocsGettingStartedRoute
+  '/docs/': typeof DocsIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/data/$': typeof ApiDataSplatRoute
+  '/docs/features/assistant': typeof DocsFeaturesAssistantRoute
+  '/docs/features/budgets': typeof DocsFeaturesBudgetsRoute
+  '/docs/features/connections': typeof DocsFeaturesConnectionsRoute
+  '/docs/features/entries': typeof DocsFeaturesEntriesRoute
+  '/docs/features/reports': typeof DocsFeaturesReportsRoute
   '/_auth/app/': typeof AuthAppIndexRoute
   '/api/data/static/$': typeof ApiDataStaticSplatRoute
   '/_auth/app/advanced/': typeof AuthAppAdvancedIndexRoute
@@ -91,8 +171,17 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/docs'
+    | '/pricing'
+    | '/docs/getting-started'
+    | '/docs/'
     | '/api/auth/$'
     | '/api/data/$'
+    | '/docs/features/assistant'
+    | '/docs/features/budgets'
+    | '/docs/features/connections'
+    | '/docs/features/entries'
+    | '/docs/features/reports'
     | '/app'
     | '/api/data/static/$'
     | '/app/advanced'
@@ -100,8 +189,16 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/pricing'
+    | '/docs/getting-started'
+    | '/docs'
     | '/api/auth/$'
     | '/api/data/$'
+    | '/docs/features/assistant'
+    | '/docs/features/budgets'
+    | '/docs/features/connections'
+    | '/docs/features/entries'
+    | '/docs/features/reports'
     | '/app'
     | '/api/data/static/$'
     | '/app/advanced'
@@ -110,8 +207,17 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/_auth'
+    | '/docs'
+    | '/pricing'
+    | '/docs/getting-started'
+    | '/docs/'
     | '/api/auth/$'
     | '/api/data/$'
+    | '/docs/features/assistant'
+    | '/docs/features/budgets'
+    | '/docs/features/connections'
+    | '/docs/features/entries'
+    | '/docs/features/reports'
     | '/_auth/app/'
     | '/api/data/static/$'
     | '/_auth/app/advanced/'
@@ -121,6 +227,8 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthRouteRoute: typeof AuthRouteRouteWithChildren
+  DocsRoute: typeof DocsRouteWithChildren
+  PricingRoute: typeof PricingRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
   ApiDataSplatRoute: typeof ApiDataSplatRoute
   ApiDataStaticSplatRoute: typeof ApiDataStaticSplatRoute
@@ -128,6 +236,20 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/pricing': {
+      id: '/pricing'
+      path: '/pricing'
+      fullPath: '/pricing'
+      preLoaderRoute: typeof PricingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/docs': {
+      id: '/docs'
+      path: '/docs'
+      fullPath: '/docs'
+      preLoaderRoute: typeof DocsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_auth': {
       id: '/_auth'
       path: ''
@@ -142,12 +264,61 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/docs/': {
+      id: '/docs/'
+      path: '/'
+      fullPath: '/docs/'
+      preLoaderRoute: typeof DocsIndexRouteImport
+      parentRoute: typeof DocsRoute
+    }
+    '/docs/getting-started': {
+      id: '/docs/getting-started'
+      path: '/getting-started'
+      fullPath: '/docs/getting-started'
+      preLoaderRoute: typeof DocsGettingStartedRouteImport
+      parentRoute: typeof DocsRoute
+    }
     '/_auth/app/': {
       id: '/_auth/app/'
       path: '/app'
       fullPath: '/app'
       preLoaderRoute: typeof AuthAppIndexRouteImport
       parentRoute: typeof AuthRouteRoute
+    }
+    '/docs/features/reports': {
+      id: '/docs/features/reports'
+      path: '/features/reports'
+      fullPath: '/docs/features/reports'
+      preLoaderRoute: typeof DocsFeaturesReportsRouteImport
+      parentRoute: typeof DocsRoute
+    }
+    '/docs/features/entries': {
+      id: '/docs/features/entries'
+      path: '/features/entries'
+      fullPath: '/docs/features/entries'
+      preLoaderRoute: typeof DocsFeaturesEntriesRouteImport
+      parentRoute: typeof DocsRoute
+    }
+    '/docs/features/connections': {
+      id: '/docs/features/connections'
+      path: '/features/connections'
+      fullPath: '/docs/features/connections'
+      preLoaderRoute: typeof DocsFeaturesConnectionsRouteImport
+      parentRoute: typeof DocsRoute
+    }
+    '/docs/features/budgets': {
+      id: '/docs/features/budgets'
+      path: '/features/budgets'
+      fullPath: '/docs/features/budgets'
+      preLoaderRoute: typeof DocsFeaturesBudgetsRouteImport
+      parentRoute: typeof DocsRoute
+    }
+    '/docs/features/assistant': {
+      id: '/docs/features/assistant'
+      path: '/features/assistant'
+      fullPath: '/docs/features/assistant'
+      preLoaderRoute: typeof DocsFeaturesAssistantRouteImport
+      parentRoute: typeof DocsRoute
     }
     '/api/data/$': {
       id: '/api/data/$'
@@ -203,9 +374,33 @@ const AuthRouteRouteWithChildren = AuthRouteRoute._addFileChildren(
   AuthRouteRouteChildren,
 )
 
+interface DocsRouteChildren {
+  DocsGettingStartedRoute: typeof DocsGettingStartedRoute
+  DocsIndexRoute: typeof DocsIndexRoute
+  DocsFeaturesAssistantRoute: typeof DocsFeaturesAssistantRoute
+  DocsFeaturesBudgetsRoute: typeof DocsFeaturesBudgetsRoute
+  DocsFeaturesConnectionsRoute: typeof DocsFeaturesConnectionsRoute
+  DocsFeaturesEntriesRoute: typeof DocsFeaturesEntriesRoute
+  DocsFeaturesReportsRoute: typeof DocsFeaturesReportsRoute
+}
+
+const DocsRouteChildren: DocsRouteChildren = {
+  DocsGettingStartedRoute: DocsGettingStartedRoute,
+  DocsIndexRoute: DocsIndexRoute,
+  DocsFeaturesAssistantRoute: DocsFeaturesAssistantRoute,
+  DocsFeaturesBudgetsRoute: DocsFeaturesBudgetsRoute,
+  DocsFeaturesConnectionsRoute: DocsFeaturesConnectionsRoute,
+  DocsFeaturesEntriesRoute: DocsFeaturesEntriesRoute,
+  DocsFeaturesReportsRoute: DocsFeaturesReportsRoute,
+}
+
+const DocsRouteWithChildren = DocsRoute._addFileChildren(DocsRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRouteRoute: AuthRouteRouteWithChildren,
+  DocsRoute: DocsRouteWithChildren,
+  PricingRoute: PricingRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
   ApiDataSplatRoute: ApiDataSplatRoute,
   ApiDataStaticSplatRoute: ApiDataStaticSplatRoute,

@@ -9,6 +9,12 @@
 - Build outputs: `dist/` folders inside each package/app.
 - each app's and package's README.md should be updated with the latest context of that project.
 
+## Docs Pages
+
+- Docs layout and navigation live in `apps/webapp/src/routes/docs.tsx`.
+- Individual docs pages are routed files under `apps/webapp/src/routes/docs/` (feature pages live in `apps/webapp/src/routes/docs/features/`).
+- Keep the sidebar/search items in sync with the docs route files when adding or removing pages.
+
 ## Build, Lint and Development Commands
 
 From the repo root:

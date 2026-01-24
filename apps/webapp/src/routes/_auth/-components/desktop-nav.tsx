@@ -31,8 +31,10 @@ export function DesktopAppNav() {
 	return (
 		<header
 			className={cn(
-				"fixed top-0 z-20 flex h-16 w-full items-center justify-between px-6 transition-all duration-300",
-				isScrolled ? "bg-background/80 backdrop-blur-xl" : "bg-transparent",
+				"fixed top-0 z-20 flex h-16 w-full items-center justify-between border-b px-6 transition-all duration-300",
+				isScrolled
+					? "border-border/50 bg-background/80 backdrop-blur-xl"
+					: "border-transparent bg-transparent",
 			)}
 		>
 			<Link to="/app">

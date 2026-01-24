@@ -39,8 +39,8 @@ export function AddEntryButton() {
 				size="lg"
 				variant="default"
 			>
-				<span className="font-medium text-base">Add expense</span>
-				<PlusIcon className="size-5" />
+				<span className="font-medium text-base">Add an entry</span>
+				<PlusIcon />
 			</Button>
 
 			<EntryDialog

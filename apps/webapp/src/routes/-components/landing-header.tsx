@@ -34,10 +34,10 @@ export function LandingHeader() {
 	return (
 		<nav
 			className={cn(
-				"fixed top-0 right-0 left-0 z-50 transition-all duration-500 ease-out",
+				"fixed top-0 right-0 left-0 z-50 border-b transition-all duration-500 ease-out",
 				isScrolled
-					? "border-border/50 border-b bg-background/80 shadow-lg shadow-primary/5 backdrop-blur-xl"
-					: "bg-transparent",
+					? "border-border/50 bg-background/80 shadow-lg shadow-primary/5 backdrop-blur-xl"
+					: "border-transparent bg-transparent",
 			)}
 		>
 			<div className="container mx-auto px-4 sm:px-6 lg:px-8">
@@ -60,6 +60,12 @@ export function LandingHeader() {
 					</Link>
 
 					<div className="flex items-center gap-2">
+						<Button asChild variant="outline">
+							<Link to="/docs">Docs</Link>
+						</Button>
+						<Button asChild variant="outline">
+							<Link to="/pricing">Pricing</Link>
+						</Button>
 						<Button
 							className="gap-2"
 							disabled={isLoading}
