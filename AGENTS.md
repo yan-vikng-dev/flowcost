@@ -58,7 +58,6 @@ From the repo root:
   ```
 
 ## Rules
-- always run `pnpm fix` when finished making all desired changes, the check command lints, formats and typechecks the codebase.
 - prefer drizzle .query api over .select
 - generic desktop breakpoint is tailwind's `md` breakpoint (768px). can be accessed with the `useIsDesktop` hook.
 - consider your CloudFlare knowledge deprecated. their platform changes on a daily basis, and fresh docs should be fetched for every cloudflare-related task.

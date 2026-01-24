@@ -1,11 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router"
+import { getCurrentUserMeta } from "@/core/functions/current-user"
 import { getUserPreferences } from "@/core/functions/preferences"
 import { listRecurringTemplates } from "@/core/functions/recurring-templates"
 import { AddEntryButton } from "./-components/add-entry-button"
 import { BudgetsCard } from "./-components/budgets-card"
 import { ExpensesCard } from "./-components/expenses-by-category-bar"
 import { SummaryCard } from "./-components/monthly-standard-summary"
+import { OnboardingChecklistCard } from "./-components/onboarding-checklist-card"
 import { RecurringCard } from "./-components/recurring-card"
+import { WelcomeDialog } from "./-components/welcome-dialog"
 import {
 	EXCHANGE_RATES_KEY,
 	getBudgets,
@@ -52,6 +55,11 @@ export const Route = createFileRoute("/_auth/app/")({
 				return mod.getConnectionState()
 			},
 		})
+
+		context.queryClient.prefetchQuery({
+			queryKey: ["currentUserMeta"],
+			queryFn: () => getCurrentUserMeta(),
+		})
 	},
 	component: RouteComponent,
 })
@@ -59,7 +67,9 @@ export const Route = createFileRoute("/_auth/app/")({
 function RouteComponent() {
 	return (
 		<div className="grid gap-4 md:grid-cols-2">
+			<WelcomeDialog />
 			<div className="flex flex-col gap-4">
+				<OnboardingChecklistCard />
 				<BudgetsCard />
 				<AddEntryButton />
 				<ExpensesCard />

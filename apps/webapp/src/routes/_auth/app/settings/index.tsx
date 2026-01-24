@@ -5,6 +5,7 @@ import { AccountCard } from "./-components/AccountCard"
 import { AssistantCard } from "./-components/AssistantCard"
 import { DangerZoneCard } from "./-components/danger-zone-card"
 import { IncomingInviteCard } from "./-components/incoming-invite-card"
+import { OnboardingChecklistSetting } from "./-components/onboarding-checklist-setting"
 import { PreferencesCard } from "./-components/preferences-card"
 
 export const Route = createFileRoute("/_auth/app/settings/")({
@@ -33,6 +34,7 @@ export const Route = createFileRoute("/_auth/app/settings/")({
 function RouteComponent() {
 	return (
 		<div className="mx-auto grid max-w-xl gap-6">
+			<OnboardingChecklistSetting />
 			<IncomingInviteCard />
 			<AccountCard />
 			<PreferencesCard />
