@@ -1,7 +1,8 @@
 import type { Category, Currency } from "@repo/shared-lib"
+import { and, eq, inArray } from "drizzle-orm"
 import type { DateTime } from "luxon"
 import type { DrizzleDb } from "../../database/setup"
-import type { SelectBudget } from "../schemas/index"
+import { budgets, type SelectBudget } from "../schemas/index"
 import type { ConvertedEntry } from "./entries"
 import { getAllowedUserIds } from "./helpers"
 
@@ -57,9 +58,7 @@ export async function fetchBudgetsForUser(
 ): Promise<SelectBudget[]> {
 	const allowedUserIds = await getAllowedUserIds(db, userId, includePartner)
 	return db.query.budgets.findMany({
-		where: {
-			userId: { in: allowedUserIds },
-		},
+		where: inArray(budgets.userId, allowedUserIds),
 	})
 }
 
@@ -77,10 +76,10 @@ export async function fetchBudgetById(
 		partnerId,
 	)
 	return db.query.budgets.findFirst({
-		where: {
-			id: budgetId,
-			userId: { in: allowedUserIds },
-		},
+		where: and(
+			eq(budgets.id, budgetId),
+			inArray(budgets.userId, allowedUserIds),
+		),
 	})
 }
 

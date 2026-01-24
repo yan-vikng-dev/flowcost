@@ -4,7 +4,7 @@ import {
 	toIsoDateInTimezone,
 	toUtcMidnight,
 } from "@repo/shared-lib"
-import { and, desc, eq, gte, isNull, or } from "drizzle-orm"
+import { and, desc, eq, gte, inArray, isNull, or } from "drizzle-orm"
 import { DateTime } from "luxon"
 import { RRule } from "rrule"
 import type { DrizzleDb } from "../../database/setup"
@@ -208,10 +208,10 @@ export async function materializeTemplateEntries(
 	for (let i = 0; i < desiredDateStrings.length; i += QUERY_BATCH_SIZE) {
 		const dateBatch = desiredDateStrings.slice(i, i + QUERY_BATCH_SIZE)
 		const existingByDate = await db.query.entries.findMany({
-			where: {
-				recurringTemplateId: template.id,
-				executedDate: { in: dateBatch },
-			},
+			where: and(
+				eq(entries.recurringTemplateId, template.id),
+				inArray(entries.executedDate, dateBatch),
+			),
 			columns: { executedDate: true },
 		})
 		for (const entry of existingByDate) {

@@ -5,7 +5,7 @@ import {
 	whatsapp_links,
 } from "@repo/db/drizzle/schemas/index"
 import { sha256Hex } from "@repo/shared-lib/crypto"
-import { eq } from "drizzle-orm"
+import { and, eq, gt, isNull } from "drizzle-orm"
 import type { MessageContext } from "@/durable-objects/AgentServer"
 import type { WhatsAppMedia } from "@/lib/whatsapp/media"
 import { fetchWhatsAppMedia } from "@/lib/whatsapp/media"
@@ -43,11 +43,11 @@ export async function handleIncomingMessage(
 
 		const now = new Date()
 		const token = await db.query.whatsapp_link_tokens.findFirst({
-			where: {
-				tokenHash,
-				expiresAt: { gt: now },
-				usedAt: { isNull: true },
-			},
+			where: and(
+				eq(whatsapp_link_tokens.tokenHash, tokenHash),
+				gt(whatsapp_link_tokens.expiresAt, now),
+				isNull(whatsapp_link_tokens.usedAt),
+			),
 		})
 		if (!token) {
 			await sendWhatsAppText({
@@ -60,9 +60,7 @@ export async function handleIncomingMessage(
 
 		// Relink logic: if this waId belongs to another user, move it
 		const existingByWa = await db.query.whatsapp_links.findFirst({
-			where: {
-				waId,
-			},
+			where: eq(whatsapp_links.waId, waId),
 		})
 		if (existingByWa && existingByWa.userId !== token.userId) {
 			await sendWhatsAppText({
@@ -121,9 +119,7 @@ export async function handleIncomingMessage(
 	}
 
 	const link = await db.query.whatsapp_links.findFirst({
-		where: {
-			waId,
-		},
+		where: eq(whatsapp_links.waId, waId),
 		columns: {},
 		with: {
 			user: {

@@ -1,9 +1,7 @@
-import { defineConfig } from "drizzle-kit"
+import type { Config } from "drizzle-kit"
 
-process.loadEnvFile(".env.local")
-
-export default defineConfig({
-	schema: "./src/drizzle/schemas/*.ts",
+const config: Config = {
+	schema: "./src/drizzle/schemas/index.ts",
 	out: "./src/drizzle/migrations",
 	dialect: "sqlite",
 	driver: "d1-http",
@@ -14,5 +12,5 @@ export default defineConfig({
 	},
 	casing: "snake_case",
 	tablesFilter: ["!_cf_KV"],
-	strict: true,
-})
+}
+export default config satisfies Config

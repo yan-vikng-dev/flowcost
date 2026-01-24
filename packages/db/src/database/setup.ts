@@ -1,17 +1,16 @@
 // packages/db/src/database/setup.ts
 
 import { type DrizzleD1Database, drizzle } from "drizzle-orm/d1"
-import { relations } from "@/drizzle/relations"
-import type * as schema from "@/drizzle/schemas"
+import * as schema from "@/drizzle/schemas"
 
-export type DrizzleDb = DrizzleD1Database<typeof schema, typeof relations>
+export type DrizzleDb = DrizzleD1Database<typeof schema>
 let db: DrizzleDb | undefined
 
 export function initDatabase(d1Db: D1Database) {
 	if (db) {
 		return db
 	}
-	db = drizzle(d1Db, { casing: "snake_case", relations })
+	db = drizzle(d1Db, { casing: "snake_case", schema })
 	return db
 }
 

@@ -111,10 +111,10 @@ function findTemplateForUser(
 	userId: string,
 ) {
 	return db.query.recurring_entry_templates.findFirst({
-		where: {
-			id: templateId,
-			userId,
-		},
+		where: and(
+			eq(recurring_entry_templates.id, templateId),
+			eq(recurring_entry_templates.userId, userId),
+		),
 	})
 }
 

@@ -187,9 +187,9 @@ export async function getEntryForUser(
 		partnerId,
 	)
 	return db.query.entries.findFirst({
-		where: {
-			id: entryId,
-			userId: { in: allowedUserIds },
-		},
+		where: and(
+			eq(entries.id, entryId),
+			inArray(entries.userId, allowedUserIds),
+		),
 	})
 }

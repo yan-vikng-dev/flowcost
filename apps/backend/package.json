@@ -22,7 +22,7 @@
 		"@repo/shared-lib": "workspace:^",
 		"@types/luxon": "^3.7.1",
 		"ai": "^6.0.5",
-		"drizzle-orm": "1.0.0-beta.8-dbc3565",
+		"drizzle-orm": "0.45.1",
 		"hono": "^4.10.4",
 		"luxon": "^3.7.2",
 		"posthog-node": "^5.11.2",

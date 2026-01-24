@@ -1,6 +1,7 @@
 import type { Currency } from "@repo/shared-lib"
+import { desc, inArray } from "drizzle-orm"
 import type { DrizzleDb } from "../../database/setup"
-import type { SelectExchangeRate } from "../schemas/index"
+import { exchange_rates, type SelectExchangeRate } from "../schemas/index"
 
 export async function fetchExchangeRatesForDates(
 	db: DrizzleDb,
@@ -15,16 +16,14 @@ export async function fetchExchangeRatesForDates(
 		for (let i = 0; i < dates.length; i += BATCH_SIZE) {
 			const dateBatch = dates.slice(i, i + BATCH_SIZE)
 			const batchRates = await db.query.exchange_rates.findMany({
-				where: {
-					date: { in: dateBatch },
-				},
+				where: inArray(exchange_rates.date, dateBatch),
 			})
 			ratesForDates.push(...batchRates)
 		}
 	}
 
 	const latest = await db.query.exchange_rates.findFirst({
-		orderBy: { date: "desc" },
+		orderBy: desc(exchange_rates.date),
 	})
 
 	if (!latest) {
@@ -42,7 +41,7 @@ export async function getLatestExchangeRates(
 	db: DrizzleDb,
 ): Promise<SelectExchangeRate> {
 	const latest = await db.query.exchange_rates.findFirst({
-		orderBy: { date: "desc" },
+		orderBy: desc(exchange_rates.date),
 	})
 
 	if (!latest) {

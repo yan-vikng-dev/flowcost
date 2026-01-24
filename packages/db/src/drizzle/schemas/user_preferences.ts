@@ -1,5 +1,6 @@
+import { currencies } from "@repo/shared-lib"
+import { relations } from "drizzle-orm"
 import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core"
-import { currencies } from "../../temp-lib/currencies"
 import { auth_users } from "./auth_users"
 import { timestamps } from "./helpers"
 
@@ -17,6 +18,16 @@ export const user_preferences = sqliteTable("user_preferences", {
 	reportsWeeklyDay: integer().notNull().default(0), // 0 = Sunday
 	...timestamps,
 })
+
+export const userPreferencesRelations = relations(
+	user_preferences,
+	({ one }) => ({
+		user: one(auth_users, {
+			fields: [user_preferences.userId],
+			references: [auth_users.id],
+		}),
+	}),
+)
 
 export type InsertUserPreferences = typeof user_preferences.$inferInsert
 export type SelectUserPreferences = typeof user_preferences.$inferSelect
