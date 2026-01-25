@@ -4,8 +4,8 @@
 	"description": "",
 	"scripts": {
 		"build": "turbo run build",
-		"test": "turbo run test",
 		"ship": "turbo run deploy",
+		"dev": "pnpm dev:webapp",
 		"dev:webapp": "pnpm run --filter webapp dev",
 		"dev:backend": "pnpm run --filter backend dev",
 		"studio": "pnpm run --filter db db:studio",
