@@ -92,6 +92,10 @@ export class AgentServer extends DurableObject {
 				posthogDistinctId: messageContext.userId,
 				posthogTraceId: this.traceId,
 				posthogPrivacyMode: false,
+				posthogProperties: {
+					$session_id: this.traceId,
+					$ai_session_id: this.traceId,
+				},
 			})
 
 			this.turns.push({ role: "user", content: message })
