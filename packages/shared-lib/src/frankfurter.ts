@@ -27,6 +27,20 @@ type FrankfurterRateItem = {
 	rate: number
 }
 
+// Caching a partial rate map poisons every conversion until the TTL expires,
+// so reject implausibly small responses instead of trusting them.
+const MIN_EXPECTED_CURRENCIES = 100
+
+function isRateItem(value: unknown): value is FrankfurterRateItem {
+	if (typeof value !== "object" || value === null) return false
+	const item = value as Partial<FrankfurterRateItem>
+	return (
+		typeof item.quote === "string" &&
+		typeof item.rate === "number" &&
+		item.rate > 0
+	)
+}
+
 function todayIso(): string {
 	const iso = new Date().toISOString().split("T")[0]
 	if (!iso) throw new Error("Failed to compute current date")
@@ -45,8 +59,18 @@ async function fetchUsdRates(query: string): Promise<UsdRates> {
 	if (!res.ok) {
 		throw new Error(`Frankfurter request failed (${res.status}) for "${query}"`)
 	}
-	const data = (await res.json()) as FrankfurterRateItem[]
-	const rates = Object.fromEntries(data.map((item) => [item.quote, item.rate]))
+	const data: unknown = await res.json()
+	if (!Array.isArray(data)) {
+		throw new Error(`Frankfurter returned a non-array response for "${query}"`)
+	}
+	const rates = Object.fromEntries(
+		data.filter(isRateItem).map((item) => [item.quote, item.rate]),
+	)
+	if (Object.keys(rates).length < MIN_EXPECTED_CURRENCIES) {
+		throw new Error(
+			`Frankfurter returned only ${Object.keys(rates).length} rates for "${query}"; refusing to cache a partial rate map`,
+		)
+	}
 	return withBase(rates)
 }
 

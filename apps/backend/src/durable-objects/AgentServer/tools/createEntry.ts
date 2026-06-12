@@ -9,7 +9,7 @@ import {
 import { tool } from "ai"
 import { DateTime } from "luxon"
 import { z } from "zod"
-import { convertEntries } from "@/lib/currency"
+import { convertEntriesBestEffort } from "@/lib/currency"
 import type { MessageContext } from ".."
 
 const createEntrySchema = z.object({
@@ -40,10 +40,13 @@ export const makeCreateEntryTool = (
 ) =>
 	tool({
 		description:
-			"Create an expense entry. The response includes the created entry plus a converted amount in the user's display currency; report both values back to the user.",
+			"Create an expense entry. The response includes the created entry plus a converted amount in the user's display currency; report both values back to the user. A null convertedAmount means the entry was saved but conversion is temporarily unavailable — never treat that as a failed save.",
 		inputSchema: createEntrySchema,
 		execute: async (input) => {
-			const executionDate = input.executionDate ?? DateTime.now().toISODate()
+			const executionDate =
+				input.executionDate ??
+				DateTime.now().setZone(context.timezone).toISODate()
+			if (!executionDate) throw new Error("Failed to resolve execution date")
 			const currency = input.currency
 				? (input.currency as Currency)
 				: context.defaultEntryCurrency
@@ -65,12 +68,19 @@ export const makeCreateEntryTool = (
 			}
 			const [inserted] = await db.insert(entries).values(newEntry).returning()
 			if (!inserted) throw new Error("Failed to create entry")
-			const [converted] = await convertEntries(
-				env,
-				[inserted],
-				context.displayCurrency,
-			)
-			if (!converted) throw new Error("Failed to convert entry")
-			return { result: converted, targetCurrency: context.displayCurrency }
+			const { entries: convertedEntries, unconvertedCount } =
+				await convertEntriesBestEffort(env, [inserted], context.displayCurrency)
+			const converted = convertedEntries[0] ?? {
+				...inserted,
+				convertedAmount: null,
+			}
+			return {
+				result: converted,
+				targetCurrency: context.displayCurrency,
+				...(unconvertedCount > 0 && {
+					conversionNote:
+						"Entry saved successfully. Conversion to the display currency is temporarily unavailable — report the original amount and currency.",
+				}),
+			}
 		},
 	})
