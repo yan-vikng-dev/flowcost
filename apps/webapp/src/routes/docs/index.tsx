@@ -3,10 +3,8 @@ import {
 	BarChart3Icon,
 	BookOpenIcon,
 	ListChecksIcon,
-	MessageCircleIcon,
 	RocketIcon,
 	UsersIcon,
-	WalletIcon,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
@@ -29,14 +27,13 @@ function DocsIndexPage() {
 				<h2 className="font-semibold text-2xl">Overview</h2>
 				<div className="space-y-4 text-sm">
 					<p>
-						Flowcost is a current-month expense tracker with WhatsApp-first
-						logging. Entries are stored by date in your timezone, budgets are
-						calculated from the current month, and reports are sent on a
-						schedule you control.
+						Flowcost is a WhatsApp-only expense tracker. Text expenses to the
+						assistant, get automatic weekly and monthly reports, and optionally
+						pair with a partner to combine spending views.
 					</p>
 					<p>
-						Use the links below to get set up fast or dive into how each feature
-						works under the hood.
+						There is no web dashboard or login — everything happens in chat. Use
+						the links below to get started or learn how each feature works.
 					</p>
 				</div>
 			</section>
@@ -65,15 +62,6 @@ function DocsIndexPage() {
 					<Button asChild className="justify-start" variant="outline">
 						<Link
 							className="flex items-center gap-2"
-							to="/docs/features/budgets"
-						>
-							<WalletIcon className="h-4 w-4 text-primary" />
-							Budgets
-						</Link>
-					</Button>
-					<Button asChild className="justify-start" variant="outline">
-						<Link
-							className="flex items-center gap-2"
 							to="/docs/features/reports"
 						>
 							<BarChart3Icon className="h-4 w-4 text-primary" />
@@ -87,15 +75,6 @@ function DocsIndexPage() {
 						>
 							<UsersIcon className="h-4 w-4 text-primary" />
 							Connections
-						</Link>
-					</Button>
-					<Button asChild className="justify-start" variant="outline">
-						<Link
-							className="flex items-center gap-2"
-							to="/docs/features/assistant"
-						>
-							<MessageCircleIcon className="h-4 w-4 text-primary" />
-							Assistant
 						</Link>
 					</Button>
 				</div>

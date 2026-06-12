@@ -61,3 +61,17 @@ From the repo root:
 - prefer drizzle .query api over .select
 - generic desktop breakpoint is tailwind's `md` breakpoint (768px). can be accessed with the `useIsDesktop` hook.
 - consider your CloudFlare knowledge deprecated. their platform changes on a daily basis, and fresh docs should be fetched for every cloudflare-related task.
+
+## Agent skills
+
+### Issue tracker
+
+Issues and PRDs live as markdown files under `.scratch/<feature-slug>/`. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Canonical labels: `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context, with the context glossary at `.agents/CONTEXT.md` and ADRs under `.agents/adr/`. See `docs/agents/domain.md`.

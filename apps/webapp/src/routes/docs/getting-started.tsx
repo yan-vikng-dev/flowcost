@@ -16,17 +16,24 @@ function GettingStartedPage() {
 					</h1>
 				</div>
 			</div>
-			<section className="scroll-mt-28 space-y-3" id="account-setup">
-				<h2 className="font-semibold text-2xl">Account setup</h2>
+			<section className="scroll-mt-28 space-y-3" id="start-chatting">
+				<h2 className="font-semibold text-2xl">Start chatting</h2>
 				<div className="space-y-4 text-sm">
 					<p>
-						Sign in with Google and open Settings to confirm your timezone and
-						display currency. Flowcost normalizes entry dates to your timezone,
-						so those preferences keep monthly analytics accurate.
+						Open WhatsApp and message the Flowcost number. Your first message
+						creates your account automatically — there is no sign-up or linking
+						step.
 					</p>
 					<p>
-						The dashboard, budgets, and reports default to the current month, so
-						you can focus on what is happening right now without manual filters.
+						Just describe an expense in plain language, for example:{" "}
+						<span className="font-medium text-foreground">
+							&quot;Coffee 4.50 USD&quot;
+						</span>{" "}
+						or{" "}
+						<span className="font-medium text-foreground">
+							&quot;Groceries 32 EUR yesterday&quot;
+						</span>
+						. The assistant parses amount, currency, category, and date.
 					</p>
 				</div>
 			</section>
@@ -35,28 +42,28 @@ function GettingStartedPage() {
 				<h2 className="font-semibold text-2xl">First entry</h2>
 				<div className="space-y-4 text-sm">
 					<p>
-						Create an entry by choosing an amount, currency, category, and entry
-						type (expense or income). You can add an optional description for
-						detail.
+						Each logged expense stores an amount, currency, category, optional
+						description, and the date it happened (in your timezone). You can
+						edit or delete entries by asking the assistant in chat.
 					</p>
 					<p>
-						Entries show up immediately in the current month dashboard and the
-						advanced entries table. Updates or deletions sync across the same
-						month view.
+						Send <span className="font-medium text-foreground">/help</span> any
+						time for the list of slash commands.
 					</p>
 				</div>
 			</section>
 
-			<section className="scroll-mt-28 space-y-3" id="link-whatsapp">
-				<h2 className="font-semibold text-2xl">Link WhatsApp</h2>
+			<section className="scroll-mt-28 space-y-3" id="reports">
+				<h2 className="font-semibold text-2xl">Reports</h2>
 				<div className="space-y-4 text-sm">
 					<p>
-						In Settings / Assistant, tap Link WhatsApp. Flowcost opens a
-						WhatsApp message containing a short-lived verification token.
+						Weekly and monthly expense summaries are sent automatically to
+						WhatsApp — no toggles to enable. Weekly reports arrive on your
+						chosen weekday; monthly reports arrive on the last day of the month.
 					</p>
 					<p>
-						Once linked, you can log entries via chat and enable scheduled
-						reports without leaving WhatsApp.
+						Adjust delivery time and timezone by telling the assistant, or see
+						the Reports feature page for details.
 					</p>
 				</div>
 			</section>

@@ -1,12 +1,11 @@
+import { fetchEntriesForRange } from "@repo/db/drizzle/queries"
+import { formatCurrency } from "@repo/shared-lib"
+import { convertEntries } from "@/lib/currency"
 import {
-	calculateBudgetsWithProgress,
-	calculateRecurringExpenses,
-	fetchBudgetsForUser,
-	fetchConvertedEntriesForRange,
-	getLatestExchangeRates,
-} from "@repo/db/drizzle/queries"
-import { formatCurrency, getCurrentMonthRange } from "@repo/shared-lib"
-import {
+	aggregateCategoryTotals,
+	aggregatePartnerTotals,
+	calculateMonthProgress,
+	findTopSpendingDay,
 	formatProgressBar,
 	getReportDateRange,
 	REPORT_SEPARATOR,
@@ -16,88 +15,68 @@ import type { ReportGeneratorParams } from "./types"
 export async function generateMonthlyReport(
 	params: ReportGeneratorParams,
 ): Promise<string | null> {
-	const { db, userId, now, prefs, allowedUserIds, partnerId } = params
+	const { env, db, userId, now, prefs, allowedUserIds, partnerId } = params
 	const timeZone = prefs.timezone
 	const displayCurrency = prefs.displayCurrency
 
 	const { start, end } = getReportDateRange("monthly", now)
 	const title = `Monthly report - ${now.toFormat("LLLL yyyy")}`
-	const entriesResult = await fetchConvertedEntriesForRange(db, userId, {
+	const rawEntries = await fetchEntriesForRange(db, {
+		allowedUserIds,
 		start: start.toJSDate(),
 		end: end.toJSDate(),
 		timezone: timeZone,
-		displayCurrency,
-		allowedUserIds,
-		partnerId,
 	})
+	const entries = await convertEntries(env, rawEntries, displayCurrency)
 
-	const latest = await getLatestExchangeRates(db)
-	const budgetsList = await fetchBudgetsForUser(db, userId, true)
-
-	const { start: monthStart, end: monthEnd } = getCurrentMonthRange(timeZone)
-	const monthlyEntriesResult = await fetchConvertedEntriesForRange(db, userId, {
-		start: monthStart,
-		end: monthEnd,
-		timezone: timeZone,
-		displayCurrency,
-		allowedUserIds,
-		partnerId,
-	})
-
-	const expenseEntries = monthlyEntriesResult.entries.filter(
-		(e) => e.entryType === "Expense",
-	)
-	const budgetsWithProgress = calculateBudgetsWithProgress(
-		budgetsList,
-		expenseEntries,
-		displayCurrency,
-		latest.rates,
-	)
-
-	const expenseEntriesForTotals = entriesResult.entries.filter(
-		(entry) => entry.entryType === "Expense",
-	)
-	const incomeEntriesForTotals = entriesResult.entries.filter(
-		(entry) => entry.entryType === "Income",
-	)
-	const totalSpent = expenseEntriesForTotals.reduce(
-		(sum, entry) => sum + entry.convertedAmount,
+	const categoryTotals = aggregateCategoryTotals(entries)
+	const totalSpent = Array.from(categoryTotals.values()).reduce(
+		(sum, val) => sum + val,
 		0,
 	)
-	const totalIncome = incomeEntriesForTotals.reduce(
-		(sum, entry) => sum + entry.convertedAmount,
-		0,
-	)
-	const netTotal = totalIncome - totalSpent
 
-	const recurringExpenses = calculateRecurringExpenses(
-		monthlyEntriesResult.entries,
-		displayCurrency,
+	const lines: string[] = [
+		title,
+		REPORT_SEPARATOR,
+		`Total spending: ${formatCurrency(totalSpent, displayCurrency)}`,
+	]
+
+	const monthProgress = calculateMonthProgress(now)
+	lines.push(
+		`Month progress: ${monthProgress.day}/${monthProgress.days} days (${Math.round(monthProgress.percent)}%)`,
 	)
-	const lines: string[] = [title, REPORT_SEPARATOR]
-	if (recurringExpenses) {
+	lines.push(formatProgressBar(monthProgress.percent))
+
+	const partnerTotals = aggregatePartnerTotals(entries, userId, partnerId)
+	if (partnerTotals) {
+		lines.push(REPORT_SEPARATOR)
+		lines.push("Shared spending:")
+		lines.push(`• You: ${formatCurrency(partnerTotals.yours, displayCurrency)}`)
 		lines.push(
-			`Recurring expenses: ${formatCurrency(recurringExpenses.usage, displayCurrency)}`,
+			`• Partner: ${formatCurrency(partnerTotals.partner, displayCurrency)}`,
 		)
 	}
-	lines.push(
-		`Total spending: ${formatCurrency(totalSpent, displayCurrency)}`,
-		`Total income: ${formatCurrency(totalIncome, displayCurrency)}`,
-		`Net: ${formatCurrency(netTotal, displayCurrency)}`,
-	)
-	lines.push(REPORT_SEPARATOR)
 
-	if (budgetsWithProgress.length > 0) {
-		lines.push("Budgets:")
-		for (const budget of budgetsWithProgress) {
-			const categoryNames = budget.categories.join(", ")
-			const bar = formatProgressBar(budget.utilizationPct)
-			const warning = budget.utilizationPct >= 100 ? "⚠️ " : ""
-			lines.push(
-				`• ${warning}${categoryNames}: ${formatCurrency(budget.spentDisplay, displayCurrency)} / ${formatCurrency(budget.amountDisplay, displayCurrency)}`,
-			)
-			lines.push(`  ${bar} ${Math.round(budget.utilizationPct)}%`)
+	lines.push(REPORT_SEPARATOR)
+	lines.push("By category:")
+	const categoriesWithSpending = Array.from(categoryTotals.entries())
+		.sort((a, b) => b[1] - a[1])
+		.filter(([, amount]) => amount > 0)
+
+	if (categoriesWithSpending.length === 0) {
+		lines.push("  None")
+	} else {
+		for (const [category, amount] of categoriesWithSpending) {
+			lines.push(`• ${category}: ${formatCurrency(amount, displayCurrency)}`)
 		}
+	}
+
+	const topDay = findTopSpendingDay(entries, timeZone)
+	if (topDay) {
+		lines.push(REPORT_SEPARATOR)
+		lines.push(
+			`Top spending day: ${topDay.date} (${formatCurrency(topDay.amount, displayCurrency)})`,
+		)
 	}
 
 	return lines.join("\n")

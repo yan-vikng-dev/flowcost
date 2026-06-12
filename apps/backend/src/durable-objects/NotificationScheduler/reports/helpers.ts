@@ -6,20 +6,17 @@ export const REPORT_SEPARATOR = "━━━━━━━━━━━━━━━"
 
 export function determineReportType(
 	now: DateTime,
-	prefs: import("./types").ReportPreferences,
+	prefs: { reportsWeeklyDay: number; timezone: string },
 ): ReportType | null {
 	const isLastDayOfMonth = now.day === now.endOf("month").day
 	const weeklyDay = prefs.reportsWeeklyDay ?? 0
 	const dayOfWeek = now.weekday === 7 ? 0 : now.weekday
 
-	if (isLastDayOfMonth && prefs.reportsMonthlyEnabled) {
+	if (isLastDayOfMonth) {
 		return "monthly"
 	}
-	if (dayOfWeek === weeklyDay && prefs.reportsWeeklyEnabled) {
+	if (dayOfWeek === weeklyDay) {
 		return "weekly"
-	}
-	if (prefs.reportsDailyEnabled) {
-		return "daily"
 	}
 	return null
 }
@@ -28,16 +25,6 @@ export function getReportDateRange(
 	type: ReportType,
 	now: DateTime,
 ): { start: DateTime; end: DateTime; title: string } {
-	if (type === "daily") {
-		const start = now.startOf("day")
-		const end = start.plus({ days: 1 })
-		return {
-			start,
-			end,
-			title: `Daily Report - ${now.toFormat("LLL d")}`,
-		}
-	}
-
 	if (type === "weekly") {
 		let start = now.startOf("week")
 		let end = start.plus({ weeks: 1 })
@@ -61,6 +48,16 @@ export function getReportDateRange(
 	}
 }
 
+export function calculateMonthProgress(now: DateTime): {
+	day: number
+	days: number
+	percent: number
+} {
+	const day = now.day
+	const days = now.daysInMonth ?? 30
+	return { day, days, percent: (day / days) * 100 }
+}
+
 export function formatProgressBar(percentage: number): string {
 	const filled = Math.round((percentage / 100) * 10)
 	const empty = 10 - filled
@@ -79,6 +76,21 @@ export function aggregateCategoryTotals(
 		)
 	}
 	return categoryTotals
+}
+
+export function aggregatePartnerTotals(
+	entries: Array<{ userId: string; convertedAmount: number }>,
+	userId: string,
+	partnerId: string | null,
+): { yours: number; partner: number } | null {
+	if (!partnerId) return null
+	let yours = 0
+	let partner = 0
+	for (const entry of entries) {
+		if (entry.userId === userId) yours += entry.convertedAmount
+		else if (entry.userId === partnerId) partner += entry.convertedAmount
+	}
+	return { yours, partner }
 }
 
 export function findTopSpendingDay(

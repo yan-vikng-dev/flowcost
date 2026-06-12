@@ -1,12 +1,8 @@
 {
 	"name": "@repo/db",
 	"version": "1.0.0",
-	"description": "Manage auth, database, schemas, and queries",
+	"description": "Drizzle schemas and query helpers for Flowcost D1",
 	"exports": {
-		"./auth/*": {
-			"types": "./dist/auth/*.d.ts",
-			"default": "./dist/auth/*.js"
-		},
 		"./database/*": {
 			"types": "./dist/database/*.d.ts",
 			"default": "./dist/database/*.js"
@@ -27,7 +23,6 @@
 	"scripts": {
 		"build": "tsc -p tsconfig.json --outDir ./dist && tsc-alias",
 		"typecheck": "tsc --noEmit",
-		"better-auth:generate": "mkdir -p src/drizzle && npx @better-auth/cli@latest generate --config ./config/auth.ts --output ./src/drizzle/auth-schema.ts",
 		"db:generate": "drizzle-kit generate --config ./drizzle-kit.config.ts",
 		"db:migrate": "drizzle-kit migrate --config ./drizzle-kit.config.ts",
 		"db:pull": "drizzle-kit pull --config ./drizzle-kit.config.ts",
@@ -42,13 +37,9 @@
 	"dependencies": {
 		"@neondatabase/serverless": "^1.0.2",
 		"@planetscale/database": "^1.19.0",
-		"@polar-sh/better-auth": "^1.6.3",
-		"@polar-sh/sdk": "^0.42.1",
 		"@repo/shared-lib": "workspace:^",
-		"better-auth": "^1.4.6",
 		"drizzle-orm": "0.45.1",
 		"luxon": "^3.7.2",
-		"rrule": "^2.8.1",
 		"zod": "^4.1.12"
 	},
 	"devDependencies": {

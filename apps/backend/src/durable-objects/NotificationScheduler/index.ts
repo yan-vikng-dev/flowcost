@@ -1,17 +1,14 @@
 import { DurableObject } from "cloudflare:workers"
 import { getDb, initDatabase } from "@repo/db/database/setup"
-import { getAllowedUserIds } from "@repo/db/drizzle/queries/helpers"
 import {
-	user_preferences,
-	whatsapp_links,
-} from "@repo/db/drizzle/schemas/index"
+	getAllowedUserIds,
+	getUserById,
+} from "@repo/db/drizzle/queries/helpers"
 import type { Currency } from "@repo/shared-lib"
-import { eq } from "drizzle-orm"
 import { DateTime } from "luxon"
 import { sendWhatsAppText } from "@/lib/whatsapp/messages"
 import {
 	determineReportType,
-	generateDailyReport,
 	generateMonthlyReport,
 	generateWeeklyReport,
 	type ReportType,
@@ -64,38 +61,16 @@ export class NotificationScheduler extends DurableObject {
 		}
 		const userId = this.userId
 
-		const prefs = await db.query.user_preferences.findFirst({
-			where: eq(user_preferences.userId, userId),
-		})
-
-		if (!prefs) {
-			console.warn(`No preferences found for user ${userId}`, { userId })
+		const user = await getUserById(db, userId)
+		if (!user) {
+			console.warn(`No user found for ${userId}`, { userId })
 			return
 		}
 
-		const whatsappLink = await db.query.whatsapp_links.findFirst({
-			where: eq(whatsapp_links.userId, userId),
-		})
-
-		if (!whatsappLink) {
-			console.warn(
-				`No WhatsApp link found for user ${userId}, skipping report`,
-				{
-					userId,
-				},
-			)
-			await this.scheduleNextAlarm()
-			return
-		}
-
-		const now = DateTime.now().setZone(prefs.timezone)
+		const now = DateTime.now().setZone(user.timezone)
 		const reportType = determineReportType(now, {
-			reportsMonthlyEnabled: prefs.reportsMonthlyEnabled,
-			reportsWeeklyEnabled: prefs.reportsWeeklyEnabled,
-			reportsDailyEnabled: prefs.reportsDailyEnabled,
-			reportsWeeklyDay: prefs.reportsWeeklyDay,
-			timezone: prefs.timezone,
-			displayCurrency: prefs.displayCurrency,
+			reportsWeeklyDay: user.reportsWeeklyDay,
+			timezone: user.timezone,
 		})
 
 		if (!reportType) {
@@ -113,8 +88,11 @@ export class NotificationScheduler extends DurableObject {
 			allowedUserIds.length > 1
 				? (allowedUserIds.find((id) => id !== userId) ?? null)
 				: null
+		const prefs = {
+			timezone: user.timezone,
+			displayCurrency: user.displayCurrency as Currency,
+		}
 		const report = await this.generateReport(
-			db,
 			userId,
 			reportType,
 			now,
@@ -126,12 +104,12 @@ export class NotificationScheduler extends DurableObject {
 			try {
 				await sendWhatsAppText({
 					env: this.env,
-					waId: whatsappLink.waId,
+					waId: user.waId,
 					text: report,
 				})
 				console.debug("NotificationScheduler report sent via WhatsApp", {
 					userId,
-					waId: whatsappLink.waId,
+					waId: user.waId,
 					reportType,
 				})
 
@@ -140,12 +118,11 @@ export class NotificationScheduler extends DurableObject {
 			} catch (error) {
 				console.error("NotificationScheduler failed to send WhatsApp message", {
 					userId,
-					waId: whatsappLink.waId,
+					waId: user.waId,
 					reportType,
 					error: error instanceof Error ? error.message : String(error),
 					stack: error instanceof Error ? error.stack : undefined,
 				})
-				// Don't rethrow - we still want to reschedule the next alarm
 			}
 		}
 
@@ -153,7 +130,6 @@ export class NotificationScheduler extends DurableObject {
 	}
 
 	private async generateReport(
-		db: ReturnType<typeof getDb>,
 		userId: string,
 		type: ReportType,
 		now: DateTime,
@@ -164,10 +140,17 @@ export class NotificationScheduler extends DurableObject {
 		allowedUserIds: string[],
 		partnerId: string | null,
 	): Promise<string | null> {
-		const params = { db, userId, now, prefs, allowedUserIds, partnerId }
+		const db = getDb()
+		const params = {
+			env: this.env,
+			db,
+			userId,
+			now,
+			prefs,
+			allowedUserIds,
+			partnerId,
+		}
 		switch (type) {
-			case "daily":
-				return generateDailyReport(params)
 			case "weekly":
 				return generateWeeklyReport(params)
 			case "monthly":
@@ -186,28 +169,16 @@ export class NotificationScheduler extends DurableObject {
 		}
 		const userId = this.userId
 
-		const prefs = await db.query.user_preferences.findFirst({
-			where: eq(user_preferences.userId, userId),
-		})
-
-		if (!prefs) {
-			console.warn(`No preferences found for user ${userId}, cannot schedule`, {
+		const user = await getUserById(db, userId)
+		if (!user) {
+			console.warn(`No user found for ${userId}, cannot schedule`, {
 				userId,
 			})
 			return
 		}
 
-		const hasAnyReportEnabled =
-			prefs.reportsDailyEnabled ||
-			prefs.reportsWeeklyEnabled ||
-			prefs.reportsMonthlyEnabled
-
-		if (!hasAnyReportEnabled) {
-			return
-		}
-
-		const timeZone = prefs.timezone || "UTC"
-		const reportsTime = prefs.reportsTime || "20:00"
+		const timeZone = user.timezone || "UTC"
+		const reportsTime = user.reportsTime || "20:00"
 		const [hourStr, minuteStr] = reportsTime.split(":")
 		const hour = Number.parseInt(hourStr || "20", 10)
 		const minute = Number.parseInt(minuteStr || "0", 10)

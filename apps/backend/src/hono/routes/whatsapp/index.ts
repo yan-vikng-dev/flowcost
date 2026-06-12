@@ -40,8 +40,18 @@ whatsappRouter.post("/whatsapp/webhook", async (c) => {
 	} catch {
 		return c.text("invalid json", 400)
 	}
-	const { phoneNumberId, waId, text, messageId, messageType, media } =
-		NotificationPayloadSchema.parse(json)
+	const {
+		phoneNumberId,
+		waId,
+		text,
+		messageId,
+		messageType,
+		media,
+		sharedContact,
+		buttonReply,
+		buttonPayload,
+		senderProfileName,
+	} = NotificationPayloadSchema.parse(json)
 
 	if (phoneNumberId && phoneNumberId !== c.env.WHATSAPP_PHONE_NUMBER_ID) {
 		console.debug({
@@ -52,7 +62,14 @@ whatsappRouter.post("/whatsapp/webhook", async (c) => {
 		return c.text("OK")
 	}
 
-	if (!waId || !messageId || (!text && !media)) {
+	const hasRecognizedPayload =
+		Boolean(text) ||
+		Boolean(media) ||
+		Boolean(sharedContact) ||
+		Boolean(buttonReply) ||
+		Boolean(buttonPayload)
+
+	if (!waId || !messageId || !hasRecognizedPayload) {
 		if (waId && messageId && messageType) {
 			c.executionCtx.waitUntil(sendTypingIndicator({ env: c.env, messageId }))
 			c.executionCtx.waitUntil(
@@ -70,6 +87,10 @@ whatsappRouter.post("/whatsapp/webhook", async (c) => {
 			waId,
 			text: text ?? undefined,
 			messageId,
+			senderProfileName,
+			sharedContact: sharedContact ?? undefined,
+			buttonReply: buttonReply ?? undefined,
+			buttonPayload: buttonPayload ?? undefined,
 			media: media
 				? {
 						kind: media.kind,

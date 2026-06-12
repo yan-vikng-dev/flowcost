@@ -1,17 +1,39 @@
 import { getDb } from "@repo/db/database/setup"
 import {
-	user_preferences,
-	whatsapp_link_tokens,
-	whatsapp_links,
-} from "@repo/db/drizzle/schemas/index"
-import { sha256Hex } from "@repo/shared-lib/crypto"
-import { and, eq, gt, isNull } from "drizzle-orm"
+	findPendingRequestForWa,
+	getPartnerUserId,
+} from "@repo/db/drizzle/queries/connections"
+import {
+	getUserById,
+	markUserOnboarded,
+	upsertUserByWaId,
+} from "@repo/db/drizzle/queries/helpers"
+import { user_connections } from "@repo/db/drizzle/schemas/index"
+import { eq, or } from "drizzle-orm"
 import type { MessageContext } from "@/durable-objects/AgentServer"
+import { inferLocaleFromWaId } from "@/lib/infer-locale-from-wa-id"
 import type { WhatsAppMedia } from "@/lib/whatsapp/media"
 import { fetchWhatsAppMedia } from "@/lib/whatsapp/media"
-import { sendTypingIndicator, sendWhatsAppText } from "@/lib/whatsapp/messages"
+import {
+	sendInteractiveButtons,
+	sendTypingIndicator,
+	sendWhatsAppText,
+} from "@/lib/whatsapp/messages"
 import { appendMediaContent } from "./append-media-content"
-import { slashCommands } from "./slash-commands"
+import {
+	displayLabel,
+	handlePairAccept,
+	handlePairDecline,
+	initializeScheduler,
+	initiatePairingRequest,
+	parsePairButtonId,
+	parsePairPickId,
+} from "./pairing"
+import {
+	exactSlashCommands,
+	isSlashCommand,
+	parsePairPhone,
+} from "./slash-commands"
 import type { HandleIncomingMessageArgs, UserContentPart } from "./types"
 
 export async function handleIncomingMessage(
@@ -19,171 +41,273 @@ export async function handleIncomingMessage(
 	args: HandleIncomingMessageArgs,
 ) {
 	const db = getDb()
-	const { waId, text, messageId, media } = args
+	const {
+		waId,
+		text,
+		messageId,
+		media,
+		sharedContact,
+		buttonReply,
+		buttonPayload,
+	} = args
+	const pairButtonId = buttonReply?.id ?? buttonPayload ?? null
 	console.debug({
 		message: "handling whatsapp webhook message",
 		waId,
 		text,
 		messageId,
 		mediaKind: media?.kind ?? null,
+		hasSharedContact: Boolean(sharedContact),
+		buttonReplyId: buttonReply?.id ?? null,
+		buttonPayload: buttonPayload ?? null,
 	})
 
-	const tokenMatch = text?.match(/^\/verify\s*([A-Za-z0-9]{4}-[A-Za-z0-9]{4})$/)
-	if (tokenMatch) {
-		const rawToken = tokenMatch[1]
-		if (!rawToken) {
+	const inferred = inferLocaleFromWaId(waId)
+	const { user, created } = await upsertUserByWaId(db, waId, {
+		displayName: args.senderProfileName,
+		timezone: inferred.timezone,
+		defaultEntryCurrency: inferred.currency,
+		displayCurrency: inferred.currency,
+	})
+	if (created) {
+		await initializeScheduler(env, user.id)
+	}
+
+	const isOnboarding = user.onboardedAt === null
+	if (isOnboarding) {
+		await markUserOnboarded(db, user.id)
+	}
+
+	if (sharedContact) {
+		await sendTypingIndicator({ env, messageId })
+		const { phones } = sharedContact
+
+		if (phones.length === 0) {
 			await sendWhatsAppText({
 				env,
 				waId,
-				text: "Token invalid or expired. Please retry linking from the web app.",
+				text: "That contact doesn't have a phone number I can use. Share a contact that has a number, or type /pair <number>.",
 			})
 			return
 		}
-		const tokenHash = await sha256Hex(rawToken)
 
-		const now = new Date()
-		const token = await db.query.whatsapp_link_tokens.findFirst({
-			where: and(
-				eq(whatsapp_link_tokens.tokenHash, tokenHash),
-				gt(whatsapp_link_tokens.expiresAt, now),
-				isNull(whatsapp_link_tokens.usedAt),
-			),
-		})
-		if (!token) {
+		if (phones.length === 1) {
+			const [phone] = phones
+			if (!phone) return
+			const result = await initiatePairingRequest(db, env, user, phone.waId)
+			if (!result.ok) {
+				await sendWhatsAppText({ env, waId, text: result.message })
+				return
+			}
 			await sendWhatsAppText({
 				env,
 				waId,
-				text: "Token invalid or expired. Please retry linking from the web app.",
+				text: "Pairing request sent. They have 24 hours to accept.",
 			})
 			return
 		}
 
-		// Relink logic: if this waId belongs to another user, move it
-		const existingByWa = await db.query.whatsapp_links.findFirst({
-			where: eq(whatsapp_links.waId, waId),
-		})
-		if (existingByWa && existingByWa.userId !== token.userId) {
-			await sendWhatsAppText({
+		if (phones.length <= 3) {
+			const contactName = sharedContact.displayName?.trim()
+			const bodyText = contactName
+				? `${contactName} has multiple numbers. Which one should I invite?`
+				: "This contact has multiple numbers. Which one should I invite?"
+			await sendInteractiveButtons({
 				env,
 				waId,
-				text: "This number was linked to a different account. Relinking to your current account.",
+				bodyText,
+				buttons: phones.map((phone) => ({
+					id: `pair_pick:${phone.waId}`,
+					title: phone.label,
+				})),
 			})
+			return
 		}
 
-		await db
-			.insert(whatsapp_links)
-			.values({
-				userId: token.userId,
-				waId,
-			})
-			.onConflictDoUpdate({
-				target: whatsapp_links.waId,
-				set: { userId: token.userId, updatedAt: new Date() },
-			})
-
-		// Mark token as used
-		await db
-			.update(whatsapp_link_tokens)
-			.set({ usedAt: now, updatedAt: now })
-			.where(eq(whatsapp_link_tokens.id, token.id))
-
-		// Enable all three report types when WhatsApp is linked
-		await db
-			.insert(user_preferences)
-			.values({
-				userId: token.userId,
-				reportsDailyEnabled: true,
-				reportsWeeklyEnabled: true,
-				reportsMonthlyEnabled: true,
-			})
-			.onConflictDoUpdate({
-				target: user_preferences.userId,
-				set: {
-					reportsDailyEnabled: true,
-					reportsWeeklyEnabled: true,
-					reportsMonthlyEnabled: true,
-				},
-			})
-
-		// Initialize NotificationScheduler DO
-		const schedulerId = env.NOTIFICATION_SCHEDULER.idFromName(token.userId)
-		const schedulerStub = env.NOTIFICATION_SCHEDULER.get(schedulerId)
-		await schedulerStub.initialize(token.userId)
-
+		const contactName = sharedContact.displayName?.trim()
+		const numberList = phones.map((phone) => `• ${phone.label}`).join("\n")
+		const intro = contactName
+			? `${contactName} has more numbers than I can show as buttons:`
+			: "This contact has more numbers than I can show as buttons:"
 		await sendWhatsAppText({
 			env,
 			waId,
-			text: "Linked ✅ You can now chat here.",
+			text: `${intro}\n\n${numberList}\n\nReply with /pair <number> for the one you want to invite.`,
 		})
 		return
 	}
 
-	const link = await db.query.whatsapp_links.findFirst({
-		where: eq(whatsapp_links.waId, waId),
-		columns: {},
-		with: {
-			user: {
-				columns: {
-					id: true,
-					email: true,
-					name: true,
-				},
-				with: {
-					preferences: true,
-				},
-			},
-		},
-	})
+	if (pairButtonId) {
+		await sendTypingIndicator({ env, messageId })
 
-	if (!link) {
-		await sendWhatsAppText({
-			env,
-			waId,
-			text: "Please visit https://flowcost.co/app/settings to link your WhatsApp number",
-		})
+		const pairPick = parsePairPickId(pairButtonId)
+		if (pairPick) {
+			const result = await initiatePairingRequest(db, env, user, pairPick.waId)
+			if (!result.ok) {
+				await sendWhatsAppText({ env, waId, text: result.message })
+				return
+			}
+			await sendWhatsAppText({
+				env,
+				waId,
+				text: "Pairing request sent. They have 24 hours to accept.",
+			})
+			return
+		}
+
+		const parsed = parsePairButtonId(pairButtonId)
+		if (!parsed) {
+			await sendWhatsAppText({
+				env,
+				waId,
+				text: "Sorry, I didn't recognize that button.",
+			})
+			return
+		}
+		if (parsed.action === "accept") {
+			const result = await handlePairAccept(db, env, user, parsed.requestId)
+			if (!result.ok) {
+				await sendWhatsAppText({ env, waId, text: result.message })
+			}
+			return
+		}
+		const result = await handlePairDecline(db, env, user, parsed.requestId)
+		if (!result.ok) {
+			await sendWhatsAppText({ env, waId, text: result.message })
+		}
 		return
 	}
-	const id = env.AI_CONVERSATION_SERVER.idFromName(link.user.id)
-	const stub = env.AI_CONVERSATION_SERVER.get(id)
-	if (text && slashCommands.includes(text)) {
+
+	if (text && isSlashCommand(text)) {
 		switch (text) {
-			case "/new":
+			case "/new": {
+				const id = env.AI_CONVERSATION_SERVER.idFromName(user.id)
+				const stub = env.AI_CONVERSATION_SERVER.get(id)
 				await stub.reset()
 				await sendWhatsAppText({ env, waId, text: "I forgor." })
 				return
+			}
 			case "/help":
 				await sendWhatsAppText({
 					env,
 					waId,
-					text: "You can either use slash commands (start with /) or just chat normally, I'll try my best to help you.",
+					text: [
+						"Flowcost — log expenses by chatting naturally, or use slash commands:",
+						"",
+						"/new — start a fresh conversation",
+						"Share a contact card — invite someone to share expenses",
+						"/pair <phone> — same as sharing a contact",
+						"/accept — accept a pairing request (fallback)",
+						"/decline — decline a pairing request (fallback)",
+						"/unpair — stop sharing with your partner",
+						"/help — show this message",
+					].join("\n"),
 				})
 				return
-			case "/link":
+			case "/accept": {
+				const request = await findPendingRequestForWa(db, waId)
+				if (!request) {
+					await sendWhatsAppText({
+						env,
+						waId,
+						text: "No pending pairing request found.",
+					})
+					return
+				}
+				const result = await handlePairAccept(db, env, user, request.id)
+				if (!result.ok) {
+					await sendWhatsAppText({ env, waId, text: result.message })
+				}
+				return
+			}
+			case "/decline": {
+				const request = await findPendingRequestForWa(db, waId)
+				if (!request) {
+					await sendWhatsAppText({
+						env,
+						waId,
+						text: "No pending pairing request found.",
+					})
+					return
+				}
+				const result = await handlePairDecline(db, env, user, request.id)
+				if (!result.ok) {
+					await sendWhatsAppText({ env, waId, text: result.message })
+				}
+				return
+			}
+			case "/unpair": {
+				const partnerId = await getPartnerUserId(db, user.id)
+				if (!partnerId) {
+					await sendWhatsAppText({
+						env,
+						waId,
+						text: "You're not paired with anyone.",
+					})
+					return
+				}
+				await db
+					.delete(user_connections)
+					.where(
+						or(
+							eq(user_connections.userIdLow, user.id),
+							eq(user_connections.userIdHigh, user.id),
+						),
+					)
+				const partner = await getUserById(db, partnerId)
 				await sendWhatsAppText({
 					env,
 					waId,
-					text: "Please visit https://flowcost.co/app/settings to link your WhatsApp number",
+					text: "Unpaired ✅ You no longer share expenses with your partner.",
 				})
-				return
-			case "/unlink": {
-				await db.delete(whatsapp_links).where(eq(whatsapp_links.waId, waId))
-				const unlinkUserId = link.user.id
-				const unlinkSchedulerId =
-					env.NOTIFICATION_SCHEDULER.idFromName(unlinkUserId)
-				const unlinkSchedulerStub =
-					env.NOTIFICATION_SCHEDULER.get(unlinkSchedulerId)
-				await unlinkSchedulerStub.revoke()
-				await sendWhatsAppText({ env, waId, text: "Unlinked ✅" })
+				if (partner) {
+					await sendWhatsAppText({
+						env,
+						waId: partner.waId,
+						text: `${displayLabel(user)} ended your expense sharing.`,
+					})
+				}
 				return
 			}
-			default:
+			default: {
+				if (
+					!exactSlashCommands.includes(
+						text as (typeof exactSlashCommands)[number],
+					)
+				) {
+					break
+				}
+			}
+		}
+
+		const targetWaId = parsePairPhone(text)
+		if (targetWaId) {
+			const result = await initiatePairingRequest(db, env, user, targetWaId)
+			if (!result.ok) {
+				await sendWhatsAppText({ env, waId, text: result.message })
+				return
+			}
+			await sendWhatsAppText({
+				env,
+				waId,
+				text: "Pairing request sent. They have 24 hours to accept.",
+			})
+			return
 		}
 	}
+
+	const id = env.AI_CONVERSATION_SERVER.idFromName(user.id)
+	const stub = env.AI_CONVERSATION_SERVER.get(id)
 	const messageContext: MessageContext = {
 		messageId,
 		waId,
-		userEmail: link.user.email,
-		...link.user.preferences,
+		userId: user.id,
+		defaultEntryCurrency: user.defaultEntryCurrency,
+		displayCurrency: user.displayCurrency,
+		timezone: user.timezone,
+		reportsTime: user.reportsTime,
+		reportsWeeklyDay: user.reportsWeeklyDay,
+		isOnboarding,
 	}
 	try {
 		const contentParts: UserContentPart[] = []
@@ -211,7 +335,7 @@ export async function handleIncomingMessage(
 	} catch (error) {
 		console.error("Error handling WhatsApp message", {
 			waId,
-			userId: link.user.id,
+			userId: user.id,
 			messageId,
 			text,
 			error: error instanceof Error ? error.message : String(error),

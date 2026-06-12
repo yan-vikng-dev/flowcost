@@ -12,9 +12,6 @@
 		"mode": "smart"
 	},
 	"vars": {
-		"GOOGLE_CLIENT_ID": "929719393907-apf36l038e899nof9ncpj21vlk92s9ed.apps.googleusercontent.com",
-		"WHATSAPP_E164": "+84906432245",
-		"BACKEND_URL": "https://backend.flowcost.co",
 		"POSTHOG_HOST": "https://eu.i.posthog.com",
 		"VITE_GTAG_ID": "AW-17572813812",
 		"VITE_POSTHOG_KEY": "phc_h0VnQKH9G4gf7a1qTVSriK4zcQHp9BXmYQElEz6cYD4"
@@ -23,21 +20,6 @@
 		{
 			"pattern": "flowcost.co",
 			"custom_domain": true
-		}
-	],
-	"d1_databases": [
-		{
-			"remote": true,
-			"binding": "DB",
-			"database_name": "flowcost-db",
-			"database_id": "e2dc49b0-3d97-4ada-9135-0a0c1410f54c"
-		}
-	],
-	"kv_namespaces": [
-		{
-			"binding": "CACHE",
-			"id": "f52e1d3b9f2c4428a3b0f10a663cb5a7",
-			"remote": true
 		}
 	]
 }

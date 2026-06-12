@@ -1,5 +1,6 @@
 import type { DrizzleDb } from "@repo/db/database/setup"
 import { getEntryForUser } from "@repo/db/drizzle/queries"
+import { getAllowedUserIds } from "@repo/db/drizzle/queries/helpers"
 import { entries, type InsertEntry } from "@repo/db/drizzle/schemas/index"
 import {
 	type Currency,
@@ -19,15 +20,11 @@ const updateEntrySchema = z.object({
 		.describe(
 			"The ID of the entry to update. This ID comes from the 'id' field in entries retrieved via get_entries. When a user corrects an entry, retrieve entries for the relevant date, match by description, amount, category, or date, and use that entry's ID. Never ask the user for entry IDs.",
 		),
-	entryType: z
-		.enum(["Expense", "Income"])
-		.optional()
-		.describe("Whether the entry is an expense or income"),
 	amount: z
 		.number()
 		.gt(0)
 		.optional()
-		.describe("The absolute amount of the entry"),
+		.describe("The absolute amount of the expense"),
 	currency: z
 		.string()
 		.regex(/^[A-Z]{3}$/)
@@ -36,11 +33,11 @@ const updateEntrySchema = z.object({
 	category: z
 		.enum(categories)
 		.optional()
-		.describe("Category of the entry from a pre-defined list"),
+		.describe("Category of the expense from a pre-defined list"),
 	description: z
 		.string()
 		.optional()
-		.describe("Short note describing the entry"),
+		.describe("Short note describing the expense"),
 	executionDate: z
 		.string()
 		.optional()
@@ -50,10 +47,11 @@ const updateEntrySchema = z.object({
 export const makeUpdateEntryTool = (context: MessageContext, db: DrizzleDb) =>
 	tool({
 		description:
-			"Update an existing financial entry. Only provide fields that should be changed; omitted fields remain unchanged.",
+			"Update an existing expense entry. Only provide fields that should be changed; omitted fields remain unchanged.",
 		inputSchema: updateEntrySchema,
 		execute: async (input) => {
-			const entry = await getEntryForUser(db, input.id, context.userId)
+			const allowedUserIds = await getAllowedUserIds(db, context.userId)
+			const entry = await getEntryForUser(db, input.id, allowedUserIds)
 			if (!entry) {
 				throw new Error(
 					"Entry not found or you don't have permission to update it",
@@ -78,10 +76,6 @@ export const makeUpdateEntryTool = (context: MessageContext, db: DrizzleDb) =>
 				patch.category = input.category
 			}
 
-			if (input.entryType !== undefined) {
-				patch.entryType = input.entryType
-			}
-
 			if (input.description !== undefined) {
 				patch.description = input.description
 			}
@@ -94,10 +88,6 @@ export const makeUpdateEntryTool = (context: MessageContext, db: DrizzleDb) =>
 					context.timezone,
 				)
 				patch.executedDate = executedDate
-			}
-
-			if (entry.recurringTemplateId) {
-				patch.isOverridden = true
 			}
 
 			if (Object.keys(patch).length === 0) {

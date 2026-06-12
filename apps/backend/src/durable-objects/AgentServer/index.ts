@@ -5,7 +5,7 @@ import {
 } from "@ai-sdk/google"
 import { withTracing } from "@posthog/ai"
 import { getDb, initDatabase } from "@repo/db/database/setup"
-import type { SelectUserPreferences } from "@repo/db/drizzle/schemas/index"
+import type { Currency } from "@repo/shared-lib"
 import {
 	type ModelMessage,
 	pruneMessages,
@@ -24,8 +24,14 @@ const trimmedPromptMessages = 30
 export type MessageContext = {
 	messageId: string
 	waId: string
-	userEmail: string
-} & SelectUserPreferences
+	userId: string
+	defaultEntryCurrency: Currency
+	displayCurrency: Currency
+	timezone: string
+	reportsTime: string
+	reportsWeeklyDay: number
+	isOnboarding: boolean
+}
 
 export class AgentServer extends DurableObject {
 	turns: ModelMessage[] = []
@@ -84,7 +90,7 @@ export class AgentServer extends DurableObject {
 		messageContext: MessageContext,
 	) {
 		try {
-			const baseModel = this.googleProvider("gemini-3-flash-preview")
+			const baseModel = this.googleProvider("gemini-3.5-flash")
 			if (!this.posthogClient) throw new Error("Posthog client not initialized")
 			if (!this.traceId) throw new Error("Trace ID not initialized")
 			this.posthogClient.identify({ distinctId: messageContext.userId })
@@ -102,7 +108,7 @@ export class AgentServer extends DurableObject {
 			const db = getDb()
 			const agent = new ToolLoopAgent({
 				model,
-				tools: createTools(messageContext, db),
+				tools: createTools(messageContext, db, this.env),
 				instructions: buildSystemPrompt(messageContext),
 				stopWhen: stepCountIs(10),
 				providerOptions: {

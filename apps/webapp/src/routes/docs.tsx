@@ -12,11 +12,9 @@ import {
 	CommandIcon,
 	DotIcon,
 	ListChecksIcon,
-	MessageCircleIcon,
 	RocketIcon,
 	SearchIcon,
 	UsersIcon,
-	WalletIcon,
 } from "lucide-react"
 import * as React from "react"
 import { FloatingWaves } from "@/components/bg/floating-waves"
@@ -67,9 +65,9 @@ const tocMap: Record<string, TocSection[]> = {
 		{
 			title: "On this page",
 			items: [
-				{ label: "Account setup", href: "#account-setup" },
+				{ label: "Start chatting", href: "#start-chatting" },
 				{ label: "First entry", href: "#first-entry" },
-				{ label: "Link WhatsApp", href: "#link-whatsapp" },
+				{ label: "Reports", href: "#reports" },
 			],
 		},
 	],
@@ -78,16 +76,7 @@ const tocMap: Record<string, TocSection[]> = {
 			title: "On this page",
 			items: [
 				{ label: "What an entry stores", href: "#entry-model" },
-				{ label: "Editing and cleanup", href: "#entry-editing" },
-			],
-		},
-	],
-	"/docs/features/budgets": [
-		{
-			title: "On this page",
-			items: [
-				{ label: "Budget structure", href: "#budget-structure" },
-				{ label: "Progress math", href: "#budget-progress" },
+				{ label: "Logging via WhatsApp", href: "#entry-logging" },
 			],
 		},
 	],
@@ -95,8 +84,8 @@ const tocMap: Record<string, TocSection[]> = {
 		{
 			title: "On this page",
 			items: [
-				{ label: "Report schedule", href: "#report-schedule" },
-				{ label: "Weekly options", href: "#weekly-options" },
+				{ label: "Always-on schedule", href: "#report-schedule" },
+				{ label: "What reports include", href: "#report-contents" },
 			],
 		},
 	],
@@ -104,17 +93,8 @@ const tocMap: Record<string, TocSection[]> = {
 		{
 			title: "On this page",
 			items: [
-				{ label: "Invites", href: "#connection-invites" },
-				{ label: "Shared data", href: "#connection-data" },
-			],
-		},
-	],
-	"/docs/features/assistant": [
-		{
-			title: "On this page",
-			items: [
-				{ label: "Linking", href: "#assistant-linking" },
-				{ label: "Reports", href: "#assistant-reports" },
+				{ label: "Pairing via /pair", href: "#pairing" },
+				{ label: "Limits and unpairing", href: "#connection-limits" },
 			],
 		},
 	],
@@ -140,45 +120,31 @@ const docsSearchItems = [
 	},
 	{
 		title: "Getting started",
-		description: "Account setup, first entry, and WhatsApp linking.",
+		description: "Message Flowcost, log your first expense, and get reports.",
 		href: "/docs/getting-started",
 		group: "Overview",
 		icon: RocketIcon,
 	},
 	{
 		title: "Entries",
-		description: "How entries are stored and edited.",
+		description: "How expenses are stored and logged in chat.",
 		href: "/docs/features/entries",
 		group: "Features",
 		icon: ListChecksIcon,
 	},
 	{
-		title: "Budgets",
-		description: "Budget structure and progress math.",
-		href: "/docs/features/budgets",
-		group: "Features",
-		icon: WalletIcon,
-	},
-	{
 		title: "Reports",
-		description: "Scheduling daily, weekly, and monthly reports.",
+		description: "Automatic weekly and monthly WhatsApp summaries.",
 		href: "/docs/features/reports",
 		group: "Features",
 		icon: BarChart3Icon,
 	},
 	{
 		title: "Connections",
-		description: "Invites, sharing, and connection limits.",
+		description: "Pair with a partner using /pair and /accept.",
 		href: "/docs/features/connections",
 		group: "Features",
 		icon: UsersIcon,
-	},
-	{
-		title: "Assistant",
-		description: "WhatsApp linking and report delivery.",
-		href: "/docs/features/assistant",
-		group: "Features",
-		icon: MessageCircleIcon,
 	},
 ] as const
 
@@ -238,8 +204,8 @@ function DocsLayout() {
 							Flowcost docs
 						</h1>
 						<p className="max-w-2xl text-sm sm:text-base">
-							Guides for setup and a deeper look at how entries, budgets, and
-							the WhatsApp assistant work together.
+							Guides for logging expenses, pairing with a partner, and
+							understanding your WhatsApp reports.
 						</p>
 					</div>
 
@@ -325,15 +291,6 @@ function DocsLayout() {
 													</span>
 												</Link>
 												<Link
-													className={linkClass("/docs/features/budgets")}
-													to="/docs/features/budgets"
-												>
-													<span className="flex items-center gap-2">
-														<WalletIcon className="h-4 w-4 text-primary" />
-														Budget
-													</span>
-												</Link>
-												<Link
 													className={linkClass("/docs/features/reports")}
 													to="/docs/features/reports"
 												>
@@ -349,15 +306,6 @@ function DocsLayout() {
 													<span className="flex items-center gap-2">
 														<UsersIcon className="h-4 w-4 text-primary" />
 														Connections
-													</span>
-												</Link>
-												<Link
-													className={linkClass("/docs/features/assistant")}
-													to="/docs/features/assistant"
-												>
-													<span className="flex items-center gap-2">
-														<MessageCircleIcon className="h-4 w-4 text-primary" />
-														Assistant
 													</span>
 												</Link>
 											</CollapsibleContent>

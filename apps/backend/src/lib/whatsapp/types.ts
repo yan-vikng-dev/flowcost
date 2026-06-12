@@ -1,5 +1,21 @@
 import { z } from "zod"
 
+const ContactPhoneSchema = z.object({
+	phone: z.string().optional(),
+	wa_id: z.string().optional(),
+	type: z.string().optional(),
+})
+
+const SharedContactSchema = z.object({
+	name: z
+		.object({
+			formatted_name: z.string().optional(),
+			first_name: z.string().optional(),
+		})
+		.optional(),
+	phones: z.array(ContactPhoneSchema).optional(),
+})
+
 const NotificationPayloadDataSchema = z.object({
 	object: z.literal("whatsapp_business_account"),
 	entry: z.array(
@@ -14,6 +30,14 @@ const NotificationPayloadDataSchema = z.object({
 								display_phone_number: z.string(),
 								phone_number_id: z.string(),
 							})
+							.optional(),
+						contacts: z
+							.array(
+								z.object({
+									wa_id: z.string().optional(),
+									profile: z.object({ name: z.string().optional() }).optional(),
+								}),
+							)
 							.optional(),
 						messages: z
 							.array(
@@ -42,6 +66,22 @@ const NotificationPayloadDataSchema = z.object({
 											caption: z.string().optional(),
 										})
 										.optional(),
+									contacts: z.array(SharedContactSchema).optional(),
+									button: z
+										.object({
+											payload: z.string(),
+											text: z.string(),
+										})
+										.optional(),
+									interactive: z
+										.object({
+											type: z.literal("button_reply"),
+											button_reply: z.object({
+												id: z.string(),
+												title: z.string(),
+											}),
+										})
+										.optional(),
 									type: z.string().optional(),
 									timestamp: z.string().optional(),
 								}),
@@ -54,10 +94,56 @@ const NotificationPayloadDataSchema = z.object({
 	),
 })
 
+export type SharedContactPhone = {
+	waId: string
+	label: string
+}
+
+export type ParsedSharedContact = {
+	displayName: string | null
+	phones: SharedContactPhone[]
+}
+
+function formatPhoneLabel(digits: string, type?: string): string {
+	if (type) {
+		const withType = `${type}: ${digits}`
+		if (withType.length <= 20) return withType
+	}
+	return digits
+}
+
+function parseSharedContact(
+	contact: z.infer<typeof SharedContactSchema>,
+): ParsedSharedContact {
+	const displayName =
+		contact.name?.formatted_name?.trim() ||
+		contact.name?.first_name?.trim() ||
+		null
+
+	const seen = new Set<string>()
+	const phones: SharedContactPhone[] = []
+
+	for (const phone of contact.phones ?? []) {
+		const waId =
+			phone.wa_id?.replace(/\D/g, "") || phone.phone?.replace(/\D/g, "") || null
+		if (!waId || seen.has(waId)) continue
+		seen.add(waId)
+
+		const digits = phone.phone?.replace(/\D/g, "") || waId
+		phones.push({
+			waId,
+			label: formatPhoneLabel(digits, phone.type),
+		})
+	}
+
+	return { displayName, phones }
+}
+
 export const NotificationPayloadSchema =
 	NotificationPayloadDataSchema.transform((payload) => {
 		const change = payload.entry[0]?.changes[0]
-		const msg = change?.value.messages?.[0]
+		const value = change?.value
+		const msg = value?.messages?.[0]
 		const text =
 			msg?.text?.body ?? msg?.image?.caption ?? msg?.document?.caption
 		const media = msg?.image
@@ -68,13 +154,33 @@ export const NotificationPayloadSchema =
 					? { kind: "document" as const, ...msg.document }
 					: null
 
+		const sharedContact =
+			msg?.type === "contacts" && msg.contacts?.[0]
+				? parseSharedContact(msg.contacts[0])
+				: null
+
+		const buttonReply =
+			msg?.type === "interactive" && msg.interactive?.type === "button_reply"
+				? msg.interactive.button_reply
+				: null
+
+		const buttonPayload =
+			msg?.type === "button" && msg.button?.payload ? msg.button.payload : null
+
+		const senderProfileName =
+			value?.contacts?.[0]?.profile?.name?.trim() || null
+
 		return {
-			phoneNumberId: change?.value.metadata?.phone_number_id ?? null,
+			phoneNumberId: value?.metadata?.phone_number_id ?? null,
 			waId: msg?.from ?? null,
 			messageId: msg?.id ?? null,
 			messageType: msg?.type ?? null,
 			text: text ?? null,
 			media,
+			sharedContact,
+			buttonReply,
+			buttonPayload,
+			senderProfileName,
 		}
 	})
 

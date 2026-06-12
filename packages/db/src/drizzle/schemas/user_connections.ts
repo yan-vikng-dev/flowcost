@@ -1,7 +1,7 @@
 import { relations } from "drizzle-orm"
 import { index, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core"
-import { auth_users } from "./auth_users"
 import { timestamps } from "./helpers"
+import { users } from "./users"
 
 export const user_connections = sqliteTable(
 	"user_connections",
@@ -11,10 +11,10 @@ export const user_connections = sqliteTable(
 			.$defaultFn(() => crypto.randomUUID()),
 		userIdLow: text()
 			.notNull()
-			.references(() => auth_users.id, { onDelete: "cascade" }),
+			.references(() => users.id, { onDelete: "cascade" }),
 		userIdHigh: text()
 			.notNull()
-			.references(() => auth_users.id, { onDelete: "cascade" }),
+			.references(() => users.id, { onDelete: "cascade" }),
 		...timestamps,
 	},
 	(table) => [
@@ -30,13 +30,15 @@ export const user_connections = sqliteTable(
 export const userConnectionsRelations = relations(
 	user_connections,
 	({ one }) => ({
-		userLow: one(auth_users, {
+		userLow: one(users, {
 			fields: [user_connections.userIdLow],
-			references: [auth_users.id],
+			references: [users.id],
+			relationName: "userLow",
 		}),
-		userHigh: one(auth_users, {
+		userHigh: one(users, {
 			fields: [user_connections.userIdHigh],
-			references: [auth_users.id],
+			references: [users.id],
+			relationName: "userHigh",
 		}),
 	}),
 )

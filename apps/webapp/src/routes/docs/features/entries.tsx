@@ -18,28 +18,29 @@ function EntriesDocsPage() {
 				<h2 className="font-semibold text-2xl">What an entry stores</h2>
 				<div className="space-y-4 text-sm">
 					<p>
-						Entries include amount, currency, category, and entry type (expense
-						or income). When you create one, Flowcost converts the timestamp
-						into a date string using your timezone.
+						Every expense includes amount, currency, category, and the date it
+						was executed. An optional description captures extra detail from
+						your message.
 					</p>
 					<p>
-						That date-first model keeps dashboards and reports aligned with the
-						current month even if entries are logged across time zones.
+						Dates are normalized to your timezone so reports and totals stay
+						consistent even when you travel.
 					</p>
 				</div>
 			</section>
 
-			<section className="scroll-mt-28 space-y-3" id="entry-editing">
-				<h2 className="font-semibold text-2xl">Editing and cleanup</h2>
+			<section className="scroll-mt-28 space-y-3" id="entry-logging">
+				<h2 className="font-semibold text-2xl">Logging via WhatsApp</h2>
 				<div className="space-y-4 text-sm">
 					<p>
-						Use the advanced entries table to search, filter, and bulk update
-						entries for the current month. It is designed for deeper cleanup or
-						audits.
+						Type naturally — the assistant extracts structured data from your
+						message. Use{" "}
+						<span className="font-medium text-foreground">/new</span> for a
+						guided prompt if you prefer step-by-step entry.
 					</p>
 					<p>
-						Updates and deletions invalidate the current month caches so the
-						dashboard, budgets, and reports stay in sync.
+						Ask to update or remove entries in chat. Changes apply immediately
+						to upcoming reports.
 					</p>
 				</div>
 			</section>

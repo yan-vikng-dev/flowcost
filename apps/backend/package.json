@@ -22,10 +22,13 @@
 		"@repo/shared-lib": "workspace:^",
 		"@types/luxon": "^3.7.1",
 		"ai": "^6.0.5",
+		"countries-and-timezones": "^3.8.0",
 		"drizzle-orm": "0.45.1",
 		"hono": "^4.10.4",
+		"libphonenumber-js": "^1.12.9",
 		"luxon": "^3.7.2",
 		"posthog-node": "^5.11.2",
+		"world-countries": "^5.1.0",
 		"zod": "^4.1.12"
 	}
 }

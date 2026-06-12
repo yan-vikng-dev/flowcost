@@ -9,6 +9,7 @@
 		"dev:webapp": "pnpm run --filter webapp dev",
 		"dev:backend": "pnpm run --filter backend dev",
 		"studio": "pnpm run --filter db db:studio",
+		"typecheck": "turbo typecheck",
 		"fix": "pnpm exec biome check --write --max-diagnostics 10 --unsafe && turbo typecheck && turbo cf:types",
 		"db:push": "pnpm run --filter db db:push"
 	},

@@ -1,26 +1,13 @@
 import { Link } from "@tanstack/react-router"
-import { Loader2Icon, LogInIcon } from "lucide-react"
 import * as React from "react"
+import { WhatsappIcon } from "@/components/icons/whatsapp-icon"
 import { ThemeToggle } from "@/components/theme"
 import { Button } from "@/components/ui/button"
-import { authClient } from "@/lib/auth-client"
+import { whatsappUrl } from "@/config/whatsapp"
 import { cn } from "@/lib/utils"
 
 export function LandingHeader() {
 	const [isScrolled, setIsScrolled] = React.useState(false)
-	const [isLoading, setIsLoading] = React.useState(false)
-
-	const handleGoogleSignIn = async () => {
-		setIsLoading(true)
-		try {
-			await authClient.signIn.social({
-				provider: "google",
-				callbackURL: "/app",
-			})
-		} catch {
-			setIsLoading(false)
-		}
-	}
 
 	React.useEffect(() => {
 		const handleScroll = () => {
@@ -63,20 +50,11 @@ export function LandingHeader() {
 						<Button asChild variant="outline">
 							<Link to="/docs">Docs</Link>
 						</Button>
-						<Button asChild variant="outline">
-							<Link to="/pricing">Pricing</Link>
-						</Button>
-						<Button
-							className="gap-2"
-							disabled={isLoading}
-							onClick={() => void handleGoogleSignIn()}
-						>
-							{isLoading ? (
-								<Loader2Icon className="h-4 w-4 animate-spin" />
-							) : (
-								<LogInIcon className="h-4 w-4" />
-							)}
-							Sign In
+						<Button asChild className="gap-2">
+							<a href={whatsappUrl} rel="noopener noreferrer" target="_blank">
+								<WhatsappIcon size={16} />
+								Message us on WhatsApp
+							</a>
 						</Button>
 						<ThemeToggle />
 					</div>

@@ -20,8 +20,6 @@ export const categories = [
 	"Taxes",
 	"Pets",
 	"Children",
-	"Investment",
-	"Salary",
 	"Business",
 	"Gift",
 	"Other",

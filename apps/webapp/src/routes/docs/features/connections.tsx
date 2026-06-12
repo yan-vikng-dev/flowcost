@@ -14,31 +14,37 @@ function ConnectionsDocsPage() {
 					<h1 className="font-semibold text-3xl tracking-tight">Connections</h1>
 				</div>
 			</div>
-			<section className="scroll-mt-28 space-y-3" id="connection-invites">
-				<h2 className="font-semibold text-2xl">Invites</h2>
+			<section className="scroll-mt-28 space-y-3" id="pairing">
+				<h2 className="font-semibold text-2xl">Pairing via /pair</h2>
 				<div className="space-y-4 text-sm">
 					<p>
-						Connections are created by inviting a partner via email. Incoming
-						and outgoing invitations appear in Settings so you can accept,
-						decline, or cancel them.
+						Share expenses with one partner using WhatsApp commands. Send{" "}
+						<span className="font-medium text-foreground">
+							/pair &lt;phone&gt;
+						</span>{" "}
+						with the invitee&apos;s phone number (digits only). They receive a
+						DM asking to accept or decline.
 					</p>
 					<p>
-						Flowcost enforces a single active connection per user. If either
-						party is already connected, new invites are blocked.
+						The invitee replies{" "}
+						<span className="font-medium text-foreground">/accept</span> or{" "}
+						<span className="font-medium text-foreground">/decline</span>.
+						Pending requests expire after 24 hours.
 					</p>
 				</div>
 			</section>
 
-			<section className="scroll-mt-28 space-y-3" id="connection-data">
-				<h2 className="font-semibold text-2xl">Shared data</h2>
+			<section className="scroll-mt-28 space-y-3" id="connection-limits">
+				<h2 className="font-semibold text-2xl">Limits and unpairing</h2>
 				<div className="space-y-4 text-sm">
 					<p>
-						Once connected, entries and budgets are shared between both users.
-						Dashboards and monthly views include data from the linked partner.
+						Each user can have one active connection. You cannot pair with
+						yourself or invite someone who is already connected elsewhere.
 					</p>
 					<p>
-						You can disconnect at any time from Settings. Shared data is no
-						longer combined once the connection is removed.
+						Either party can end the connection with{" "}
+						<span className="font-medium text-foreground">/unpair</span>. Shared
+						totals in reports stop once the connection is removed.
 					</p>
 				</div>
 			</section>

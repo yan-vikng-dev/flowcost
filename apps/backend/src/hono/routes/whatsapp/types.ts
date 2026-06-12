@@ -2,6 +2,16 @@ export type HandleIncomingMessageArgs = {
 	waId: string
 	text?: string
 	messageId: string
+	senderProfileName?: string | null
+	sharedContact?: {
+		displayName: string | null
+		phones: Array<{ waId: string; label: string }>
+	}
+	buttonReply?: {
+		id: string
+		title: string
+	}
+	buttonPayload?: string
 	media?: {
 		kind: "image" | "audio" | "document"
 		id: string

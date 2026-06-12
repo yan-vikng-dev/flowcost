@@ -32,8 +32,9 @@ export const Route = createRootRouteWithContext<{
 					"width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover",
 			},
 			...seo({
-				title: "Flowcost | Expense Tracker",
-				description: `Flowcost is your personal expense tracker, with direct WhatsApp integration. `,
+				title: "Flowcost | WhatsApp Expense Tracker",
+				description:
+					"Track expenses by texting WhatsApp. Automatic weekly and monthly reports. Pair with a partner to share spending.",
 			}),
 		],
 		links: [

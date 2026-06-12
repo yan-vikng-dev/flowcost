@@ -1,6 +1,6 @@
 import type { Config } from "drizzle-kit"
 
-process.loadEnvFile('.env.local')
+process.loadEnvFile(".env.local")
 
 const config: Config = {
 	schema: "./src/drizzle/schemas/index.ts",

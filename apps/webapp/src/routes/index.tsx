@@ -1,16 +1,9 @@
-import { createFileRoute, redirect } from "@tanstack/react-router"
+import { createFileRoute } from "@tanstack/react-router"
 import { FloatingWaves } from "@/components/bg/floating-waves"
-import { checkAuthSession } from "@/server/check-auth-session"
 import { HeroSection } from "./-components/hero-section"
 import { LandingHeader } from "./-components/landing-header"
 
 export const Route = createFileRoute("/")({
-	beforeLoad: async () => {
-		const session = await checkAuthSession()
-		if (session) {
-			throw redirect({ to: "/app" })
-		}
-	},
 	component: LandingPage,
 })
 

@@ -1,54 +1,30 @@
-import { ArrowRight, Loader2 } from "lucide-react"
-import * as React from "react"
+import { ArrowRightIcon } from "lucide-react"
+import { WhatsappIcon } from "@/components/icons/whatsapp-icon"
 import { Button } from "@/components/ui/button"
-import { authClient } from "@/lib/auth-client"
+import { whatsappUrl } from "@/config/whatsapp"
 
 export function HeroSection() {
-	const [isLoading, setIsLoading] = React.useState(false)
-
-	const handleGoogleSignIn = async () => {
-		setIsLoading(true)
-		try {
-			await authClient.signIn.social({
-				provider: "google",
-				callbackURL: "/app",
-			})
-		} catch {
-			setIsLoading(false)
-		}
-	}
 	return (
 		<section className="relative flex min-h-screen items-center">
-			<div className="mx-auto max-w-4xl space-y-6 text-center">
+			<div className="mx-auto max-w-4xl space-y-6 px-4 text-center sm:px-6">
 				<h1 className="font-bold text-4xl tracking-tight sm:text-6xl lg:text-7xl">
-					Your personal
-					<span className="block text-primary">Expense Tracker</span>
+					Track expenses by texting
+					<span className="block text-primary">WhatsApp</span>
 				</h1>
 
-				<p className="max-w-2xl text-lg text-muted-foreground leading-8">
-					Track your expenses, income, and budgets with ease. Talk to your
-					personal AI assistant to manage your data and get insights from
-					anywhere, using our free WhatsApp integration.
+				<p className="mx-auto max-w-2xl text-lg text-muted-foreground leading-8">
+					Text an expense to Flowcost and an AI assistant logs it for you. Get
+					automatic weekly and monthly reports, and pair with a partner to share
+					spending — no app, no login, just chat.
 				</p>
 
 				<div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
-					<Button
-						className="group"
-						disabled={isLoading}
-						onClick={() => void handleGoogleSignIn()}
-						size="lg"
-					>
-						{isLoading ? (
-							<>
-								<Loader2 className="h-4 w-4 animate-spin" />
-								Loading...
-							</>
-						) : (
-							<>
-								Get Started
-								<ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
-							</>
-						)}
+					<Button asChild className="group gap-2" size="lg">
+						<a href={whatsappUrl} rel="noopener noreferrer" target="_blank">
+							<WhatsappIcon size={18} />
+							Message us on WhatsApp
+							<ArrowRightIcon className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+						</a>
 					</Button>
 				</div>
 			</div>

@@ -1,20 +1,37 @@
 # Webapp
 
-## Design principles
-- the majority of the data is current-month centric. budgets, entries, dashboards, everything is fetched for the current month
-- entries are keyed to a date string (YYYY-MM-DD), independent of exact time. user timezone is used on creation and fetching for that purpose.
+Static marketing site and product docs for Flowcost. The product itself runs entirely over WhatsApp — there is no authenticated dashboard, login, or in-app expense management.
 
-## Onboarding checklist
-- dashboard shows a dismissible onboarding checklist stored in localStorage
-- completion is derived from entries, budgets, recurring templates, and WhatsApp link status
-- users can re-enable it from Settings while the checklist is incomplete
+## Pages
+
+| Route | Purpose |
+|-------|---------|
+| `/` | Landing page with a `wa.me` CTA to start chatting |
+| `/docs` | Docs overview |
+| `/docs/getting-started` | How to log your first expense |
+| `/docs/features/*` | Feature guides (entries, reports, connections) |
+
+The `/pricing` route and all `_auth/**` app routes are removed.
+
+## WhatsApp CTA
+
+The landing page links to `https://wa.me/<number>`. Set the number in `src/config/whatsapp.ts` (`WHATSAPP_NUMBER`, digits only). Production also exposes `WHATSAPP_E164` via `wrangler.jsonc` for server-side use.
 
 ## Analytics
-- PostHog is used for client-side analytics (pageviews + user identify) via a `/config/*` reverse proxy.
-- Analytics are disabled outside production builds.
-- Env vars: `VITE_POSTHOG_KEY`, `VITE_POSTHOG_HOST`.
 
-## Public pages
-- Landing page: `/`
-- Docs page: `/docs`
-- Pricing page: `/pricing`
+PostHog pageviews via a `/config/*` reverse proxy. Analytics are disabled outside production builds.
+
+Env vars: `VITE_POSTHOG_KEY`, `VITE_POSTHOG_HOST` (in `wrangler.jsonc`).
+
+## Stack
+
+TanStack Start (Vite + React) deployed as a Cloudflare Worker. Shares the D1/KV bindings with the backend for any server-side needs, but the UI is static content only.
+
+## Commands
+
+```bash
+pnpm dev          # vite dev server
+pnpm build        # production client + SSR worker bundle
+pnpm typecheck    # tsc --noEmit
+pnpm cf:types     # regenerate worker-configuration.d.ts
+```
