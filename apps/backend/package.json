@@ -8,7 +8,9 @@
 		"dev": "wrangler dev",
 		"test": "vitest",
 		"typecheck": "tsc --noEmit",
-		"cf:types": "wrangler types --env-interface BaseEnv"
+		"cf:types": "wrangler types --env-interface BaseEnv",
+		"wa:config": "node --env-file=.env.local scripts/configure-whatsapp.ts",
+		"wa:config:dry": "node --env-file=.env.local scripts/configure-whatsapp.ts --dry-run"
 	},
 	"devDependencies": {
 		"@types/node": "^24.10.0",

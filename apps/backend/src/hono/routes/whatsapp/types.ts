@@ -2,6 +2,7 @@ export type HandleIncomingMessageArgs = {
 	waId: string
 	text?: string
 	messageId: string
+	requestWelcome?: boolean
 	senderProfileName?: string | null
 	sharedContact?: {
 		displayName: string | null

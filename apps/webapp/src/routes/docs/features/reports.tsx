@@ -15,17 +15,26 @@ function ReportsDocsPage() {
 				</div>
 			</div>
 			<section className="scroll-mt-28 space-y-3" id="report-schedule">
-				<h2 className="font-semibold text-2xl">Always-on schedule</h2>
+				<h2 className="font-semibold text-2xl">Schedule and pausing</h2>
 				<div className="space-y-4 text-sm">
 					<p>
-						Flowcost sends weekly and monthly expense summaries to WhatsApp
-						automatically. There are no enable/disable toggles — reports are
-						always part of the product.
+						Weekly and monthly expense summaries are on by default. Weekly
+						reports land on your configured weekday; monthly reports land on the
+						last day of the month. Both share a single delivery time in your
+						timezone.
 					</p>
 					<p>
-						Weekly reports land on your configured weekday. Monthly reports land
-						on the last day of the month. Both share a single delivery time in
-						your timezone.
+						Tell the assistant to pause or resume reports (for example
+						&quot;pause my reports&quot; or &quot;resume weekly reports&quot;).
+						Use <span className="font-medium text-foreground">/settings</span>{" "}
+						to see your current schedule.
+					</p>
+					<p>
+						If you have been inactive for more than 24 hours, WhatsApp&apos;s
+						messaging rules may block the full report. Flowcost then sends a
+						&quot;report is ready&quot; template with a{" "}
+						<span className="font-medium text-foreground">Show report</span>{" "}
+						button — tap it to receive the summary.
 					</p>
 				</div>
 			</section>

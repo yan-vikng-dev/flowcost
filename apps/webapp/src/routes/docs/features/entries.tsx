@@ -34,13 +34,20 @@ function EntriesDocsPage() {
 				<div className="space-y-4 text-sm">
 					<p>
 						Type naturally — the assistant extracts structured data from your
-						message. Use{" "}
-						<span className="font-medium text-foreground">/new</span> for a
-						guided prompt if you prefer step-by-step entry.
+						message. You can also send receipt photos, voice notes, or PDF
+						documents and it will extract the expense from them.
 					</p>
 					<p>
-						Ask to update or remove entries in chat. Changes apply immediately
-						to upcoming reports.
+						Ask in plain language to list totals, edit entries, or delete them —
+						for example &quot;how much did I spend this week?&quot; or
+						&quot;change yesterday&apos;s taxi to 12&quot;. Say{" "}
+						<span className="font-medium text-foreground">undo</span> right
+						after logging to remove the most recent entry.
+					</p>
+					<p>
+						<span className="font-medium text-foreground">/new</span> clears
+						conversation context (after about an hour of inactivity it clears
+						automatically too). Your logged expenses are never deleted.
 					</p>
 				</div>
 			</section>

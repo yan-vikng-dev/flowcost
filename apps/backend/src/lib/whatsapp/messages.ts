@@ -31,6 +31,32 @@ export type SendTemplateMessageResult =
 
 const WHATSAPP_API_URL = `https://graph.facebook.com/v24.0`
 
+function parseWhatsAppErrorCode(errorBody: string): number | undefined {
+	try {
+		const json = JSON.parse(errorBody) as { error?: { code?: number } }
+		const code = json.error?.code
+		return typeof code === "number" ? code : undefined
+	} catch {
+		return undefined
+	}
+}
+
+export class WhatsAppApiError extends Error {
+	readonly status: number
+	readonly statusText: string
+	readonly errorBody: string
+	readonly code: number | undefined
+
+	constructor(status: number, statusText: string, errorBody: string) {
+		super(`WhatsApp API error: ${status} ${statusText} - ${errorBody}`)
+		this.name = "WhatsAppApiError"
+		this.status = status
+		this.statusText = statusText
+		this.errorBody = errorBody
+		this.code = parseWhatsAppErrorCode(errorBody)
+	}
+}
+
 export async function sendWhatsAppText({
 	env,
 	waId,
@@ -61,9 +87,7 @@ export async function sendWhatsAppText({
 			waId,
 			errorBody: errorText,
 		})
-		throw new Error(
-			`WhatsApp API error: ${response.status} ${response.statusText} - ${errorText}`,
-		)
+		throw new WhatsAppApiError(response.status, response.statusText, errorText)
 	}
 
 	try {

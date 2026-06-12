@@ -8,6 +8,7 @@ import {
 } from "@repo/db/drizzle/queries/connections"
 import { getUserById } from "@repo/db/drizzle/queries/helpers"
 import type { SelectUser } from "@repo/db/drizzle/schemas/index"
+import { parsePhoneNumberFromString } from "libphonenumber-js/min"
 import { sendTemplateMessage, sendWhatsAppText } from "@/lib/whatsapp/messages"
 
 export const PAIR_INVITE_TEMPLATE_NAME = "pair_invite"
@@ -16,11 +17,24 @@ export const PAIR_INVITE_TEMPLATE_LANG = "en"
 const PAIR_BUTTON_ID = /^pair_(accept|decline):(.+)$/
 export const PAIR_PICK_ID = /^pair_pick:(.+)$/
 
+function formatWaId(waId: string): string {
+	const phone = parsePhoneNumberFromString(`+${waId}`)
+	if (phone?.isValid()) {
+		return phone.formatInternational()
+	}
+	return `+${waId}`
+}
+
 export function displayLabel(user: {
 	displayName: string | null
 	waId: string
 }): string {
-	return user.displayName?.trim() || user.waId
+	const formattedNumber = formatWaId(user.waId)
+	const name = user.displayName?.trim()
+	if (name) {
+		return `${name} (${formattedNumber})`
+	}
+	return formattedNumber
 }
 
 export function parsePairButtonId(

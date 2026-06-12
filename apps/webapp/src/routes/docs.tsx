@@ -66,6 +66,7 @@ const tocMap: Record<string, TocSection[]> = {
 			title: "On this page",
 			items: [
 				{ label: "Start chatting", href: "#start-chatting" },
+				{ label: "Commands and settings", href: "#commands" },
 				{ label: "First entry", href: "#first-entry" },
 				{ label: "Reports", href: "#reports" },
 			],
@@ -84,7 +85,7 @@ const tocMap: Record<string, TocSection[]> = {
 		{
 			title: "On this page",
 			items: [
-				{ label: "Always-on schedule", href: "#report-schedule" },
+				{ label: "Schedule and pausing", href: "#report-schedule" },
 				{ label: "What reports include", href: "#report-contents" },
 			],
 		},
@@ -120,7 +121,8 @@ const docsSearchItems = [
 	},
 	{
 		title: "Getting started",
-		description: "Message Flowcost, log your first expense, and get reports.",
+		description:
+			"Welcome tour, slash commands, your first expense, and reports.",
 		href: "/docs/getting-started",
 		group: "Overview",
 		icon: RocketIcon,
@@ -134,7 +136,8 @@ const docsSearchItems = [
 	},
 	{
 		title: "Reports",
-		description: "Automatic weekly and monthly WhatsApp summaries.",
+		description:
+			"Weekly and monthly summaries — on by default, pausable in chat.",
 		href: "/docs/features/reports",
 		group: "Features",
 		icon: BarChart3Icon,

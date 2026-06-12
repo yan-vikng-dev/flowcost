@@ -70,12 +70,14 @@ whatsappRouter.post("/whatsapp/webhook", async (c) => {
 		return c.text("OK")
 	}
 
+	const isRequestWelcome = messageType === "request_welcome"
 	const hasRecognizedPayload =
 		Boolean(text) ||
 		Boolean(media) ||
 		Boolean(sharedContact) ||
 		Boolean(buttonReply) ||
-		Boolean(buttonPayload)
+		Boolean(buttonPayload) ||
+		isRequestWelcome
 
 	if (!waId || !messageId || !hasRecognizedPayload) {
 		if (waId && messageId && messageType) {
@@ -95,6 +97,7 @@ whatsappRouter.post("/whatsapp/webhook", async (c) => {
 			waId,
 			text: text ?? undefined,
 			messageId,
+			requestWelcome: isRequestWelcome,
 			senderProfileName,
 			sharedContact: sharedContact ?? undefined,
 			buttonReply: buttonReply ?? undefined,

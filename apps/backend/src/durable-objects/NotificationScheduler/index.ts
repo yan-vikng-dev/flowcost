@@ -4,15 +4,25 @@ import {
 	getAllowedUserIds,
 	getUserById,
 } from "@repo/db/drizzle/queries/helpers"
+import type { SelectUser } from "@repo/db/drizzle/schemas/index"
 import type { Currency } from "@repo/shared-lib"
 import { DateTime } from "luxon"
-import { sendWhatsAppText } from "@/lib/whatsapp/messages"
+import {
+	sendTemplateMessage,
+	sendWhatsAppText,
+	WhatsAppApiError,
+} from "@/lib/whatsapp/messages"
 import {
 	determineReportType,
 	generateMonthlyReport,
 	generateWeeklyReport,
 	type ReportType,
 } from "./reports"
+
+export const REPORT_READY_TEMPLATE_NAME = "report_ready"
+export const REPORT_READY_TEMPLATE_LANG = "en"
+
+const RE_ENGAGEMENT_ERROR_CODE = 131047
 
 export class NotificationScheduler extends DurableObject {
 	userId: string | null = null
@@ -46,6 +56,85 @@ export class NotificationScheduler extends DurableObject {
 		})
 	}
 
+	async sendReportNow(
+		reportType: "weekly" | "monthly",
+		dateISO: string,
+	): Promise<void> {
+		const db = getDb()
+		if (!this.userId) {
+			console.error("NotificationScheduler sendReportNow: no stored userId", {
+				id: this.ctx.id.toString(),
+			})
+			return
+		}
+		const userId = this.userId
+
+		const user = await getUserById(db, userId)
+		if (!user) {
+			console.warn(`No user found for sendReportNow ${userId}`, { userId })
+			return
+		}
+
+		const reportDate = DateTime.fromISO(dateISO, { zone: user.timezone })
+		if (!reportDate.isValid) {
+			console.warn("NotificationScheduler sendReportNow: invalid dateISO", {
+				userId,
+				dateISO,
+			})
+			return
+		}
+
+		const allowedUserIds = await getAllowedUserIds(db, userId, true)
+		const partnerId =
+			allowedUserIds.length > 1
+				? (allowedUserIds.find((id) => id !== userId) ?? null)
+				: null
+		const prefs = {
+			timezone: user.timezone,
+			displayCurrency: user.displayCurrency as Currency,
+		}
+		const report = await this.generateReport(
+			userId,
+			reportType,
+			reportDate,
+			prefs,
+			allowedUserIds,
+			partnerId,
+		)
+		if (!report) {
+			console.warn("NotificationScheduler sendReportNow: no report generated", {
+				userId,
+				reportType,
+				dateISO,
+			})
+			return
+		}
+
+		try {
+			await sendWhatsAppText({
+				env: this.env,
+				waId: user.waId,
+				text: report,
+			})
+			console.debug("NotificationScheduler sendReportNow delivered", {
+				userId,
+				reportType,
+				dateISO,
+			})
+
+			const messageId = `report:${reportType}:${reportDate.toISODate()}`
+			await this.appendToConversationHistory(userId, messageId, report)
+		} catch (error) {
+			console.error("NotificationScheduler sendReportNow failed", {
+				userId,
+				reportType,
+				dateISO,
+				error: error instanceof Error ? error.message : String(error),
+				stack: error instanceof Error ? error.stack : undefined,
+			})
+		}
+	}
+
 	override async alarm() {
 		console.debug("NotificationScheduler alarm triggered", {
 			userId: this.userId,
@@ -64,6 +153,14 @@ export class NotificationScheduler extends DurableObject {
 		const user = await getUserById(db, userId)
 		if (!user) {
 			console.warn(`No user found for ${userId}`, { userId })
+			return
+		}
+
+		if (user.reportsPaused) {
+			console.debug("NotificationScheduler skipping report — paused", {
+				userId,
+			})
+			await this.scheduleNextAlarm()
 			return
 		}
 
@@ -101,32 +198,76 @@ export class NotificationScheduler extends DurableObject {
 			partnerId,
 		)
 		if (report) {
-			try {
-				await sendWhatsAppText({
-					env: this.env,
-					waId: user.waId,
-					text: report,
-				})
-				console.debug("NotificationScheduler report sent via WhatsApp", {
-					userId,
-					waId: user.waId,
-					reportType,
-				})
-
-				const messageId = `report:${reportType}:${now.toISODate()}`
-				await this.appendToConversationHistory(userId, messageId, report)
-			} catch (error) {
-				console.error("NotificationScheduler failed to send WhatsApp message", {
-					userId,
-					waId: user.waId,
-					reportType,
-					error: error instanceof Error ? error.message : String(error),
-					stack: error instanceof Error ? error.stack : undefined,
-				})
-			}
+			await this.deliverReport(user, reportType, now, report)
 		}
 
 		await this.scheduleNextAlarm()
+	}
+
+	private async deliverReport(
+		user: SelectUser,
+		reportType: ReportType,
+		reportDate: DateTime,
+		report: string,
+	): Promise<void> {
+		const userId = user.id
+		const dateISO = reportDate.toISODate()
+
+		try {
+			await sendWhatsAppText({
+				env: this.env,
+				waId: user.waId,
+				text: report,
+			})
+			console.debug("NotificationScheduler report sent via WhatsApp", {
+				userId,
+				waId: user.waId,
+				reportType,
+			})
+
+			const messageId = `report:${reportType}:${dateISO}`
+			await this.appendToConversationHistory(userId, messageId, report)
+		} catch (error) {
+			if (
+				error instanceof WhatsAppApiError &&
+				error.code === RE_ENGAGEMENT_ERROR_CODE
+			) {
+				console.info(
+					"NotificationScheduler re-engagement window closed — sending template fallback",
+					{
+						userId,
+						reportType,
+						dateISO,
+					},
+				)
+				const templateResult = await sendTemplateMessage({
+					env: this.env,
+					waId: user.waId,
+					templateName: REPORT_READY_TEMPLATE_NAME,
+					languageCode: REPORT_READY_TEMPLATE_LANG,
+					bodyParams: [reportType],
+					quickReplyPayloads: [`send_report:${reportType}:${dateISO}`],
+				})
+				if (!templateResult.ok) {
+					console.error("NotificationScheduler template fallback failed", {
+						userId,
+						reportType,
+						dateISO,
+						status: templateResult.status,
+						errorBody: templateResult.errorBody,
+					})
+				}
+				return
+			}
+
+			console.error("NotificationScheduler failed to send WhatsApp message", {
+				userId,
+				waId: user.waId,
+				reportType,
+				error: error instanceof Error ? error.message : String(error),
+				stack: error instanceof Error ? error.stack : undefined,
+			})
+		}
 	}
 
 	private async generateReport(

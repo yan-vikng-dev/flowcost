@@ -55,6 +55,17 @@ export async function upsertUserByWaId(
 ): Promise<{ user: SelectUser; created: boolean }> {
 	const existing = await getUserByWaId(db, waId)
 	if (existing) {
+		const displayName = seeds?.displayName?.trim()
+		if (displayName) {
+			const currentName = existing.displayName?.trim() ?? null
+			if (displayName !== currentName) {
+				await db
+					.update(users)
+					.set({ displayName })
+					.where(eq(users.id, existing.id))
+				return { user: { ...existing, displayName }, created: false }
+			}
+		}
 		return { user: existing, created: false }
 	}
 

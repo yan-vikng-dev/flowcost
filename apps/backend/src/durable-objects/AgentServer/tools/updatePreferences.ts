@@ -40,6 +40,10 @@ const updatePreferencesSchema = z.object({
 		.describe(
 			"Day of week for weekly reports: 0 = Sunday through 6 = Saturday",
 		),
+	reportsPaused: z
+		.boolean()
+		.optional()
+		.describe("Pause or resume weekly/monthly spending reports"),
 })
 
 export const makeUpdatePreferencesTool = (
@@ -49,7 +53,7 @@ export const makeUpdatePreferencesTool = (
 ) =>
 	tool({
 		description:
-			"Update the user's preferences. Any omitted properties will be left unchanged. Weekly and monthly reports are always enabled.",
+			"Update the user's preferences. Any omitted properties will be left unchanged. Weekly and monthly reports are on by default; use reportsPaused to pause or resume them.",
 		inputSchema: updatePreferencesSchema,
 		execute: async (input) => {
 			const displayCurrency =
@@ -74,6 +78,7 @@ export const makeUpdatePreferencesTool = (
 			const reportsTime = input.reportsTime ?? existing.reportsTime
 			const reportsWeeklyDay =
 				input.reportsWeeklyDay ?? existing.reportsWeeklyDay
+			const reportsPaused = input.reportsPaused ?? existing.reportsPaused
 
 			await db
 				.update(users)
@@ -83,6 +88,7 @@ export const makeUpdatePreferencesTool = (
 					timezone,
 					reportsTime,
 					reportsWeeklyDay,
+					reportsPaused,
 				})
 				.where(eq(users.id, context.userId))
 
@@ -106,6 +112,7 @@ export const makeUpdatePreferencesTool = (
 			context.timezone = timezone
 			context.reportsTime = reportsTime
 			context.reportsWeeklyDay = reportsWeeklyDay
+			context.reportsPaused = reportsPaused
 
 			return {
 				displayCurrency,
@@ -113,6 +120,7 @@ export const makeUpdatePreferencesTool = (
 				timezone,
 				reportsTime,
 				reportsWeeklyDay,
+				reportsPaused,
 				appliedImmediately: true,
 			}
 		},

@@ -18,12 +18,12 @@ function ConnectionsDocsPage() {
 				<h2 className="font-semibold text-2xl">Pairing via /pair</h2>
 				<div className="space-y-4 text-sm">
 					<p>
-						Share expenses with one partner using WhatsApp commands. Send{" "}
+						Share expenses with one partner using WhatsApp. Send{" "}
 						<span className="font-medium text-foreground">
 							/pair &lt;phone&gt;
 						</span>{" "}
-						with the invitee&apos;s phone number (digits only). They receive a
-						DM asking to accept or decline.
+						with the invitee&apos;s phone number (digits only), or share their
+						contact card in chat. They receive a DM asking to accept or decline.
 					</p>
 					<p>
 						The invitee replies{" "}

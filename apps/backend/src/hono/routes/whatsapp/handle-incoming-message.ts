@@ -21,6 +21,11 @@ import {
 } from "@/lib/whatsapp/messages"
 import { appendMediaContent } from "./append-media-content"
 import {
+	parseOnboardButtonId,
+	sendWelcomeBackMessage,
+	sendWelcomeMessages,
+} from "./onboarding"
+import {
 	displayLabel,
 	handlePairAccept,
 	handlePairDecline,
@@ -29,7 +34,10 @@ import {
 	parsePairButtonId,
 	parsePairPickId,
 } from "./pairing"
+import { parseSendReportPayload } from "./report-buttons"
 import {
+	buildHelpText,
+	buildSettingsText,
 	exactSlashCommands,
 	isSlashCommand,
 	parsePairPhone,
@@ -49,6 +57,7 @@ export async function handleIncomingMessage(
 		sharedContact,
 		buttonReply,
 		buttonPayload,
+		requestWelcome,
 	} = args
 	const pairButtonId = buttonReply?.id ?? buttonPayload ?? null
 	console.debug({
@@ -73,10 +82,16 @@ export async function handleIncomingMessage(
 		await initializeScheduler(env, user.id)
 	}
 
-	const isOnboarding = user.onboardedAt === null
-	if (isOnboarding) {
-		await markUserOnboarded(db, user.id)
+	if (requestWelcome) {
+		if (user.onboardedAt !== null) {
+			await sendWelcomeBackMessage(env, waId)
+		} else {
+			await sendWelcomeMessages(env, waId, user)
+		}
+		return
 	}
+
+	const isOnboarding = user.onboardedAt === null
 
 	if (sharedContact) {
 		await sendTypingIndicator({ env, messageId })
@@ -140,6 +155,45 @@ export async function handleIncomingMessage(
 	if (pairButtonId) {
 		await sendTypingIndicator({ env, messageId })
 
+		const onboardAction = parseOnboardButtonId(pairButtonId)
+		if (onboardAction === "confirm") {
+			await markUserOnboarded(db, user.id)
+			await sendWhatsAppText({
+				env,
+				waId,
+				text: "Perfect, you're all set. Text me your first expense whenever — e.g. *lunch 12* or *taxi 8 EUR yesterday*.",
+			})
+			return
+		}
+		if (onboardAction === "change") {
+			await markUserOnboarded(db, user.id)
+			await sendWhatsAppText({
+				env,
+				waId,
+				text: "Sure — tell me what to change in plain words, e.g. *set my currency to EUR*, *my timezone is Paris*, or *send reports on Sunday at 9am*.",
+			})
+			return
+		}
+
+		if (pairButtonId.startsWith("send_report:")) {
+			const sendReport = parseSendReportPayload(pairButtonId)
+			if (!sendReport) {
+				await sendWhatsAppText({
+					env,
+					waId,
+					text: "That report link looks expired or invalid. Ask me for a spending summary anytime.",
+				})
+				return
+			}
+			const schedulerId = env.NOTIFICATION_SCHEDULER.idFromName(user.id)
+			const schedulerStub = env.NOTIFICATION_SCHEDULER.get(schedulerId)
+			await schedulerStub.sendReportNow(
+				sendReport.reportType,
+				sendReport.dateISO,
+			)
+			return
+		}
+
 		const pairPick = parsePairPickId(pairButtonId)
 		if (pairPick) {
 			const result = await initiatePairingRequest(db, env, user, pairPick.waId)
@@ -184,25 +238,28 @@ export async function handleIncomingMessage(
 				const id = env.AI_CONVERSATION_SERVER.idFromName(user.id)
 				const stub = env.AI_CONVERSATION_SERVER.get(id)
 				await stub.reset()
-				await sendWhatsAppText({ env, waId, text: "I forgor." })
-				return
-			}
-			case "/help":
 				await sendWhatsAppText({
 					env,
 					waId,
-					text: [
-						"Flowcost — log expenses by chatting naturally, or use slash commands:",
-						"",
-						"/new — start a fresh conversation",
-						"Share a contact card — invite someone to share expenses",
-						"/pair <phone> — same as sharing a contact",
-						"/accept — accept a pairing request (fallback)",
-						"/decline — decline a pairing request (fallback)",
-						"/unpair — stop sharing with your partner",
-						"/help — show this message",
-					].join("\n"),
+					text: "Fresh start 🧹 I've cleared our conversation context — your logged expenses are all safe.",
 				})
+				return
+			}
+			case "/help":
+				await sendWhatsAppText({ env, waId, text: buildHelpText() })
+				return
+			case "/settings": {
+				const partnerId = await getPartnerUserId(db, user.id)
+				const partner = partnerId ? await getUserById(db, partnerId) : null
+				await sendWhatsAppText({
+					env,
+					waId,
+					text: buildSettingsText(user, partner ? displayLabel(partner) : null),
+				})
+				return
+			}
+			case "/start":
+				await sendWelcomeMessages(env, waId, user)
 				return
 			case "/accept": {
 				const request = await findPendingRequestForWa(db, waId)
@@ -307,6 +364,7 @@ export async function handleIncomingMessage(
 		timezone: user.timezone,
 		reportsTime: user.reportsTime,
 		reportsWeeklyDay: user.reportsWeeklyDay,
+		reportsPaused: user.reportsPaused,
 		isOnboarding,
 	}
 	try {

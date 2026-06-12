@@ -17,6 +17,7 @@ export const users = sqliteTable("users", {
 	timezone: text().notNull().default("UTC"),
 	reportsTime: text().notNull().default("20:00"),
 	reportsWeeklyDay: integer().notNull().default(0), // 0 = Sunday
+	reportsPaused: integer({ mode: "boolean" }).notNull().default(false),
 	onboardedAt: integer({ mode: "timestamp_ms" }),
 	...timestamps,
 })

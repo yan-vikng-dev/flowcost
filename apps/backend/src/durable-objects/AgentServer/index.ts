@@ -5,6 +5,7 @@ import {
 } from "@ai-sdk/google"
 import { withTracing } from "@posthog/ai"
 import { getDb, initDatabase } from "@repo/db/database/setup"
+import { markUserOnboarded } from "@repo/db/drizzle/queries/helpers"
 import type { Currency } from "@repo/shared-lib"
 import {
 	type ModelMessage,
@@ -21,6 +22,9 @@ const contextWindowMs = 1000 * 60 * 60 // 1 hour
 const maxPromptMessages = 40
 const trimmedPromptMessages = 30
 
+// History can carry non-JSON values (e.g. Dates in tool results) that the AI SDK rejects on replay.
+const toJsonSafe = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T
+
 export type MessageContext = {
 	messageId: string
 	waId: string
@@ -30,6 +34,7 @@ export type MessageContext = {
 	timezone: string
 	reportsTime: string
 	reportsWeeklyDay: number
+	reportsPaused: boolean
 	isOnboarding: boolean
 }
 
@@ -106,38 +111,75 @@ export class AgentServer extends DurableObject {
 
 			this.turns.push({ role: "user", content: message })
 			const db = getDb()
-			const agent = new ToolLoopAgent({
-				model,
-				tools: createTools(messageContext, db, this.env),
-				instructions: buildSystemPrompt(messageContext),
-				stopWhen: stepCountIs(10),
-				providerOptions: {
-					google: {
-						thinkingConfig: {
-							thinkingLevel: "medium",
-							includeThoughts: false,
-						},
-					} satisfies GoogleGenerativeAIProviderOptions,
-				},
-				prepareStep: ({ messages }) => {
-					if (messages.length <= maxPromptMessages)
-						return { messages: messages }
-					const tail = messages.slice(-trimmedPromptMessages)
-					// Never start the prompt mid tool-call/result pair.
-					const firstUserIndex = tail.findIndex((m) => m.role === "user")
-					return {
-						messages: firstUserIndex > 0 ? tail.slice(firstUserIndex) : tail,
+			const createAgent = (stepSink: ModelMessage[]) =>
+				new ToolLoopAgent({
+					model,
+					tools: createTools(messageContext, db, this.env),
+					instructions: buildSystemPrompt(messageContext),
+					stopWhen: stepCountIs(10),
+					maxRetries: 3,
+					providerOptions: {
+						google: {
+							thinkingConfig: {
+								thinkingLevel: "medium",
+								includeThoughts: false,
+							},
+						} satisfies GoogleGenerativeAIProviderOptions,
+					},
+					prepareStep: ({ messages }) => {
+						if (messages.length <= maxPromptMessages)
+							return { messages: messages }
+						const tail = messages.slice(-trimmedPromptMessages)
+						// Never start the prompt mid tool-call/result pair.
+						const firstUserIndex = tail.findIndex((m) => m.role === "user")
+						return {
+							messages: firstUserIndex > 0 ? tail.slice(firstUserIndex) : tail,
+						}
+					},
+					onStepFinish: (step) => {
+						stepSink.push(...step.response.messages)
+					},
+				})
+
+			const maxAttempts = 2
+			const generateWithRetry = async () => {
+				for (let attempt = 1; ; attempt++) {
+					const stepSink: ModelMessage[] = []
+					const agent = createAgent(stepSink)
+					const messages = pruneMessages({
+						messages: toJsonSafe(this.turns),
+						toolCalls: "before-last-10-messages",
+						emptyMessages: "remove",
+					})
+
+					try {
+						const result = await agent.generate({ messages })
+						if (result.finishReason === "error" || !result.text) {
+							throw new Error(
+								`Failed to generate text. finishReason: ${result.finishReason}, text: ${result.text}`,
+							)
+						}
+						return result
+					} catch (error) {
+						const prunedStepSink = pruneMessages({
+							messages: stepSink,
+							emptyMessages: "remove",
+						})
+						if (prunedStepSink.length > 0) {
+							this.turns.push(...prunedStepSink)
+							await this.ctx.storage.put("conversationHistory", this.turns)
+						}
+
+						if (attempt >= maxAttempts) throw error
+						console.warn("Agent generate attempt failed, retrying", {
+							attempt,
+							error,
+						})
 					}
-				},
-			})
-			// Keep recent tool calls in the prompt: a history scrubbed of tool
-			// calls teaches the model by example to answer without tools.
-			const messages = pruneMessages({
-				messages: this.turns,
-				toolCalls: "before-last-10-messages",
-				emptyMessages: "remove",
-			})
-			const result = await agent.generate({ messages })
+				}
+			}
+
+			const result = await generateWithRetry()
 
 			const prunedMessages = pruneMessages({
 				messages: result.response.messages,
@@ -146,17 +188,15 @@ export class AgentServer extends DurableObject {
 			this.turns.push(...prunedMessages)
 			await this.ctx.storage.put("conversationHistory", this.turns)
 
-			if (result.finishReason === "error" || !result.text) {
-				throw new Error(
-					`Failed to generate text. finishReason: ${result.finishReason}, text: ${result.text}`,
-				)
-			}
-
 			await sendWhatsAppText({
 				env: this.env,
 				waId: messageContext.waId,
 				text: result.text,
 			})
+
+			if (messageContext.isOnboarding) {
+				await markUserOnboarded(db, messageContext.userId)
+			}
 		} catch (error) {
 			console.error("Error in AgentServer.handleMessage", {
 				userId: messageContext.userId,
