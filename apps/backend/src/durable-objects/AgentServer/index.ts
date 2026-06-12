@@ -122,17 +122,25 @@ export class AgentServer extends DurableObject {
 				prepareStep: ({ messages }) => {
 					if (messages.length <= maxPromptMessages)
 						return { messages: messages }
+					const tail = messages.slice(-trimmedPromptMessages)
+					// Never start the prompt mid tool-call/result pair.
+					const firstUserIndex = tail.findIndex((m) => m.role === "user")
 					return {
-						messages: messages.slice(-trimmedPromptMessages),
+						messages: firstUserIndex > 0 ? tail.slice(firstUserIndex) : tail,
 					}
 				},
 			})
-			const messages = this.turns
+			// Keep recent tool calls in the prompt: a history scrubbed of tool
+			// calls teaches the model by example to answer without tools.
+			const messages = pruneMessages({
+				messages: this.turns,
+				toolCalls: "before-last-10-messages",
+				emptyMessages: "remove",
+			})
 			const result = await agent.generate({ messages })
 
 			const prunedMessages = pruneMessages({
 				messages: result.response.messages,
-				toolCalls: "all",
 				emptyMessages: "remove",
 			})
 			this.turns.push(...prunedMessages)
