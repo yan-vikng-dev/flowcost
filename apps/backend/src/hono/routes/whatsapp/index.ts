@@ -40,6 +40,14 @@ whatsappRouter.post("/whatsapp/webhook", async (c) => {
 	} catch {
 		return c.text("invalid json", 400)
 	}
+	const parsed = NotificationPayloadSchema.safeParse(json)
+	if (!parsed.success) {
+		// Returning non-2xx makes Meta retry the same unparseable payload.
+		console.warn("Unrecognized WhatsApp webhook payload; acknowledging", {
+			issues: parsed.error.issues,
+		})
+		return c.text("OK")
+	}
 	const {
 		phoneNumberId,
 		waId,
@@ -51,7 +59,7 @@ whatsappRouter.post("/whatsapp/webhook", async (c) => {
 		buttonReply,
 		buttonPayload,
 		senderProfileName,
-	} = NotificationPayloadSchema.parse(json)
+	} = parsed.data
 
 	if (phoneNumberId && phoneNumberId !== c.env.WHATSAPP_PHONE_NUMBER_ID) {
 		console.debug({

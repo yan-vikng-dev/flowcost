@@ -3,6 +3,7 @@ import { users } from "@repo/db/drizzle/schemas/index"
 import { type Currency, currencies } from "@repo/shared-lib"
 import { tool } from "ai"
 import { eq } from "drizzle-orm"
+import { IANAZone } from "luxon"
 import { z } from "zod"
 import type { MessageContext } from ".."
 
@@ -62,6 +63,8 @@ export const makeUpdatePreferencesTool = (
 				throw new Error(`invalid currency provided ${displayCurrency}`)
 			if (!currencies.includes(defaultEntryCurrency))
 				throw new Error(`invalid currency provided ${defaultEntryCurrency}`)
+			if (input.timezone && !IANAZone.isValidZone(input.timezone))
+				throw new Error(`invalid IANA timezone provided ${input.timezone}`)
 
 			const existing = await db.query.users.findFirst({
 				where: eq(users.id, context.userId),
@@ -96,12 +99,21 @@ export const makeUpdatePreferencesTool = (
 				await schedulerStub.initialize(context.userId)
 			}
 
+			// Later tool calls in this same run read the shared context, so the
+			// change applies immediately — not just on the next message.
+			context.displayCurrency = displayCurrency
+			context.defaultEntryCurrency = defaultEntryCurrency
+			context.timezone = timezone
+			context.reportsTime = reportsTime
+			context.reportsWeeklyDay = reportsWeeklyDay
+
 			return {
 				displayCurrency,
 				defaultEntryCurrency,
 				timezone,
 				reportsTime,
 				reportsWeeklyDay,
+				appliedImmediately: true,
 			}
 		},
 	})

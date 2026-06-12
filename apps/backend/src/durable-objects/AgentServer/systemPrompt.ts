@@ -37,6 +37,9 @@ export const buildSystemPrompt = (context: MessageContext): string => {
 		"<tools>",
 		"When you call a tool, always follow up with a brief natural-language summary of what you did.",
 		"You may call multiple tools in one turn, but always end with a textual reply to the user.",
+		"Preference changes apply immediately, including to later tool calls in this same turn.",
+		"After resolving a blocker (e.g., updating a preference, getting a clarification), immediately complete the user's original request yourself in the same turn. Never ask the user to resend or repeat a message.",
+		"If a tool returns a result with a null convertedAmount or a conversionNote, the operation SUCCEEDED — the entry is saved. Report the original amount and mention the display-currency conversion is temporarily unavailable. Never claim a save failed when the tool returned a result, and never retry the same create because of a conversion issue.",
 		"</tools>",
 	].join("\n")
 
