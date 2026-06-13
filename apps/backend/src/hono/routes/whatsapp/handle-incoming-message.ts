@@ -18,6 +18,7 @@ import {
 	sendInteractiveButtons,
 	sendTypingIndicator,
 	sendWhatsAppText,
+	trySendUserFallback,
 } from "@/lib/whatsapp/messages"
 import { appendMediaContent } from "./append-media-content"
 import {
@@ -102,6 +103,7 @@ export async function handleIncomingMessage(
 				env,
 				waId,
 				text: "That contact doesn't have a phone number I can use. Share a contact that has a number, or type /pair <number>.",
+				operation: "reply",
 			})
 			return
 		}
@@ -111,13 +113,19 @@ export async function handleIncomingMessage(
 			if (!phone) return
 			const result = await initiatePairingRequest(db, env, user, phone.waId)
 			if (!result.ok) {
-				await sendWhatsAppText({ env, waId, text: result.message })
+				await sendWhatsAppText({
+					env,
+					waId,
+					text: result.message,
+					operation: "reply",
+				})
 				return
 			}
 			await sendWhatsAppText({
 				env,
 				waId,
 				text: "Pairing request sent. They have 24 hours to accept.",
+				operation: "reply",
 			})
 			return
 		}
@@ -135,6 +143,7 @@ export async function handleIncomingMessage(
 					id: `pair_pick:${phone.waId}`,
 					title: phone.label,
 				})),
+				operation: "interactive",
 			})
 			return
 		}
@@ -148,6 +157,7 @@ export async function handleIncomingMessage(
 			env,
 			waId,
 			text: `${intro}\n\n${numberList}\n\nReply with /pair <number> for the one you want to invite.`,
+			operation: "reply",
 		})
 		return
 	}
@@ -162,6 +172,7 @@ export async function handleIncomingMessage(
 				env,
 				waId,
 				text: "Perfect, you're all set. Text me your first expense whenever — e.g. *lunch 12* or *taxi 8 EUR yesterday*.",
+				operation: "reply",
 			})
 			return
 		}
@@ -171,6 +182,7 @@ export async function handleIncomingMessage(
 				env,
 				waId,
 				text: "Sure — tell me what to change in plain words, e.g. *set my currency to EUR*, *my timezone is Paris*, or *send reports on Sunday at 9am*.",
+				operation: "reply",
 			})
 			return
 		}
@@ -182,6 +194,7 @@ export async function handleIncomingMessage(
 					env,
 					waId,
 					text: "That report link looks expired or invalid. Ask me for a spending summary anytime.",
+					operation: "reply",
 				})
 				return
 			}
@@ -198,13 +211,19 @@ export async function handleIncomingMessage(
 		if (pairPick) {
 			const result = await initiatePairingRequest(db, env, user, pairPick.waId)
 			if (!result.ok) {
-				await sendWhatsAppText({ env, waId, text: result.message })
+				await sendWhatsAppText({
+					env,
+					waId,
+					text: result.message,
+					operation: "reply",
+				})
 				return
 			}
 			await sendWhatsAppText({
 				env,
 				waId,
 				text: "Pairing request sent. They have 24 hours to accept.",
+				operation: "reply",
 			})
 			return
 		}
@@ -215,19 +234,30 @@ export async function handleIncomingMessage(
 				env,
 				waId,
 				text: "Sorry, I didn't recognize that button.",
+				operation: "reply",
 			})
 			return
 		}
 		if (parsed.action === "accept") {
 			const result = await handlePairAccept(db, env, user, parsed.requestId)
 			if (!result.ok) {
-				await sendWhatsAppText({ env, waId, text: result.message })
+				await sendWhatsAppText({
+					env,
+					waId,
+					text: result.message,
+					operation: "reply",
+				})
 			}
 			return
 		}
 		const result = await handlePairDecline(db, env, user, parsed.requestId)
 		if (!result.ok) {
-			await sendWhatsAppText({ env, waId, text: result.message })
+			await sendWhatsAppText({
+				env,
+				waId,
+				text: result.message,
+				operation: "reply",
+			})
 		}
 		return
 	}
@@ -242,11 +272,17 @@ export async function handleIncomingMessage(
 					env,
 					waId,
 					text: "Fresh start 🧹 I've cleared our conversation context — your logged expenses are all safe.",
+					operation: "command",
 				})
 				return
 			}
 			case "/help":
-				await sendWhatsAppText({ env, waId, text: buildHelpText() })
+				await sendWhatsAppText({
+					env,
+					waId,
+					text: buildHelpText(),
+					operation: "command",
+				})
 				return
 			case "/settings": {
 				const partnerId = await getPartnerUserId(db, user.id)
@@ -255,6 +291,7 @@ export async function handleIncomingMessage(
 					env,
 					waId,
 					text: buildSettingsText(user, partner ? displayLabel(partner) : null),
+					operation: "command",
 				})
 				return
 			}
@@ -268,12 +305,18 @@ export async function handleIncomingMessage(
 						env,
 						waId,
 						text: "No pending pairing request found.",
+						operation: "command",
 					})
 					return
 				}
 				const result = await handlePairAccept(db, env, user, request.id)
 				if (!result.ok) {
-					await sendWhatsAppText({ env, waId, text: result.message })
+					await sendWhatsAppText({
+						env,
+						waId,
+						text: result.message,
+						operation: "command",
+					})
 				}
 				return
 			}
@@ -284,12 +327,18 @@ export async function handleIncomingMessage(
 						env,
 						waId,
 						text: "No pending pairing request found.",
+						operation: "command",
 					})
 					return
 				}
 				const result = await handlePairDecline(db, env, user, request.id)
 				if (!result.ok) {
-					await sendWhatsAppText({ env, waId, text: result.message })
+					await sendWhatsAppText({
+						env,
+						waId,
+						text: result.message,
+						operation: "command",
+					})
 				}
 				return
 			}
@@ -300,6 +349,7 @@ export async function handleIncomingMessage(
 						env,
 						waId,
 						text: "You're not paired with anyone.",
+						operation: "command",
 					})
 					return
 				}
@@ -316,12 +366,14 @@ export async function handleIncomingMessage(
 					env,
 					waId,
 					text: "Unpaired ✅ You no longer share expenses with your partner.",
+					operation: "command",
 				})
 				if (partner) {
 					await sendWhatsAppText({
 						env,
 						waId: partner.waId,
 						text: `${displayLabel(user)} ended your expense sharing.`,
+						operation: "reply",
 					})
 				}
 				return
@@ -341,13 +393,19 @@ export async function handleIncomingMessage(
 		if (targetWaId) {
 			const result = await initiatePairingRequest(db, env, user, targetWaId)
 			if (!result.ok) {
-				await sendWhatsAppText({ env, waId, text: result.message })
+				await sendWhatsAppText({
+					env,
+					waId,
+					text: result.message,
+					operation: "command",
+				})
 				return
 			}
 			await sendWhatsAppText({
 				env,
 				waId,
 				text: "Pairing request sent. They have 24 hours to accept.",
+				operation: "command",
 			})
 			return
 		}
@@ -391,19 +449,21 @@ export async function handleIncomingMessage(
 		await sendTypingIndicator({ env, messageId })
 		await stub.handleMessage(content, messageContext)
 	} catch (error) {
-		console.error("Error handling WhatsApp message", {
+		console.error({
+			event: "whatsapp.handle_incoming.failed",
 			waId,
 			userId: user.id,
 			messageId,
-			text,
-			error: error instanceof Error ? error.message : String(error),
-			stack: error instanceof Error ? error.stack : undefined,
 			errorName: error instanceof Error ? error.name : undefined,
+			errorMessage: error instanceof Error ? error.message : String(error),
 		})
-		await sendWhatsAppText({
+
+		await trySendUserFallback({
 			env,
 			waId,
 			text: "Something went wrong. Please try again.",
+			error,
+			userId: user.id,
 		})
 		throw error
 	}

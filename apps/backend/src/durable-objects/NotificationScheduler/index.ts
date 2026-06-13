@@ -7,11 +7,8 @@ import {
 import type { SelectUser } from "@repo/db/drizzle/schemas/index"
 import type { Currency } from "@repo/shared-lib"
 import { DateTime } from "luxon"
-import {
-	sendTemplateMessage,
-	sendWhatsAppText,
-	WhatsAppApiError,
-} from "@/lib/whatsapp/messages"
+import { WhatsAppApiError } from "@/lib/whatsapp/classify-error"
+import { sendTemplateMessage, sendWhatsAppText } from "@/lib/whatsapp/messages"
 import {
 	determineReportType,
 	generateMonthlyReport,
@@ -115,6 +112,8 @@ export class NotificationScheduler extends DurableObject {
 				env: this.env,
 				waId: user.waId,
 				text: report,
+				operation: "report",
+				userId,
 			})
 			console.debug("NotificationScheduler sendReportNow delivered", {
 				userId,
@@ -218,6 +217,8 @@ export class NotificationScheduler extends DurableObject {
 				env: this.env,
 				waId: user.waId,
 				text: report,
+				operation: "report",
+				userId,
 			})
 			console.debug("NotificationScheduler report sent via WhatsApp", {
 				userId,
@@ -247,6 +248,8 @@ export class NotificationScheduler extends DurableObject {
 					languageCode: REPORT_READY_TEMPLATE_LANG,
 					bodyParams: [reportType],
 					quickReplyPayloads: [`send_report:${reportType}:${dateISO}`],
+					operation: "template",
+					userId,
 				})
 				if (!templateResult.ok) {
 					console.error("NotificationScheduler template fallback failed", {

@@ -128,16 +128,12 @@ function normalizeTemplateComponents(
 			return {
 				type: "BODY",
 				text: String(record["text"] ?? ""),
-				example: record["example"] as
-					| { body_text: string[][] }
-					| undefined,
+				example: record["example"] as { body_text: string[][] } | undefined,
 			}
 		}
 
 		if (type === "BUTTONS") {
-			const buttons = Array.isArray(record["buttons"])
-				? record["buttons"]
-				: []
+			const buttons = Array.isArray(record["buttons"]) ? record["buttons"] : []
 			return {
 				type: "BUTTONS",
 				buttons: buttons.map((button) => {

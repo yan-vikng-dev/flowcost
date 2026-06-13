@@ -92,6 +92,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 					src="https://www.googletagmanager.com/gtag/js?id=AW-17572813812"
 				/>
 				<script
+					// biome-ignore lint/security/noDangerouslySetInnerHtml: Google Ads gtag requires an inline bootstrap script in <head> before first paint
 					dangerouslySetInnerHTML={{
 						__html: [
 							"window.dataLayer = window.dataLayer || [];",

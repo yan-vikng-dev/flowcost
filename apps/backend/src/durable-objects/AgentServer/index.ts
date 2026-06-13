@@ -14,7 +14,7 @@ import {
 	ToolLoopAgent,
 } from "ai"
 import { PostHog } from "posthog-node"
-import { sendWhatsAppText } from "@/lib/whatsapp/messages"
+import { sendWhatsAppText, trySendUserFallback } from "@/lib/whatsapp/messages"
 import { buildSystemPrompt } from "./systemPrompt"
 import { createTools } from "./tools"
 
@@ -94,128 +94,177 @@ export class AgentServer extends DurableObject {
 		message: UserContent,
 		messageContext: MessageContext,
 	) {
-		try {
-			const baseModel = this.googleProvider("gemini-3.5-flash")
-			if (!this.posthogClient) throw new Error("Posthog client not initialized")
-			if (!this.traceId) throw new Error("Trace ID not initialized")
-			this.posthogClient.identify({ distinctId: messageContext.userId })
-			const model = withTracing(baseModel, this.posthogClient, {
-				posthogDistinctId: messageContext.userId,
-				posthogTraceId: this.traceId,
-				posthogPrivacyMode: false,
-				posthogProperties: {
-					$session_id: this.traceId,
-					$ai_session_id: this.traceId,
-				},
-			})
+		const fallbackText =
+			"Something went wrong. Please try again, or start a new chat with /new"
 
-			this.turns.push({ role: "user", content: message })
-			const db = getDb()
-			const createAgent = (stepSink: ModelMessage[]) =>
-				new ToolLoopAgent({
-					model,
-					tools: createTools(messageContext, db, this.env),
-					instructions: buildSystemPrompt(messageContext),
-					stopWhen: stepCountIs(10),
-					maxRetries: 3,
-					providerOptions: {
-						google: {
-							thinkingConfig: {
-								thinkingLevel: "medium",
-								includeThoughts: false,
-							},
-						} satisfies GoogleGenerativeAIProviderOptions,
-					},
-					prepareStep: ({ messages }) => {
-						if (messages.length <= maxPromptMessages)
-							return { messages: messages }
-						const tail = messages.slice(-trimmedPromptMessages)
-						// Never start the prompt mid tool-call/result pair.
-						const firstUserIndex = tail.findIndex((m) => m.role === "user")
-						return {
-							messages: firstUserIndex > 0 ? tail.slice(firstUserIndex) : tail,
-						}
-					},
-					onStepFinish: (step) => {
-						stepSink.push(...step.response.messages)
+		try {
+			let result: { text: string; response: { messages: ModelMessage[] } }
+
+			try {
+				const baseModel = this.googleProvider("gemini-3.5-flash")
+				if (!this.posthogClient)
+					throw new Error("Posthog client not initialized")
+				if (!this.traceId) throw new Error("Trace ID not initialized")
+				this.posthogClient.identify({ distinctId: messageContext.userId })
+				const model = withTracing(baseModel, this.posthogClient, {
+					posthogDistinctId: messageContext.userId,
+					posthogTraceId: this.traceId,
+					posthogPrivacyMode: false,
+					posthogProperties: {
+						$session_id: this.traceId,
+						$ai_session_id: this.traceId,
 					},
 				})
 
-			const maxAttempts = 2
-			const generateWithRetry = async () => {
-				for (let attempt = 1; ; attempt++) {
-					const stepSink: ModelMessage[] = []
-					const agent = createAgent(stepSink)
-					const messages = pruneMessages({
-						messages: toJsonSafe(this.turns),
-						toolCalls: "before-last-10-messages",
-						emptyMessages: "remove",
+				this.turns.push({ role: "user", content: message })
+				const db = getDb()
+				const createAgent = (stepSink: ModelMessage[]) =>
+					new ToolLoopAgent({
+						model,
+						tools: createTools(messageContext, db, this.env),
+						instructions: buildSystemPrompt(messageContext),
+						stopWhen: stepCountIs(10),
+						maxRetries: 3,
+						providerOptions: {
+							google: {
+								thinkingConfig: {
+									thinkingLevel: "medium",
+									includeThoughts: false,
+								},
+							} satisfies GoogleGenerativeAIProviderOptions,
+						},
+						prepareStep: ({ messages }) => {
+							if (messages.length <= maxPromptMessages)
+								return { messages: messages }
+							const tail = messages.slice(-trimmedPromptMessages)
+							// Never start the prompt mid tool-call/result pair.
+							const firstUserIndex = tail.findIndex((m) => m.role === "user")
+							return {
+								messages:
+									firstUserIndex > 0 ? tail.slice(firstUserIndex) : tail,
+							}
+						},
+						onStepFinish: (step) => {
+							stepSink.push(...step.response.messages)
+						},
 					})
 
-					try {
-						const result = await agent.generate({ messages })
-						if (result.finishReason === "error" || !result.text) {
-							throw new Error(
-								`Failed to generate text. finishReason: ${result.finishReason}, text: ${result.text}`,
-							)
-						}
-						return result
-					} catch (error) {
-						const prunedStepSink = pruneMessages({
-							messages: stepSink,
+				const maxAttempts = 2
+				const generateWithRetry = async () => {
+					for (let attempt = 1; ; attempt++) {
+						const stepSink: ModelMessage[] = []
+						const agent = createAgent(stepSink)
+						const messages = pruneMessages({
+							messages: toJsonSafe(this.turns),
+							toolCalls: "before-last-10-messages",
 							emptyMessages: "remove",
 						})
-						if (prunedStepSink.length > 0) {
-							this.turns.push(...prunedStepSink)
-							await this.ctx.storage.put("conversationHistory", this.turns)
-						}
 
-						if (attempt >= maxAttempts) throw error
-						console.warn("Agent generate attempt failed, retrying", {
-							attempt,
-							error,
-						})
+						try {
+							const generateResult = await agent.generate({ messages })
+							if (
+								generateResult.finishReason === "error" ||
+								!generateResult.text
+							) {
+								throw new Error(
+									`Failed to generate text. finishReason: ${generateResult.finishReason}, text: ${generateResult.text}`,
+								)
+							}
+							return generateResult
+						} catch (error) {
+							const prunedStepSink = pruneMessages({
+								messages: stepSink,
+								emptyMessages: "remove",
+							})
+							if (prunedStepSink.length > 0) {
+								this.turns.push(...prunedStepSink)
+								await this.ctx.storage.put("conversationHistory", this.turns)
+							}
+
+							if (attempt >= maxAttempts) throw error
+							console.warn("Agent generate attempt failed, retrying", {
+								attempt,
+								error,
+							})
+						}
 					}
 				}
+
+				result = await generateWithRetry()
+			} catch (error) {
+				console.error({
+					event: "agent.handle_message.failed",
+					userId: messageContext.userId,
+					messageId: messageContext.messageId,
+					traceId: this.traceId,
+					failurePhase: "generate",
+					errorName: error instanceof Error ? error.name : undefined,
+					errorMessage: error instanceof Error ? error.message : String(error),
+				})
+				await trySendUserFallback({
+					env: this.env,
+					waId: messageContext.waId,
+					text: fallbackText,
+					error,
+					userId: messageContext.userId,
+					traceId: this.traceId ?? undefined,
+				})
+				return
 			}
 
-			const result = await generateWithRetry()
-
-			const prunedMessages = pruneMessages({
-				messages: result.response.messages,
-				emptyMessages: "remove",
-			})
-			this.turns.push(...prunedMessages)
-			await this.ctx.storage.put("conversationHistory", this.turns)
-
-			await sendWhatsAppText({
-				env: this.env,
-				waId: messageContext.waId,
-				text: result.text,
-			})
-
-			if (messageContext.isOnboarding) {
-				await markUserOnboarded(db, messageContext.userId)
+			try {
+				const prunedMessages = pruneMessages({
+					messages: result.response.messages,
+					emptyMessages: "remove",
+				})
+				this.turns.push(...prunedMessages)
+				await this.ctx.storage.put("conversationHistory", this.turns)
+			} catch (error) {
+				console.error({
+					event: "agent.handle_message.failed",
+					userId: messageContext.userId,
+					messageId: messageContext.messageId,
+					traceId: this.traceId,
+					failurePhase: "storage",
+					errorName: error instanceof Error ? error.name : undefined,
+					errorMessage: error instanceof Error ? error.message : String(error),
+				})
+				await trySendUserFallback({
+					env: this.env,
+					waId: messageContext.waId,
+					text: fallbackText,
+					error,
+					userId: messageContext.userId,
+					traceId: this.traceId ?? undefined,
+				})
+				return
 			}
-		} catch (error) {
-			console.error("Error in AgentServer.handleMessage", {
-				userId: messageContext.userId,
-				messageId: messageContext.messageId,
-				traceId: this.traceId,
-				error,
-			})
+
 			try {
 				await sendWhatsAppText({
 					env: this.env,
 					waId: messageContext.waId,
-					text: "Something went wrong. Please try again, or start a new chat with /new",
+					text: result.text,
+					operation: "reply",
+					userId: messageContext.userId,
+					traceId: this.traceId ?? undefined,
 				})
-			} catch (sendError) {
-				console.error("Failed to send WhatsApp error message", {
+
+				if (messageContext.isOnboarding) {
+					const db = getDb()
+					await markUserOnboarded(db, messageContext.userId)
+				}
+			} catch (error) {
+				console.error({
+					event: "agent.handle_message.failed",
 					userId: messageContext.userId,
 					messageId: messageContext.messageId,
-					sendError,
+					traceId: this.traceId,
+					failurePhase: "reply_send",
+					errorName: error instanceof Error ? error.name : undefined,
+					errorMessage: error instanceof Error ? error.message : String(error),
 				})
+				return
 			}
 		} finally {
 			this.seenMessageIds.add(messageContext.messageId)

@@ -22,6 +22,7 @@ export async function sendWelcomeMessages(
 		env,
 		waId,
 		text: "Hey! I'm Flowcost — I track your spending right here in WhatsApp. Just text me an expense like *coffee 4.50* and I'll log it. You can also send a photo of a receipt or a voice note. By default I send you a spending report every week and at the end of each month — you can pause them anytime.",
+		operation: "reply",
 	})
 	await sendInteractiveButtons({
 		env,
@@ -31,6 +32,7 @@ export async function sendWelcomeMessages(
 			{ id: ONBOARD_CONFIRM_ID, title: "Looks right" },
 			{ id: ONBOARD_CHANGE_ID, title: "Change settings" },
 		],
+		operation: "interactive",
 	})
 }
 
@@ -39,5 +41,6 @@ export async function sendWelcomeBackMessage(env: Env, waId: string) {
 		env,
 		waId,
 		text: "Welcome back! Just text me an expense anytime — e.g. *lunch 12* — or type /help for a refresher.",
+		operation: "reply",
 	})
 }

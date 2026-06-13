@@ -87,6 +87,7 @@ whatsappRouter.post("/whatsapp/webhook", async (c) => {
 					env: c.env,
 					waId,
 					text: "Sorry, I can't read this media type. try a photo?",
+					operation: "reply",
 				}),
 			)
 		}

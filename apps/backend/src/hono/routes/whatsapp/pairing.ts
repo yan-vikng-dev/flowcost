@@ -83,6 +83,7 @@ export async function sendPairingInvite(
 			`pair_accept:${requestId}`,
 			`pair_decline:${requestId}`,
 		],
+		operation: "template",
 	})
 	if (!result.ok) return { ok: false }
 	return { ok: true }
@@ -123,6 +124,7 @@ export async function initiatePairingRequest(
 			env,
 			waId: requester.waId,
 			text: failureMessage,
+			operation: "reply",
 		})
 		return { ok: false, message: failureMessage }
 	}
@@ -179,6 +181,7 @@ export async function handlePairAccept(
 			env,
 			waId: requester.waId,
 			text: `${displayLabel(accepter)} accepted your pairing request. You're now sharing expenses.`,
+			operation: "reply",
 		})
 	}
 	await initializeScheduler(env, accepter.id)
@@ -186,6 +189,7 @@ export async function handlePairAccept(
 		env,
 		waId: accepter.waId,
 		text: "Paired ✅ You now share expenses with your partner.",
+		operation: "reply",
 	})
 
 	return { ok: true }
@@ -212,12 +216,14 @@ export async function handlePairDecline(
 			env,
 			waId: requester.waId,
 			text: `${displayLabel(decliner)} declined your pairing request.`,
+			operation: "reply",
 		})
 	}
 	await sendWhatsAppText({
 		env,
 		waId: decliner.waId,
 		text: "Request declined.",
+		operation: "reply",
 	})
 
 	return { ok: true }
