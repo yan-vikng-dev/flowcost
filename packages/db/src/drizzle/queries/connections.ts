@@ -1,4 +1,4 @@
-import { and, desc, eq, gt, or } from "drizzle-orm"
+import { and, eq, gt, or } from "drizzle-orm"
 import type { DrizzleDb } from "../../database/setup"
 import {
 	connection_requests,
@@ -61,20 +61,6 @@ export async function createConnectionRequest(
 	}
 
 	return request
-}
-
-export async function findPendingRequestForWa(
-	db: DrizzleDb,
-	targetWaId: string,
-): Promise<SelectConnectionRequest | undefined> {
-	return db.query.connection_requests.findFirst({
-		where: and(
-			eq(connection_requests.targetWaId, targetWaId),
-			eq(connection_requests.status, "pending"),
-			gt(connection_requests.expiresAt, new Date()),
-		),
-		orderBy: desc(connection_requests.createdAt),
-	})
 }
 
 export async function acceptConnectionRequest(

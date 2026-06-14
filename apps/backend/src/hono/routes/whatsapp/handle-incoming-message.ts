@@ -1,8 +1,5 @@
 import { getDb } from "@repo/db/database/setup"
-import {
-	findPendingRequestForWa,
-	getPartnerUserId,
-} from "@repo/db/drizzle/queries/connections"
+import { getPartnerUserId } from "@repo/db/drizzle/queries/connections"
 import {
 	getUserById,
 	markUserOnboarded,
@@ -39,9 +36,7 @@ import { parseSendReportPayload } from "./report-buttons"
 import {
 	buildHelpText,
 	buildSettingsText,
-	exactSlashCommands,
 	isSlashCommand,
-	parsePairPhone,
 } from "./slash-commands"
 import type { HandleIncomingMessageArgs, UserContentPart } from "./types"
 
@@ -102,7 +97,7 @@ export async function handleIncomingMessage(
 			await sendWhatsAppText({
 				env,
 				waId,
-				text: "That contact doesn't have a phone number I can use. Share a contact that has a number, or type /pair <number>.",
+				text: "That contact doesn't have a phone number I can use. Share a contact that has a number.",
 				operation: "reply",
 			})
 			return
@@ -130,34 +125,19 @@ export async function handleIncomingMessage(
 			return
 		}
 
-		if (phones.length <= 3) {
-			const contactName = sharedContact.displayName?.trim()
-			const bodyText = contactName
-				? `${contactName} has multiple numbers. Which one should I invite?`
-				: "This contact has multiple numbers. Which one should I invite?"
-			await sendInteractiveButtons({
-				env,
-				waId,
-				bodyText,
-				buttons: phones.map((phone) => ({
-					id: `pair_pick:${phone.waId}`,
-					title: phone.label,
-				})),
-				operation: "interactive",
-			})
-			return
-		}
-
 		const contactName = sharedContact.displayName?.trim()
-		const numberList = phones.map((phone) => `• ${phone.label}`).join("\n")
-		const intro = contactName
-			? `${contactName} has more numbers than I can show as buttons:`
-			: "This contact has more numbers than I can show as buttons:"
-		await sendWhatsAppText({
+		const bodyText = contactName
+			? `${contactName} has multiple numbers. Which one should I invite?`
+			: "This contact has multiple numbers. Which one should I invite?"
+		await sendInteractiveButtons({
 			env,
 			waId,
-			text: `${intro}\n\n${numberList}\n\nReply with /pair <number> for the one you want to invite.`,
-			operation: "reply",
+			bodyText,
+			buttons: phones.slice(0, 3).map((phone) => ({
+				id: `pair_pick:${phone.waId}`,
+				title: phone.label,
+			})),
+			operation: "interactive",
 		})
 		return
 	}
@@ -298,50 +278,6 @@ export async function handleIncomingMessage(
 			case "/start":
 				await sendWelcomeMessages(env, waId, user)
 				return
-			case "/accept": {
-				const request = await findPendingRequestForWa(db, waId)
-				if (!request) {
-					await sendWhatsAppText({
-						env,
-						waId,
-						text: "No pending pairing request found.",
-						operation: "command",
-					})
-					return
-				}
-				const result = await handlePairAccept(db, env, user, request.id)
-				if (!result.ok) {
-					await sendWhatsAppText({
-						env,
-						waId,
-						text: result.message,
-						operation: "command",
-					})
-				}
-				return
-			}
-			case "/decline": {
-				const request = await findPendingRequestForWa(db, waId)
-				if (!request) {
-					await sendWhatsAppText({
-						env,
-						waId,
-						text: "No pending pairing request found.",
-						operation: "command",
-					})
-					return
-				}
-				const result = await handlePairDecline(db, env, user, request.id)
-				if (!result.ok) {
-					await sendWhatsAppText({
-						env,
-						waId,
-						text: result.message,
-						operation: "command",
-					})
-				}
-				return
-			}
 			case "/unpair": {
 				const partnerId = await getPartnerUserId(db, user.id)
 				if (!partnerId) {
@@ -378,36 +314,6 @@ export async function handleIncomingMessage(
 				}
 				return
 			}
-			default: {
-				if (
-					!exactSlashCommands.includes(
-						text as (typeof exactSlashCommands)[number],
-					)
-				) {
-					break
-				}
-			}
-		}
-
-		const targetWaId = parsePairPhone(text)
-		if (targetWaId) {
-			const result = await initiatePairingRequest(db, env, user, targetWaId)
-			if (!result.ok) {
-				await sendWhatsAppText({
-					env,
-					waId,
-					text: result.message,
-					operation: "command",
-				})
-				return
-			}
-			await sendWhatsAppText({
-				env,
-				waId,
-				text: "Pairing request sent. They have 24 hours to accept.",
-				operation: "command",
-			})
-			return
 		}
 	}
 

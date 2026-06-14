@@ -5,8 +5,6 @@ export const exactSlashCommands = [
 	"/help",
 	"/settings",
 	"/start",
-	"/accept",
-	"/decline",
 	"/unpair",
 ] as const
 
@@ -22,16 +20,8 @@ const weeklyDayNames = [
 	"Saturday",
 ] as const
 
-export function parsePairPhone(text: string): string | null {
-	const match = text.match(/^\/pair\s+(.+)$/i)
-	if (!match?.[1]) return null
-	const digits = match[1].replace(/\D/g, "")
-	return digits.length > 0 ? digits : null
-}
-
 export function isSlashCommand(text: string): boolean {
-	if (exactSlashCommands.includes(text as ExactSlashCommand)) return true
-	return parsePairPhone(text) !== null
+	return exactSlashCommands.includes(text as ExactSlashCommand)
 }
 
 export function buildHelpText(): string {
@@ -43,15 +33,16 @@ export function buildHelpText(): string {
 		"• Edit or delete entries by describing them",
 		"• Change settings by asking — e.g. *set my currency to EUR*",
 		"",
+		"*Share with a partner*",
+		"• Invite someone by sharing their contact card with me",
+		"• Got an invite? Just tap *Accept* or *Decline* on it",
+		"• /unpair — stop sharing anytime",
+		"",
 		"*Commands*",
 		"/help — this message",
 		"/new — clear conversation context (expenses stay safe)",
 		"/settings — show your current settings",
 		"/start — replay the welcome tour",
-		"/pair <phone> — invite someone to share expenses",
-		"/unpair — stop sharing with your partner",
-		"/accept — accept a pairing request",
-		"/decline — decline a pairing request",
 	].join("\n")
 }
 
