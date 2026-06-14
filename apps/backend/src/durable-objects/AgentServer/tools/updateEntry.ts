@@ -12,6 +12,7 @@ import { tool } from "ai"
 import { eq } from "drizzle-orm"
 import { DateTime } from "luxon"
 import { z } from "zod"
+import { toAgentEntry } from "@/lib/currency"
 import type { MessageContext } from ".."
 
 const updateEntrySchema = z.object({
@@ -104,6 +105,6 @@ export const makeUpdateEntryTool = (context: MessageContext, db: DrizzleDb) =>
 				throw new Error("Failed to update entry")
 			}
 
-			return { result: updatedEntry }
+			return { result: toAgentEntry(updatedEntry) }
 		},
 	})

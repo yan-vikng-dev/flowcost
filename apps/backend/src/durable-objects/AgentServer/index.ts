@@ -15,15 +15,16 @@ import {
 } from "ai"
 import { PostHog } from "posthog-node"
 import { sendWhatsAppText, trySendUserFallback } from "@/lib/whatsapp/messages"
+import {
+	formatErrorForLog,
+	sanitizeUserContentForHistory,
+} from "./message-history"
 import { buildSystemPrompt } from "./systemPrompt"
 import { createTools } from "./tools"
 
 const contextWindowMs = 1000 * 60 * 60 // 1 hour
 const maxPromptMessages = 40
 const trimmedPromptMessages = 30
-
-// History can carry non-JSON values (e.g. Dates in tool results) that the AI SDK rejects on replay.
-const toJsonSafe = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T
 
 export type MessageContext = {
 	messageId: string
@@ -98,7 +99,8 @@ export class AgentServer extends DurableObject {
 			"Something went wrong. Please try again, or start a new chat with /new"
 
 		try {
-			let result: { text: string; response: { messages: ModelMessage[] } }
+			let outcome: GenerateOutcome
+			let sanitizedUserMessage: ModelMessage
 
 			try {
 				const baseModel = this.googleProvider("gemini-3.5-flash")
@@ -116,7 +118,14 @@ export class AgentServer extends DurableObject {
 					},
 				})
 
-				this.turns.push({ role: "user", content: message })
+				sanitizedUserMessage = {
+					role: "user",
+					content: sanitizeUserContentForHistory(message),
+				}
+				const liveUserMessage: ModelMessage = {
+					role: "user",
+					content: message,
+				}
 				const db = getDb()
 				const createAgent = (stepSink: ModelMessage[]) =>
 					new ToolLoopAgent({
@@ -150,12 +159,19 @@ export class AgentServer extends DurableObject {
 					})
 
 				const maxAttempts = 2
-				const generateWithRetry = async () => {
+				const generateWithRetry = async (): Promise<GenerateOutcome> => {
+					const accumulatedSteps: ModelMessage[] = []
+
 					for (let attempt = 1; ; attempt++) {
 						const stepSink: ModelMessage[] = []
 						const agent = createAgent(stepSink)
+						const historyForPrompt = [
+							...this.turns,
+							liveUserMessage,
+							...accumulatedSteps,
+						]
 						const messages = pruneMessages({
-							messages: toJsonSafe(this.turns),
+							messages: historyForPrompt,
 							toolCalls: "before-last-10-messages",
 							emptyMessages: "remove",
 						})
@@ -170,36 +186,46 @@ export class AgentServer extends DurableObject {
 									`Failed to generate text. finishReason: ${generateResult.finishReason}, text: ${generateResult.text}`,
 								)
 							}
-							return generateResult
+							return {
+								status: "ok",
+								response: generateResult.response,
+								text: generateResult.text,
+							}
 						} catch (error) {
 							const prunedStepSink = pruneMessages({
 								messages: stepSink,
 								emptyMessages: "remove",
 							})
-							if (prunedStepSink.length > 0) {
-								this.turns.push(...prunedStepSink)
-								await this.ctx.storage.put("conversationHistory", this.turns)
-							}
+							accumulatedSteps.push(...prunedStepSink)
 
-							if (attempt >= maxAttempts) throw error
+							if (attempt >= maxAttempts) {
+								return {
+									status: "failed",
+									partialSteps: accumulatedSteps,
+									error,
+								}
+							}
+							const { errorName, errorMessage } = formatErrorForLog(error)
 							console.warn("Agent generate attempt failed, retrying", {
 								attempt,
-								error,
+								errorName,
+								errorMessage,
 							})
 						}
 					}
 				}
 
-				result = await generateWithRetry()
+				outcome = await generateWithRetry()
 			} catch (error) {
+				const { errorName, errorMessage } = formatErrorForLog(error)
 				console.error({
 					event: "agent.handle_message.failed",
 					userId: messageContext.userId,
 					messageId: messageContext.messageId,
 					traceId: this.traceId,
 					failurePhase: "generate",
-					errorName: error instanceof Error ? error.name : undefined,
-					errorMessage: error instanceof Error ? error.message : String(error),
+					errorName,
+					errorMessage,
 				})
 				await trySendUserFallback({
 					env: this.env,
@@ -213,27 +239,53 @@ export class AgentServer extends DurableObject {
 			}
 
 			try {
-				const prunedMessages = pruneMessages({
-					messages: result.response.messages,
-					emptyMessages: "remove",
-				})
-				this.turns.push(...prunedMessages)
+				const tail =
+					outcome.status === "ok"
+						? outcome.response.messages
+						: outcome.partialSteps
+				this.turns.push(
+					sanitizedUserMessage,
+					...pruneMessages({ messages: tail, emptyMessages: "remove" }),
+				)
 				await this.ctx.storage.put("conversationHistory", this.turns)
 			} catch (error) {
+				const { errorName, errorMessage } = formatErrorForLog(error)
 				console.error({
 					event: "agent.handle_message.failed",
 					userId: messageContext.userId,
 					messageId: messageContext.messageId,
 					traceId: this.traceId,
 					failurePhase: "storage",
-					errorName: error instanceof Error ? error.name : undefined,
-					errorMessage: error instanceof Error ? error.message : String(error),
+					errorName,
+					errorMessage,
 				})
 				await trySendUserFallback({
 					env: this.env,
 					waId: messageContext.waId,
 					text: fallbackText,
 					error,
+					userId: messageContext.userId,
+					traceId: this.traceId ?? undefined,
+				})
+				return
+			}
+
+			if (outcome.status === "failed") {
+				const { errorName, errorMessage } = formatErrorForLog(outcome.error)
+				console.error({
+					event: "agent.handle_message.failed",
+					userId: messageContext.userId,
+					messageId: messageContext.messageId,
+					traceId: this.traceId,
+					failurePhase: "generate",
+					errorName,
+					errorMessage,
+				})
+				await trySendUserFallback({
+					env: this.env,
+					waId: messageContext.waId,
+					text: fallbackText,
+					error: outcome.error,
 					userId: messageContext.userId,
 					traceId: this.traceId ?? undefined,
 				})
@@ -244,7 +296,7 @@ export class AgentServer extends DurableObject {
 				await sendWhatsAppText({
 					env: this.env,
 					waId: messageContext.waId,
-					text: result.text,
+					text: outcome.text,
 					operation: "reply",
 					userId: messageContext.userId,
 					traceId: this.traceId ?? undefined,
@@ -255,14 +307,15 @@ export class AgentServer extends DurableObject {
 					await markUserOnboarded(db, messageContext.userId)
 				}
 			} catch (error) {
+				const { errorName, errorMessage } = formatErrorForLog(error)
 				console.error({
 					event: "agent.handle_message.failed",
 					userId: messageContext.userId,
 					messageId: messageContext.messageId,
 					traceId: this.traceId,
 					failurePhase: "reply_send",
-					errorName: error instanceof Error ? error.name : undefined,
-					errorMessage: error instanceof Error ? error.message : String(error),
+					errorName,
+					errorMessage,
 				})
 				return
 			}
@@ -316,3 +369,7 @@ export class AgentServer extends DurableObject {
 }
 
 type UserContent = Extract<ModelMessage, { role: "user" }>["content"]
+
+type GenerateOutcome =
+	| { status: "ok"; response: { messages: ModelMessage[] }; text: string }
+	| { status: "failed"; partialSteps: ModelMessage[]; error: unknown }

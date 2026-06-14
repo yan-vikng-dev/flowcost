@@ -11,7 +11,7 @@ import { tool } from "ai"
 import { and, eq, gte, inArray, ne } from "drizzle-orm"
 import { DateTime } from "luxon"
 import { z } from "zod"
-import { convertEntriesBestEffort } from "@/lib/currency"
+import { convertEntriesBestEffort, toAgentEntry } from "@/lib/currency"
 import type { MessageContext } from ".."
 
 const createEntrySchema = z.object({
@@ -110,7 +110,7 @@ export const makeCreateEntryTool = (
 				: undefined
 
 			return {
-				result: converted,
+				result: toAgentEntry(converted),
 				targetCurrency: context.displayCurrency,
 				...(unconvertedCount > 0 && {
 					conversionNote:

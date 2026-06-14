@@ -12,6 +12,20 @@ export type BestEffortConvertedEntry = SelectEntry & {
 	convertedAmount: number | null
 }
 
+/** Entry shape safe for agent tool results and durable history (no Date fields). */
+export type AgentEntry = Omit<SelectEntry, "createdAt" | "updatedAt">
+
+export type AgentBestEffortConvertedEntry = AgentEntry & {
+	convertedAmount: number | null
+}
+
+export function toAgentEntry<T extends SelectEntry>(
+	entry: T,
+): Omit<T, "createdAt" | "updatedAt"> {
+	const { createdAt: _createdAt, updatedAt: _updatedAt, ...agentEntry } = entry
+	return agentEntry
+}
+
 export type BestEffortConversionResult = {
 	entries: BestEffortConvertedEntry[]
 	/** Entries whose conversion failed; their convertedAmount is null. */
