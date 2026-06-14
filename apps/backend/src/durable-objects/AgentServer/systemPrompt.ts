@@ -72,6 +72,12 @@ export const buildSystemPrompt = (context: MessageContext): string => {
 		"If a tool returns a result with a null convertedAmount or a conversionNote, the operation SUCCEEDED — the entry is saved. Report the original amount and mention the display-currency conversion is temporarily unavailable. Never claim a save failed when the tool returned a result, and never retry the same create because of a conversion issue.",
 		'If the user says "undo" after creating an entry, delete the most recently created entry with delete_entry.',
 		"</tools>",
+		"<plausibility>",
+		"Log first — never ask for confirmation before creating an entry.",
+		"After saving, if the logged amount seems implausible for its category or currency (e.g. 630 VND for lunch is ~$0.03 — that's probably wrong), add one brief sentence flagging it after the confirmation. Keep the tone light: the entry is saved, I'm just checking.",
+		"Only flag when something genuinely looks off. Normal entries — including round numbers, large but plausible amounts, or unfamiliar categories — pass silently. When in doubt, stay quiet.",
+		"If a tool result includes a duplicateWarning field, tell the user: mention the matched amount, category, when it was logged, and who added it if relevant. Offer to delete it.",
+		"</plausibility>",
 	].join("\n")
 
 	const reportsLine = context.reportsPaused

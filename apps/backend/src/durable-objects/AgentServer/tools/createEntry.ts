@@ -1,4 +1,5 @@
 import type { DrizzleDb } from "@repo/db/database/setup"
+import { getAllowedUserIds } from "@repo/db/drizzle/queries/helpers"
 import { entries, type InsertEntry } from "@repo/db/drizzle/schemas/index"
 import {
 	type Currency,
@@ -7,6 +8,7 @@ import {
 	toIsoDateInTimezone,
 } from "@repo/shared-lib"
 import { tool } from "ai"
+import { and, eq, gte, inArray, ne } from "drizzle-orm"
 import { DateTime } from "luxon"
 import { z } from "zod"
 import { convertEntriesBestEffort } from "@/lib/currency"
@@ -74,6 +76,39 @@ export const makeCreateEntryTool = (
 				...inserted,
 				convertedAmount: null,
 			}
+
+			// Non-blocking duplicate check: same category + original amount/currency
+			// logged by this user or their partner within the last 10 minutes.
+			const allowedUserIds = await getAllowedUserIds(db, context.userId)
+			const windowStart = new Date(Date.now() - 10 * 60 * 1000)
+			const duplicate = await db.query.entries.findFirst({
+				where: and(
+					inArray(entries.userId, allowedUserIds),
+					ne(entries.id, inserted.id),
+					eq(entries.amount, input.amount),
+					eq(entries.currency, currency),
+					eq(entries.category, input.category),
+					gte(entries.createdAt, windowStart),
+				),
+				with: { user: true },
+			})
+			const duplicateWarning = duplicate
+				? {
+						matchedEntryId: duplicate.id,
+						amount: duplicate.amount,
+						currency: duplicate.currency,
+						category: duplicate.category,
+						loggedAt: duplicate.createdAt.toISOString(),
+						minutesAgo: Math.round(
+							(Date.now() - duplicate.createdAt.getTime()) / 60_000,
+						),
+						addedBy:
+							duplicate.userId === context.userId
+								? "you"
+								: (duplicate.user?.displayName ?? "your partner"),
+					}
+				: undefined
+
 			return {
 				result: converted,
 				targetCurrency: context.displayCurrency,
@@ -81,6 +116,7 @@ export const makeCreateEntryTool = (
 					conversionNote:
 						"Entry saved successfully. Conversion to the display currency is temporarily unavailable — report the original amount and currency.",
 				}),
+				...(duplicateWarning && { duplicateWarning }),
 			}
 		},
 	})
