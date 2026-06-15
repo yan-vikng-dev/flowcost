@@ -1,6 +1,9 @@
 import { Hono } from "hono"
 import { sendTypingIndicator, sendWhatsAppText } from "@/lib/whatsapp/messages"
-import { NotificationPayloadSchema } from "@/lib/whatsapp/types"
+import {
+	NotificationPayloadSchema,
+	shouldReplyForUnsupportedMedia,
+} from "@/lib/whatsapp/types"
 import { verifyWhatsAppSignature } from "@/lib/whatsapp/verify-signature"
 import { handleIncomingMessage } from "./handle-incoming-message"
 
@@ -54,6 +57,7 @@ whatsappRouter.post("/whatsapp/webhook", async (c) => {
 		text,
 		messageId,
 		messageType,
+		messageKeys,
 		media,
 		sharedContact,
 		buttonReply,
@@ -81,15 +85,24 @@ whatsappRouter.post("/whatsapp/webhook", async (c) => {
 
 	if (!waId || !messageId || !hasRecognizedPayload) {
 		if (waId && messageId && messageType) {
-			c.executionCtx.waitUntil(sendTypingIndicator({ env: c.env, messageId }))
-			c.executionCtx.waitUntil(
-				sendWhatsAppText({
-					env: c.env,
-					waId,
-					text: "Sorry, I can't read this media type. try a photo?",
-					operation: "reply",
-				}),
-			)
+			console.warn({
+				message: "unhandled whatsapp webhook message",
+				messageType,
+				waId,
+				messageId,
+				messageKeys,
+			})
+			if (shouldReplyForUnsupportedMedia(messageType)) {
+				c.executionCtx.waitUntil(sendTypingIndicator({ env: c.env, messageId }))
+				c.executionCtx.waitUntil(
+					sendWhatsAppText({
+						env: c.env,
+						waId,
+						text: "Sorry, I can't read this media type. try a photo?",
+						operation: "reply",
+					}),
+				)
+			}
 		}
 		return c.text("OK")
 	}

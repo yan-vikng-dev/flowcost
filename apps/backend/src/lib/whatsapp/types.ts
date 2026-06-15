@@ -1,5 +1,42 @@
 import { z } from "zod"
 
+/** Known WhatsApp Cloud API inbound message `type` values (not exhaustive). */
+export const WHATSAPP_MESSAGE_TYPES = [
+	"text",
+	"image",
+	"audio",
+	"video",
+	"document",
+	"sticker",
+	"location",
+	"contacts",
+	"interactive",
+	"button",
+	"reaction",
+	"order",
+	"system",
+	"unsupported",
+	"ephemeral",
+	"request_welcome",
+] as const
+
+export type WhatsAppMessageType = (typeof WHATSAPP_MESSAGE_TYPES)[number]
+
+/** Media subtypes we do not handle yet but should politely decline. */
+const UNSUPPORTED_MEDIA_REPLY_TYPES = new Set<WhatsAppMessageType>([
+	"sticker",
+	"video",
+])
+
+export function shouldReplyForUnsupportedMedia(
+	messageType: string | null,
+): messageType is WhatsAppMessageType {
+	return (
+		messageType !== null &&
+		UNSUPPORTED_MEDIA_REPLY_TYPES.has(messageType as WhatsAppMessageType)
+	)
+}
+
 const ContactPhoneSchema = z.object({
 	phone: z.string().optional(),
 	wa_id: z.string().optional(),
@@ -41,50 +78,52 @@ const NotificationPayloadDataSchema = z.object({
 							.optional(),
 						messages: z
 							.array(
-								z.object({
-									id: z.string(),
-									from: z.string(),
-									text: z.object({ body: z.string() }).optional(),
-									image: z
-										.object({
-											id: z.string(),
-											mime_type: z.string().optional(),
-											caption: z.string().optional(),
-										})
-										.optional(),
-									audio: z
-										.object({
-											id: z.string(),
-											mime_type: z.string().optional(),
-										})
-										.optional(),
-									document: z
-										.object({
-											id: z.string(),
-											mime_type: z.string().optional(),
-											filename: z.string().optional(),
-											caption: z.string().optional(),
-										})
-										.optional(),
-									contacts: z.array(SharedContactSchema).optional(),
-									button: z
-										.object({
-											payload: z.string(),
-											text: z.string(),
-										})
-										.optional(),
-									interactive: z
-										.object({
-											type: z.literal("button_reply"),
-											button_reply: z.object({
+								z
+									.object({
+										id: z.string(),
+										from: z.string(),
+										text: z.object({ body: z.string() }).optional(),
+										image: z
+											.object({
 												id: z.string(),
-												title: z.string(),
-											}),
-										})
-										.optional(),
-									type: z.string().optional(),
-									timestamp: z.string().optional(),
-								}),
+												mime_type: z.string().optional(),
+												caption: z.string().optional(),
+											})
+											.optional(),
+										audio: z
+											.object({
+												id: z.string(),
+												mime_type: z.string().optional(),
+											})
+											.optional(),
+										document: z
+											.object({
+												id: z.string(),
+												mime_type: z.string().optional(),
+												filename: z.string().optional(),
+												caption: z.string().optional(),
+											})
+											.optional(),
+										contacts: z.array(SharedContactSchema).optional(),
+										button: z
+											.object({
+												payload: z.string(),
+												text: z.string(),
+											})
+											.optional(),
+										interactive: z
+											.object({
+												type: z.literal("button_reply"),
+												button_reply: z.object({
+													id: z.string(),
+													title: z.string(),
+												}),
+											})
+											.optional(),
+										type: z.string().optional(),
+										timestamp: z.string().optional(),
+									})
+									.passthrough(),
 							)
 							.optional(),
 					}),
@@ -175,6 +214,7 @@ export const NotificationPayloadSchema =
 			waId: msg?.from ?? null,
 			messageId: msg?.id ?? null,
 			messageType: msg?.type ?? null,
+			messageKeys: msg ? Object.keys(msg).sort() : [],
 			text: text ?? null,
 			media,
 			sharedContact,
